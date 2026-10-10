@@ -51,7 +51,9 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
   cache), then runs the check.
 - **A new `js/*.js` file also needs** `<link rel="modulepreload" href="js/NAME.js">` in `index.html`,
   placed **after** the import map. If it comes before the import map, `three` imports break. `check.mjs` tells you if one is missing.
-- Update `README.md` when players can see a change.
+- **Docs pass with every release:** in the same commit, make quick, targeted updates to `README.md` (anything players
+  see) and this file (architecture, topics, module map, decisions, status) wherever the change makes them wrong or
+  incomplete. Edit only the affected lines, and skip it when nothing documented changed.
 
 ## Architecture
 
