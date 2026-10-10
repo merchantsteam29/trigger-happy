@@ -30,6 +30,8 @@ With rotation off, the same map comes back.
 - **Damage numbers:** they pop up on every hit, gold for headshots.
 - **Weapons:** the pause menu (Esc) lists every weapon, and picking one equips it straight away.
 - **Rules:** an infinite-ammo toggle, no timer and no score limit. Practice kills don't count for missions.
+- **🎯 Aim trainer** (pause menu): 3, 2, 1, then 60 seconds of orange targets popping up around where you face, 4 at
+  a time. Your score is how many you hit, with your accuracy. Your best goes on the **Aim trainer** leaderboard.
 
 The server list uses a free public relay (no account needed), so public server names are visible to anyone.
 If the relay is down you can still create servers and join with codes.
@@ -64,6 +66,16 @@ real match. Replay it any time from **Keyboard & mouse → Play the tutorial** i
 | Capture the Flag | Red vs Blue. Grab the enemy flag and bring it to your base while your own flag is home. Dropped flags return after 20s, or touch your own to return it. First to 3 captures |
 | Bounty Hunter | The leader carries a bounty (gold). Killing them is worth 3 points, anyone else 1. First to 30 |
 | Domination | Red vs Blue over three zones A, B, C. Stand in a zone with only your team to capture it; each zone you own scores a point per second. First to 200 |
+| Zombie Survival | Co-op against waves of zombies that get bigger, tougher and faster; runners from wave 3 and a Brute every 5th wave. Downed players come back when the wave is cleared; the last few zombies show on the minimap. Survive as many waves as you can |
+| Lights Out | Horror Infection: night, thick fog, rain and lightning. Survivors carry flashlights and hear a heartbeat when a zombie is close; zombies have glowing eyes, no name tags and see a little better in the dark. Survive until time runs out |
+
+**Game Night only:** **Battle Royale** (one life, everyone starts with a pistol, loot guns, health and ammo around the
+map, and stay inside the closing purple storm; last one standing wins) and the **Tournament** (knockout free-for-all
+rounds, then a 1v1 final). See [Game Night](#quick-play--game-night).
+
+**🎪 Mode of the week:** every Monday a new mix of a mode and silly rules, the same for everyone (Moon Snipers, Knife
+Frenzy, Tank Rockets, Pistol Panic, One-Shot Gun Game, Chaos CTF, Headshot Hill, Moon Zombies). **Play** on the home
+screen joins or starts a server playing it. Finish 3 matches of it in a week for 🪙 150.
 
 ## Pings (team modes)
 
@@ -74,10 +86,15 @@ team sees it, with the distance. One ping every 2.5 s (at most 4 in 15 s).
 ## Map pickups
 
 In Free For All, Team Deathmatch, King of the Hill, Capture the Flag, Domination, Hardpoint, Kill Confirmed, Bounty
-Hunter and Last Man Standing, every map has **health packs** (+50 health, back after 20 s), **ammo crates** (full mags
+Hunter, Last Man Standing and Zombie Survival, every map has **health packs** (+50 health, back after 20 s), **ammo crates** (full mags
 and grenades, back after 25 s) and a **power weapon** in the middle (Railgun, Minigun, Rocket Launcher or Heavy
 Sniper Rifle) that appears 30 s into the match and 90 s after someone takes it; everyone is told who has it. The
 host can turn pickups off in the host panel.
+
+**Barrels and crates:** every match (not the Practice Range) has 5 red **explosive barrels** and 5 wooden **crates** on
+open ground. Shoot or blast a crate and it breaks. A barrel explodes: up to 110 damage within 5 m with knockback, and it
+sets off barrels and crates nearby. You get the kill, you take half damage from your own barrel, and teammates are
+safe. They block shots behind them but you can walk through them.
 
 ## Host panel
 
@@ -92,7 +109,9 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
   code (R-…) anyone can paste with **Use a code…**. Presets can also be picked when creating a server, and the
   server list shows them.
 - Physics: game speed, move speed, jump height, gravity
-- Bots: add (easy / normal / hard), fill to 8, change difficulty, remove
+- Bots: add, fill to 8, change difficulty, remove. **Auto** (the default, and what servers filled with bots use)
+  gets better when players are beating the bots and eases off when the bots are winning, up to an expert level.
+  Bots back off to cover when hurt, grab health, check corners, crouch in long fights and stick with their team
 - Players: kick, swap teams
 
 ## Maps
@@ -174,16 +193,20 @@ strength in Settings → Controller (or Controls on touch devices).
 Plug in or pair any standard controller (Xbox, PlayStation, Switch Pro, most Bluetooth pads) and press a button — the
 game switches to controller mode (touching the mouse or keyboard switches back).
 
-| Input | Action |
+| Input (default) | Action |
 |---|---|
 | Left stick / right stick | Move / look |
 | RT / LT | Fire / aim down sights |
 | A / B | Jump / crouch (slide while sprinting) |
 | X / Y | Reload / switch weapon |
-| RB / LB or R3 | Grenade / quick melee |
-| L3 | Sprint |
-| D-pad ◀ ▶ / ▲ / ▼ | Previous–next weapon / melee weapon / inspect |
+| RB / LB | Grenade / quick melee |
+| L3 / R3 | Sprint / push to talk (voice chat) |
+| D-pad ◀ ▶ / ▲ / ▼ | Previous–next weapon / ping in team modes (melee weapon otherwise) / inspect |
 | View / Menu | Scoreboard / pause |
+
+**Change any button** in **Settings → Controller → Button layout**: pick an action, press the button you want, and two
+actions swap if it was taken (Menu always pauses). When you're out or spectating, **LB / RB** switch who you watch;
+any button skips the kill cam. PlayStation controllers show ✕ ○ □ △ / L1 / R1 names.
 
 Every menu works with the controller too: D-pad or left stick moves, **A** selects, **B** goes back, **LB/RB** switch
 menu sections or settings tabs, **LT/RT** switch loadout slots, the right stick scrolls, and left/right changes sliders.
@@ -194,11 +217,21 @@ The Grenade Launcher one-shots on a direct hit but slows you down while it's out
 ## Controls
 
 WASD move · Mouse aim · LMB fire · RMB aim/scope · Space jump · Shift sprint · Ctrl/C crouch ·
-R reload · 1–4 / wheel switch · Q last weapon · G quick grenade · F quick melee · T inspect · Tab scoreboard · Esc pause/loadout
+R reload · 1–4 / wheel switch · Q last weapon · G quick grenade · F quick melee · T inspect · Z ping (team modes) ·
+X clan spray · V push to talk · Tab scoreboard · Esc pause/loadout
 
 **Movement:** crouch while sprinting to **slide** (a burst of speed you can jump out of). You stay on the ground
 walking down stairs, can still jump for a moment after running off a ledge, a jump pressed just before landing
 still counts, and you hop onto edges you only just clip when jumping.
+- **Mantle:** jump at a ledge up to about 2 m high and keep moving forward to climb onto it.
+- **Wall-run:** sprint-jump along a wall beside you to run on it for up to 1.2 s (your view tilts). Jump to kick off
+  the wall. Land before running on the same wall again.
+
+**Damage drop-off:** every gun loses some damage at long range (the loadout card shows where). The Sniper Rifle still
+kills with a headshot and the Heavy Sniper Rifle with a body shot at any range.
+
+**Kill cam:** when another player kills you, the last few seconds replay from their eyes, with you falling at the
+moment of the kill. Any key, tap or controller button skips it; turn it off in Settings.
 
 **Headshots:** the head hitbox follows the player model (crouching, leaning, looking up/down). Headshots get a gold
 hitmarker and a "tink"; headshot kills show **HEADSHOT** (with a streak count), knock the victim's hat off, and are
@@ -213,7 +246,8 @@ the weapon you had out before.
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
 ("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Character → Banner**:
 Standard and Carbon are free; Tiger, Woodland / Arctic Camo, Ocean, Sunset, Hazard, Bloodbath, Neon Grid, Code Rain,
-Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold and Diamond cost tokens (several are animated). Bots wear random ones.
+Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold and Diamond cost tokens (several are animated). Some can only be
+earned: season pass banners, a banner for each holiday event, ranked season banners and **Top Clan**. Bots wear random ones.
 
 ## Levels, daily rewards & challenges
 
@@ -240,6 +274,9 @@ don't count, and it needs at least 2 players). The first 5 matches are placement
 Rookie, Contender (1,100), Veteran (1,250), Elite (1,400), Master (1,550) and Legend (1,700). Ranked servers use the
 standard rules, show their rating in the server list, and your division shows on your profile.
 
+**Season rewards:** your best division each season is remembered. When the season ends you get the **Ranked**
+banner for that division and every one below it (Contender, Veteran, Elite, Master, Legend).
+
 ## Quick Play & Game Night
 
 - **Quick Play** (top of the Servers screen) drops you into the busiest public server with room, or starts a public
@@ -248,6 +285,18 @@ standard rules, show their rating in the server list, and your division shows on
   zone); while it's live, **Join game night** puts everyone in the same 🌙 Game Night server (a second one opens if
   it's full). Matches there give **double XP**, and finishing one earns the **Midnight** wrap. Tap **Remind me** to get
   a browser notification when it starts (while the game is open in a tab).
+- **Battle Royale:** in the Game Night server, 30 and 60 minutes in (every 30 minutes on longer nights), with a warning
+  15 minutes and 1 minute before. One life, pistol and knife to start, 34 loot spots (guns, rare power weapons, health,
+  ammo) and a storm that closes in over about 5 minutes. The winner tops the board; then the server goes back to normal.
+- **Tournament:** the last 30 minutes of Game Night (nights of an hour or more), with a warning 10 minutes before:
+  "10 MINS UNTIL TOURNAMENT. LEAVE SOON IF YOU DON'T WANT TO PARTICIPATE". Everyone still in the server is in.
+  Free-for-all rounds (first to 15, 5 minutes, new map each) where the top half go through, then a **1v1 final**
+  (first to 7). The champion gets 🪙 750 and the Champion wrap, the runner-up 🪙 250.
+- **Watch:** while a Battle Royale or Tournament is on, that server has a **👁 Watch** button in the server list.
+  Watchers (and players knocked out) see every player marked through walls, a live scoreboard, and can use a free
+  camera (F).
+- **Game Night voice:** pause menu → **🎤 Join Game Night voice** talks with everyone in the Game Night server (needs
+  a gamertag; push to talk and volume follow your voice settings).
 - The owner sets the schedule (days, start time, length, time zone) in **Mod Panel → Announce**. Until then it's every
   day at 7 PM New York time for 2 hours.
 
@@ -256,13 +305,28 @@ standard rules, show their rating in the server list, and your division shows on
 In **Friends → Clan**, create a clan (a 2–5 letter **[TAG]**, a name and a color) or ask to join one by its tag; the
 leader accepts requests, can remove members and can disband it. Members get their **[TAG]** before their name on the
 scoreboard and results (only once the clan's signed member list includes them), a clan chat (which also shows in
-matches), and the **Clans** tab on the weekly leaderboard ranks clans by their members' XP. Up to 30 members.
+matches), and the **Clans** tab on the weekly leaderboard ranks clans by their members' kills. Up to 30 members.
+
+- **Top clan:** every member of last week's #1 clan gets 🪙 300 and the **Top Clan** banner.
+- **Clan wars:** a leader types another clan's tag and presses **⚔ Challenge**; their leader accepts or declines.
+  Then the challenger's leader presses **Start the war**: a private Team Deathmatch with your clan in red and theirs in
+  blue (nobody else can join). Both clans get a **Join the war** button. Each clan's record shows its wins and losses.
+- **Clan sprays:** the leader draws a 16×16 pixel spray (**🎨 Make clan spray**). Members press **X** in a match to
+  spray it on a wall within 5 m, once every 8 seconds. Everyone in the match sees it.
 
 ## Player profiles
 
 Click a gamertag (your own in **Friends**, a friend, or anyone on the **Leaderboard**) to see their profile: banner,
 level and rank, kills, K/D, wins, win rate, matches, headshots, best streak, favorite gun (with its wrap) and season
-badges, with an **Add friend** button. Players with a gamertag post their profile automatically.
+badges, up to 3 achievements they picked to show, with an **Add friend** button. Players with a gamertag post their
+profile automatically.
+
+## Achievements
+
+**Missions → Achievements** has 28 feats you unlock once and keep: kill milestones, headshots, streaks, triple kills,
+air / low-health / long-range / suppressed / melee / explosive / barrel kills, using 20 guns, wins, matches, every map
+and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners and
+ranked divisions. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
 
 ## Invite friends
 
@@ -281,10 +345,12 @@ Every day one mode is featured (the same for everyone): it gives **1.5x XP** (st
 🪙 100 for the first match you finish in it that day. **Play it** on the Servers screen joins a public server
 playing it, or starts one. Featured servers have a ⭐ in the list.
 
-## Weekly leaderboard
+## Leaderboard
 
-**Leaderboard** in the menu ranks everyone with a gamertag by **XP, kills, wins and headshots** for the week
-(Monday 00:00 UTC to the next Monday). Last week's #1 on each board gets a 🏆 next to their name all week (on the
+**Leaderboard** in the menu ranks everyone with a gamertag by **kills, wins and headshots**: **this week** (Monday
+00:00 UTC to the next Monday), **last week** or **all time**, in every mode or just one (the mode picker). The
+**Clans** board ranks clans by their members' kills this week, and **Aim trainer** shows the best scores from the
+Practice Range. Last week's #1 on each board gets a 🏆 next to their name all week (on the
 scoreboard and results), plus 500 tokens and the **Weekly Champion** wrap. Each player's game posts its own signed
 totals, capped to what's possible in a week; staff can take a player off the board from the Mod Panel
 (**Hide from leaderboard**).
@@ -306,14 +372,15 @@ moment** of the match as a clip you can **Save** (WebM video) or **Share**. Brow
   Blood, Double / Triple / Multi Kill, Killing Spree, Rampage, Unstoppable, Legendary, Godlike, Shutdown (ending
   someone's streak), Revenge, Headshot, Melee Kill, Boom (explosives) and Longshot (40 m+).
 - **Kill confirm:** a small "ELIMINATED <name>" line under the crosshair for each of your kills.
-- **After dying:** the camera shows your killer. With a longer respawn (or once you're out in Last Man Standing), you
-  then watch living players (teammates in team modes) until you respawn. Q / E or click to switch.
+- **After dying:** the kill cam, then the camera shows your killer. With a longer respawn (or once you're out in Last
+  Man Standing, Battle Royale or a Tournament), you then watch living players (teammates in team modes) until you
+  respawn. Q / E or click to switch.
 - **Reload ring** around the crosshair that fills as you reload.
 - Scoreboard (Tab) with rank and K/D; the end screen shows a podium for the top three.
 
 ## Settings
 
-**Key bindings:** Settings → Controls on a computer. Every action can have two keys, and mouse buttons 3 / 4 / 5
+**Key bindings:** Settings → Controls on a computer (controller buttons: Settings → Controller). Every action can have two keys, and mouse buttons 3 / 4 / 5
 (middle and side buttons) work too. Picking a key that's already used moves it to the new action. Controllers and
 touch controls aren't affected. The "Keyboard & mouse" help in the menu shows your current keys.
 
@@ -322,12 +389,32 @@ Open **Settings** from the main menu or the pause menu. Everything is saved in y
 | Tab | Options |
 |---|---|
 | Controls | Mouse sensitivity (desktop) / look sensitivity (touch), aiming sensitivity, invert look, toggle aim with right mouse |
-| Controller | Look sensitivity, aiming sensitivity, invert, stick dead zone, aim assist + strength, crouch toggle, auto-sprint, vibration, button layout |
-| Video | Field of view, weapon field of view, view bobbing, graphics (**Low-end** for school laptops and old phones: low resolution, no shadows or decorations, shorter view; Low; Normal; High), **auto resolution** (drops the resolution a little when frames dip, on by default), **blood effects** (off shows grey sparks instead), FPS counter. If a match runs very slowly the game suggests Low-end once |
-| HUD & Audio | Volume, party chat, voice chat, minimap on/off, HUD size, crosshair color, size and center dot |
+| Controller | Look sensitivity, aiming sensitivity, invert, stick dead zone, aim assist + strength, crouch toggle, auto-sprint, vibration, rebindable buttons |
+| Video | Field of view, weapon field of view, view bobbing, graphics (**Low-end** for school laptops and old phones: low resolution, no shadows or decorations, shorter view; Low; Normal; High), **auto resolution** (drops the resolution a little when frames dip, on by default), **kill cam**, **blood effects** (off shows grey sparks instead), FPS counter. If a match runs very slowly the game suggests Low-end once |
+| HUD & Audio | Time zone (shows your device's; change it in your system settings), volume, party chat, voice chat, **streamer mode** (hides server codes and shows other players as Player 1, Player 2…), minimap on/off, HUD size, crosshair color, size and center dot |
+| Accessibility | **Colorblind mode** (Protanopia, Deuteranopia, Tritanopia, Grayscale: team, zombie and health bar colors), **sound captions** (footsteps, gunfire, reloads, explosions on screen with an arrow to where they came from) and caption size, kill cam, blood |
 | Mobile | Edit button layout (drag any touch button anywhere, resize each one), button size, button opacity |
 | Missions | 50 missions (kills, headshots, sniper / shotgun / melee / secondary / explosive kills, streaks, multi-kills, long shots, revenge, airborne, suppressed and low-health kills, matches, wins, team wins, maps and modes played, mode-specific goals, collecting cosmetics). Each one pays tokens 🪙 |
 | Customize | 23 hats, 9 hair styles (+ colors), 12 face items, 12 back items and 17 banners. Tap anything to preview it, then spend tokens on whatever you want. Other players see what you wear |
+
+## Shop & gifts
+
+**🛒 Shop** in the menu has every cosmetic, banner and weapon wrap you can buy with tokens, always the same (nothing
+rotates or leaves). Filter to what you don't own, sort by price or name, preview anything, then **Buy**, **Wear** or
+**Gift to a friend**. The **Gifts** tab sends 10–1,000 tokens to a friend (up to 5 gifts a day) and lists what you've
+received. Gifts arrive the next time your friend plays; an item they already have turns into its price in tokens.
+
+## Holiday events
+
+Holidays of many faiths and cultures (New Year's, Lunar New Year, Holi, Purim, Nowruz, Eid al-Fitr, Passover, Easter,
+Orthodox Easter, Vaisakhi, Vesak, Eid al-Adha, Rosh Hashanah, Diwali, Guru Nanak Gurpurab, Hanukkah, Bodhi Day,
+Christmas). While one is on, the home screen and matches greet you, XP is 1.25x, and your first match of it earns that
+holiday's banner and 🪙 150 (once a year). Moon-based dates can be a day off depending on where you live.
+
+## Report a bug
+
+Pause menu → **🐞 Report a bug**: say what went wrong (the game adds its version, your device and the match for you)
+and optionally attach a picture of your screen. It goes straight to the developer. Needs a gamertag; one a minute.
 
 ## Mobile
 
@@ -346,8 +433,7 @@ The game checks `version.json` every minute. When a new version is out, a pop-up
 re-downloads every file (a hard refresh) — automatically after 5 seconds in the menu, or when you choose
 (**Update now** / **After this server**) while playing.
 
-**Releasing:** bump the version in both `js/version.js` and `version.json` (same string), update the notes,
-and add any new files to the `files` list in `version.json`.
+**Releasing:** `node tools/release.mjs <version> "note"` (see [CLAUDE.md](CLAUDE.md) for the full workflow).
 
 ## Gamertag, friends & party chat
 
@@ -409,6 +495,8 @@ becomes free again.
   - **Log:** moderator activity (actions, warns, bans, mutes and kicks per staff member), then every staff action with
     its time, filterable by moderator.
   - **Staff** (owner only): appoint and remove moderators, permanently or for 1, 7 or 30 days.
+  - **Bugs** (owner only): bug reports from players, with their game version, device, match and screenshot. Mark one
+    **Done** to remove it; they disappear after 30 days.
   - **Recent:** everyone you've played with lately (on this device), with their verified gamertag when known, so you
     can find people after a match.
   - **Quick reasons:** a dropdown of common reasons (Cheating, Toxic chat, Harassment…) fills the reason box.
@@ -457,4 +545,5 @@ browser data or making a new gamertag.
 
 ## Run locally
 
-`node serve.js` → http://localhost:8080
+`node serve.js` → http://localhost:8080 · `node tools/check.mjs` checks the code before a commit.
+Working on the game? Start with [CLAUDE.md](CLAUDE.md).
