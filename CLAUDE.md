@@ -4,7 +4,7 @@ A browser multiplayer FPS. Plain HTML + ES modules + Three.js 0.160 (import map 
 build step, no backend: matches are peer-to-peer and everything persistent goes over free public
 MQTT relays, signed by the players' own keys.
 
-- Live: https://merchantsteam29.github.io/Gun-game-fun/ (GitHub Pages from `main`)
+- Live: https://merchantsteam29.github.io/trigger-happy/ (GitHub Pages from `main`). Repo: `merchantsteam29/trigger-happy`. The old address is a separate redirect repo, `Gun-game-fun`.
 - Owner: gamertag **GIGACHAD** (GitHub `merchantsteam29`). The owner decides features and pushes.
 - Player-facing docs: `README.md`. This file is for whoever changes the code.
 

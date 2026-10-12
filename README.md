@@ -2,7 +2,7 @@
 
 (Formerly Gun Game 3D.) A browser-based 3D multiplayer shooter (Three.js + WebRTC) to play with friends, with bots.
 
-**Play:** https://merchantsteam29.github.io/Gun-game-fun/
+**Play:** https://merchantsteam29.github.io/trigger-happy/
 
 ## How to play
 
