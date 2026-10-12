@@ -1,6 +1,6 @@
-# Gun Game 3D
+# Trigger Happy
 
-A browser-based 3D multiplayer shooter (Three.js + WebRTC) to play with friends, with bots.
+(Formerly Gun Game 3D.) A browser-based 3D multiplayer shooter (Three.js + WebRTC) to play with friends, with bots.
 
 **Play:** https://merchantsteam29.github.io/Gun-game-fun/
 
@@ -263,8 +263,8 @@ earned: season pass banners, a banner for each holiday event, ranked season bann
 
 ## Install as an app
 
-Gun Game 3D can be installed like an app, with its own icon, full screen and no browser bar. Use **Install app** on
-the Servers screen (or in the menu sidebar). On iPhone / iPad: Safari → Share → **Add to Home Screen**.
+Trigger Happy can be installed like an app, with its own icon, full screen and no browser bar. Use **Install app** on
+the Play screen (or at the bottom of the menu). On iPhone / iPad: Safari → Share → **Add to Home Screen**.
 
 ## Ranked
 

@@ -294,8 +294,10 @@ export class GamepadInput {
     if (!list.length) return;
     const cur = this.current(root);
     if (!cur || !list.includes(cur)) { this.focus(this.initial(root, list) || list[0]); return; }
-    // Main menu: right from the section list goes into the section (back to where you were in it).
-    if (root.id === 'menu' && dir === 'right' && cur.closest('#menu-nav')) {
+    // Main menu: down from the section tabs goes into the section (back to where you were in it).
+    // (Phones keep the tabs at the bottom, so there it's up.)
+    const intoPane = document.body.classList.contains('mobile') && !document.body.classList.contains('tablet') ? 'up' : 'down';
+    if (root.id === 'menu' && dir === intoPane && cur.closest('#menu-nav')) {
       const pane = root.querySelector('.menu-pane:not(.hidden)');
       const inPane = list.filter((el) => pane && pane.contains(el));
       if (inPane.length) { this.focus(inPane.includes(this.paneFocus) ? this.paneFocus : inPane[0]); return; }
@@ -309,7 +311,7 @@ export class GamepadInput {
     const ZONES = '#menu-nav, .menu-pane, #set-tabs, #set-body, .hp-grid > section';
     const zone = cur.closest(ZONES);
     const pickFrom = (cands) => this.nearest(cur, a, ax, ay, dx, dy, cands);
-    const best = dy && zone ? pickFrom(list.filter((el) => el.closest(ZONES) === zone)) : pickFrom(list);
+    const best = (dy && zone && pickFrom(list.filter((el) => el.closest(ZONES) === zone))) || pickFrom(list);
     if (best) this.focus(best);
   }
 

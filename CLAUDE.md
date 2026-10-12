@@ -1,4 +1,4 @@
-# Gun Game 3D: notes for developers and AI agents
+# Trigger Happy (formerly Gun Game 3D): notes for developers and AI agents
 
 A browser multiplayer FPS. Plain HTML + ES modules + Three.js 0.160 (import map from a CDN), no
 build step, no backend: matches are peer-to-peer and everything persistent goes over free public
@@ -117,6 +117,9 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Staff:** `roles.js`, `moderation.js`, `modpanel.js`, `hostpanel.js`
 - **Input and settings:** `settings.js` (`opts`, `setOpt`, `onOpts`), `settingsui.js`, `binds.js`, `gamepad.js`
   (rebindable `PAD_ACTIONS`), `touch.js`, `access.js` (colorblind modes), `tutorial.js`
+- **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every
+  screen's look). Classes and ids are shared with the JS, so restyle in `ui.css` and keep them. Icons: `icons/icon.svg` is the
+  source; the PNGs (favicon, 192/512, maskable, apple-touch) are rendered from it. `icons/mark.svg` is the logo without its tile.
 - **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`)
 
 ### Where to add things

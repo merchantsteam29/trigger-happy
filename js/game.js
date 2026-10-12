@@ -2501,7 +2501,7 @@ export class Game {
         c.width = c.height = 128;
         const x = c.getContext('2d');
         x.fillStyle = 'rgba(8,10,14,0.65)'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill();
-        x.fillStyle = '#ffffff'; x.font = 'bold 76px Chakra Petch, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(name, 64, 70);
+        x.fillStyle = '#ffffff'; x.font = 'bold 76px Rubik, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(name, 64, 70);
         const tex = new THREE.CanvasTexture(c);
         const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
         label.scale.set(1.1, 1.1, 1);
@@ -2762,7 +2762,7 @@ export class Game {
     const r = best
       ? { label: (best.sc > me.sc ? '1ST · ' : '') + best.name, score: val(best), pct: val(best) / total, color: this.colorFor(best) }
       : { label: '—', score: 0, pct: 0, color: '#8a94a3' };
-    return { l: { label: (me.sc >= (best ? best.sc : 0) ? '1ST · ' : '') + 'YOU', score: val(me), pct: val(me) / total, color: '#ffb020' }, r };
+    return { l: { label: (me.sc >= (best ? best.sc : 0) ? '1ST · ' : '') + 'YOU', score: val(me), pct: val(me) / total, color: '#ff2d75' }, r };
   }
 
   drawRadar() {

@@ -132,7 +132,7 @@ class GameNight {
   }
   notify(text) {
     if (!this.remind || !('Notification' in window) || Notification.permission !== 'granted' || document.hasFocus()) return;
-    try { new Notification('Gun Game 3D', { body: text, tag: 'gamenight', icon: 'icons/icon-192.png' }); } catch { /* ignore */ }
+    try { new Notification('Trigger Happy', { body: text, tag: 'gamenight', icon: 'icons/icon-192.png' }); } catch { /* ignore */ }
   }
 }
 

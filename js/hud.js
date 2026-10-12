@@ -455,7 +455,7 @@ export class Hud {
       const sh = $('end-hl').querySelector('[data-hlshare]');
       if (sh && h) sh.onclick = async () => {
         const file = new File([h.blob], `gun-game-3d-highlight.${h.ext}`, { type: h.blob.type });
-        try { if (navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Gun Game 3D', text: `${h.label} in Gun Game 3D!` }); } catch { /* cancelled */ }
+        try { if (navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Trigger Happy', text: `${h.label} in Trigger Happy!` }); } catch { /* cancelled */ }
       };
     }
     // Ranked: rating change

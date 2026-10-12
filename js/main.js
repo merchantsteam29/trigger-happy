@@ -113,7 +113,7 @@ async function installApp() {
   showInstall();
 }
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); install.prompt = e; showInstall(); });
-window.addEventListener('appinstalled', () => { install.standalone = true; showInstall(); toast('Installed! Open Gun Game 3D from your home screen or desktop.'); });
+window.addEventListener('appinstalled', () => { install.standalone = true; showInstall(); toast('Installed! Open Trigger Happy from your home screen or desktop.'); });
 $('btn-install').onclick = installApp;
 $('btn-install').classList.toggle('hidden', !canInstall());
 
@@ -255,7 +255,7 @@ function renderHome() {
     ${(() => { const w = motwNow(), p = motwProgress(); return `<div class="hs-tile banner-row hs-motw"><span class="hs-ic">${w.icon}</span><span class="hs-txt"><b>Mode of the week: ${esc(w.name)}</b><small>${esc(w.desc)} · ${p.paid ? '✓ reward earned' : `play ${MOTW_MATCHES} matches: ${p.n}/${MOTW_MATCHES} · 🪙 ${MOTW_TOKENS}`} · new mode in ${fmtDuration(motwEnds() - Date.now())}</small></span><button class="primary sm" data-motw>Play</button></div>`; })()}
     ${holidayRow()}
     ${!tutorialDone() ? '<button class="hs-tile hs-tutorial banner-row" data-tutorial><span class="hs-ic">🎓</span><span class="hs-txt"><b>New here? Take the 1-minute tutorial</b><small>Learn the controls in the Practice Range · 🪙 ' + TUTORIAL_TOKENS + '</small></span><span class="hm-arrow">›</span></button>' : ''}
-    ${canInstall() ? '<button class="hs-tile hs-install banner-row" data-install><span class="hs-ic">📲</span><span class="hs-txt"><b>Install the app</b><small>Gun Game 3D on your home screen, full screen</small></span><span class="hm-arrow">›</span></button>' : ''}
+    ${canInstall() ? '<button class="hs-tile hs-install banner-row" data-install><span class="hs-ic">📲</span><span class="hs-txt"><b>Install the app</b><small>Trigger Happy on your home screen, full screen</small></span><span class="hm-arrow">›</span></button>' : ''}
     <div class="today-row">
       <div class="hs-tile hs-daily ${login.claimed ? '' : 'ready'}">
         <span class="hs-ic">🎁</span>
@@ -815,7 +815,7 @@ function renderInvite() {
     setTimeout(() => { copy.textContent = 'Copy link'; }, 1500);
   };
   const share = $('inv-share');
-  if (share) share.onclick = () => navigator.share({ title: 'Gun Game 3D', text: `Play Gun Game 3D with me! We both get ${INVITE_TOKENS} tokens.`, url: $('inv-link').value }).catch(() => {});
+  if (share) share.onclick = () => navigator.share({ title: 'Trigger Happy', text: `Play Trigger Happy with me! We both get ${INVITE_TOKENS} tokens.`, url: $('inv-link').value }).catch(() => {});
 }
 // ---------- Clans ----------
 let clanForm = 'create';

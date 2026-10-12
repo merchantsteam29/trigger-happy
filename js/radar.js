@@ -69,7 +69,7 @@ export class Radar {
       x.beginPath(); x.arc(ox, oz, Math.max(4, o.r * k), 0, Math.PI * 2); x.fill(); x.stroke();
       if (o.label) {
         x.save(); x.translate(ox, oz); x.rotate(-me.yaw);
-        x.fillStyle = '#fff'; x.font = `700 ${Math.round(S / 14)}px Chakra Petch, sans-serif`;
+        x.fillStyle = '#fff'; x.font = `700 ${Math.round(S / 14)}px Rubik, sans-serif`;
         x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(o.label, 0, 1);
         x.restore();
       }
@@ -94,18 +94,18 @@ export class Radar {
     x.save();
     x.translate(R, R);
     const g = x.createRadialGradient(0, 0, 0, 0, 0, R * 0.55);
-    g.addColorStop(0, 'rgba(255,176,32,0.28)'); g.addColorStop(1, 'rgba(255,176,32,0)');
+    g.addColorStop(0, 'rgba(255,45,117,0.28)'); g.addColorStop(1, 'rgba(255,45,117,0)');
     x.fillStyle = g;
     x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R * 0.55, -Math.PI / 2 - 0.55, -Math.PI / 2 + 0.55); x.closePath(); x.fill();
     const a = S / 26;
-    x.fillStyle = '#ffb020'; x.strokeStyle = 'rgba(0,0,0,0.8)'; x.lineWidth = 1.5;
+    x.fillStyle = '#ff2d75'; x.strokeStyle = 'rgba(0,0,0,0.8)'; x.lineWidth = 1.5;
     x.beginPath(); x.moveTo(0, -a); x.lineTo(a * 0.75, a * 0.8); x.lineTo(0, a * 0.35); x.lineTo(-a * 0.75, a * 0.8); x.closePath();
     x.fill(); x.stroke();
     x.restore();
 
     // North marker on the rim (world -z).
     const n = -Math.PI / 2 + me.yaw;
-    x.fillStyle = 'rgba(255,255,255,0.75)'; x.font = `700 ${Math.round(S / 13)}px Chakra Petch, sans-serif`;
+    x.fillStyle = 'rgba(255,255,255,0.75)'; x.font = `700 ${Math.round(S / 13)}px Rubik, sans-serif`;
     x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText('N', R + Math.cos(n) * (R - S / 14), R + Math.sin(n) * (R - S / 14));
   }

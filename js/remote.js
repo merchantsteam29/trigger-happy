@@ -55,12 +55,12 @@ function nameTag(name, color, role = null) {
   g.strokeStyle = 'rgba(0,0,0,0.8)';
   const r = TAG_ROLES[role];
   if (r) {
-    g.font = '800 22px Chakra Petch, sans-serif';
+    g.font = '800 22px Rubik, sans-serif';
     g.strokeText(r[0], 128, 30);
     g.fillStyle = r[1];
     g.fillText(r[0], 128, 30);
   }
-  g.font = '600 30px Chakra Petch, sans-serif';
+  g.font = '600 30px Rubik, sans-serif';
   g.strokeText(name, 128, 64);
   g.fillStyle = r ? r[1] : color;
   g.fillText(name, 128, 64);
