@@ -22,6 +22,8 @@ export class Net {
     this.code = null;
     this.onMessage = () => {};
     this.onClose = () => {};
+    this.onReachable = () => {}; // host: (true/false) whether new players can find this lobby
+    this.reachable = true;
     this.closed = false;
     this.nextId = 1;
   }
@@ -32,6 +34,7 @@ export class Net {
       this.peer = peer;
       let opened = false;
       peer.on('open', () => {
+        if (opened) { this.setReachable(true); return; } // back on the lobby server after a drop: same match
         opened = true;
         this.isHost = true;
         this.code = code;
@@ -48,7 +51,7 @@ export class Net {
         this.logic.addPlayer('host', name, color, cos);
         resolve();
       });
-      peer.on('disconnected', () => { if (!this.closed) peer.reconnect(); });
+      peer.on('disconnected', () => { if (opened) { this.setReachable(false); this.retryHost(); } });
       peer.on('error', (e) => {
         if (!opened) {
           reject(new Error(e.type === 'unavailable-id' ? 'That lobby code is taken, try again.' : `Could not create lobby (${e.type || e.message}).`));
@@ -56,6 +59,21 @@ export class Net {
         } else console.warn('peer error', e);
       });
     });
+  }
+
+  // The lobby server (PeerJS) is how new players find the host. If it drops us (or goes down),
+  // players already in keep playing, but nobody new can join: keep trying until it's back.
+  retryHost(wait = 2000) {
+    clearTimeout(this.retryT);
+    if (this.closed || !this.peer || this.peer.destroyed || !this.peer.disconnected) return;
+    try { this.peer.reconnect(); } catch { /* tried again below */ }
+    this.retryT = setTimeout(() => this.retryHost(Math.min(wait * 2, 30000)), wait);
+  }
+
+  setReachable(v) {
+    if (this.reachable === v) return;
+    this.reachable = v;
+    this.onReachable(v);
   }
 
   accept(conn) {
@@ -132,7 +150,7 @@ export class Net {
       const peer = new Peer();
       this.peer = peer;
       let done = false;
-      const fail = (msg) => { if (done) return; done = true; peer.destroy(); reject(new Error(msg)); };
+      const fail = (msg, gone = false) => { if (done) return; done = true; peer.destroy(); reject(Object.assign(new Error(msg), { gone })); };
       const timer = setTimeout(() => fail('Timed out connecting to the lobby.'), 15000);
       peer.on('open', () => {
         const conn = peer.connect(PREFIX + code, { reliable: true });
@@ -168,7 +186,7 @@ export class Net {
         conn.on('close', () => { if (!this.closed) this.onClose('Lost connection to the host.'); });
       });
       peer.on('error', (e) => {
-        if (!done) { clearTimeout(timer); fail(e.type === 'peer-unavailable' ? 'No lobby with that code.' : `Connection failed (${e.type || e.message}).`); }
+        if (!done) { clearTimeout(timer); if (e.type === 'peer-unavailable') fail('No lobby with that code.', true); else fail(`Connection failed (${e.type || e.message}).`); }
         else console.warn('peer error', e);
       });
     });
@@ -204,6 +222,7 @@ export class Net {
     this.closed = true;
     clearInterval(this.reaper);
     clearInterval(this.pinger);
+    clearTimeout(this.retryT);
     if (this.logic) this.logic.destroy();
     if (this.peer) this.peer.destroy();
   }

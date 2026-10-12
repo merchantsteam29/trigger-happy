@@ -305,13 +305,16 @@ async function freshServers() {
   return browser.list().filter((s) => s.players < s.max);
 }
 const randomMap = () => { const maps = MAP_ORDER.filter((m) => m !== 'range'); return maps[Math.floor(Math.random() * maps.length)]; };
-async function joinCode(code) { $('join-code').value = code; await joinLobby(); }
+async function joinCode(code) { $('join-code').value = code; return joinLobby(); }
 async function quickPlay() {
   if (busy) return;
   status('Finding a match…');
   const open = await freshServers();
-  const best = open.filter((s) => s.players > 0)[0] || open[0];
-  if (best) return joinCode(best.code);
+  // Busiest first; a server that turns out to be gone is skipped (and dropped from the list).
+  for (const s of [...open.filter((x) => x.players > 0), ...open.filter((x) => !x.players)].slice(0, 3)) {
+    if (await joinCode(s.code) !== false) return;
+    status('Finding a match…');
+  }
   status('');
   hostLobby({ name: `${settings.name || 'Player'}'s Quick Play`, mode: 'ffa', map: randomMap(), max: 12, bots: 6, rotate: true, vis: 'public' });
 }
@@ -1243,6 +1246,7 @@ function listingInfo() {
 function setPublic(v) {
   if (!hosting || !net) return;
   hosting.public = v;
+  announcer.live = net.reachable;
   if (v) announcer.start(net.code, listingInfo).then((ok) => { if (!ok && hosting) chat.system('Could not reach the server list. Friends can still join with the code.'); });
   else announcer.stop();
   $('pause-vis').textContent = v ? '🌐 Public' : '🔒 Private';
@@ -1351,6 +1355,11 @@ function newNet() {
   const n = new Net();
   n.onMessage = (m) => { game.onNet(m); chatOnNet(m); };
   n.onClose = (reason) => leave(reason);
+  // Hosting and the lobby server dropped us: nobody new can join, so take the listing down until it's back.
+  n.onReachable = (v) => {
+    announcer.setLive(v);
+    if (hosting) chat.system(v ? 'Reconnected: new players can join again.' : 'Lost the lobby server, so new players can\'t join right now. Reconnecting…');
+  };
   game.attach(n, { loadout: settings.loadout, color: settings.color });
   game.myBanner = getCos().banner; // for the MVP card
   return n;
@@ -1958,6 +1967,7 @@ async function joinLobby(spectateArg = false) {
     net.destroy();
     net = null;
     game.reset();
+    if (e.gone && browser.servers.has(code)) { browser.markDead(code); setBusy(false); status('That server has closed. It\'s been taken off the list.', true); return false; }
     status(e.message, true);
   }
   setBusy(false);

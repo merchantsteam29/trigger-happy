@@ -1,8 +1,8 @@
 {
-  "version": "2026.10.12.1",
+  "version": "2026.10.12.2",
   "notes": [
-    "Gun Game 3D is now Trigger Happy! New name, new icon and a brand-new look for every menu and the HUD",
-    "Menu sections are now tabs along the top, and keyboard and mouse help sits at the bottom of the screen"
+    "Servers that have closed no longer linger in the server list, and Quick Play skips them",
+    "Hosting: if the connection players join through drops, your server reconnects by itself (players already in keep playing)"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

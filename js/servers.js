@@ -11,8 +11,13 @@ const REFRESH_MS = 15000;
 // A listing disappears if we haven't heard it refreshed for this long (by OUR clock: the host's
 // clock may be wrong, which used to hide perfectly good servers).
 const SEEN_MS = 40000;
-// Retained listings older than this (by the host's clock, generous for clock drift) are leftovers.
-const RETAINED_MAX_AGE = 10 * 60 * 1000;
+// A retained listing is what the relay kept from the host's last refresh. Live hosts refresh every
+// 15 s, so an older one is a leftover from a host whose tab died without clearing it (those used to
+// sit in the list for 10 minutes with nobody behind them). A live host whose clock is off still
+// shows up with its next refresh, which arrives as a normal (not retained) message.
+const RETAINED_MAX_AGE = 60 * 1000;
+// A listed server we couldn't join stays hidden this long (by our clock).
+const DEAD_MS = 3 * 60 * 1000;
 const CODE_RE = /^[A-Z0-9]{5}$/;
 export const REGIONS = ['NA', 'SA', 'EU', 'Asia', 'OCE', 'AF'];
 
@@ -56,6 +61,7 @@ function clean(code, raw) {
 export class ServerBrowser {
   constructor() {
     this.servers = new Map();
+    this.dead = new Map(); // code -> when we gave up on it
     this.onChange = () => {};
     this.relay = null;
   }
@@ -94,8 +100,17 @@ export class ServerBrowser {
     const s = clean(code, raw);
     if (!s) return;
     if (packet && packet.retain && Math.abs(Date.now() - s.ts) > RETAINED_MAX_AGE) return; // a dead host's leftover
+    if (Date.now() - (this.dead.get(code) || 0) < DEAD_MS) return;
     s.seen = Date.now();
     this.servers.set(code, s);
+    this.onChange();
+  }
+
+  // Joining a listed server failed (no host behind it): hide it for a while.
+  markDead(code) {
+    if (!this.servers.has(code)) return;
+    this.dead.set(code, Date.now());
+    this.servers.delete(code);
     this.onChange();
   }
 
@@ -110,7 +125,14 @@ export class ServerBrowser {
 
 // Hosting a public server: publish its listing until stopped (or the tab goes away).
 export class ServerAnnouncer {
-  constructor() { this.relay = null; this.code = null; }
+  constructor() { this.relay = null; this.code = null; this.live = true; }
+
+  // false while players can't reach this host (lobby server down): the listing is taken down until it's back.
+  setLive(v) {
+    if (this.live === v) return;
+    this.live = v;
+    this.publish();
+  }
 
   async start(code, getInfo) {
     this.stop();
@@ -129,7 +151,7 @@ export class ServerAnnouncer {
   publish() {
     if (!this.relay || !this.code) return;
     const info = { v: 1, ...this.getInfo(), ts: Date.now() };
-    this.relay.publish(PREFIX + this.code, JSON.stringify(info), { retain: true });
+    this.relay.publish(PREFIX + this.code, this.live ? JSON.stringify(info) : '', { retain: true });
   }
 
   stop() {
