@@ -1,5 +1,5 @@
 import { store } from './util.js';
-import { allStats, getStat, onStats, isOwned } from './missions.js';
+import { allStats, getStat, onStats, isEarned as isOwned } from './missions.js';
 import { MAP_ORDER } from './maps.js';
 import { WEAPONS } from './weapons.js';
 import { myRanked, DIVISIONS } from './ranked.js';

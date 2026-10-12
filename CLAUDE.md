@@ -28,6 +28,8 @@ MQTT relays, signed by the players' own keys.
 
 ### Owner preferences (standing decisions)
 
+- **GIGACHAD owns every cosmetic and wrap**, including ones added later. It's a check in `missions.js` (`isOwned` /
+  `ownsWrap` ask `roles.isOwner()`), not a grant, so new items need nothing extra. Achievements use `isEarned` (real ownership).
 - **No weapon mastery** (per-gun levels / unlock tracks / mastery camos). Ever.
 - **New features don't give XP.** Reward with leaderboards, badges (achievements) or tokens. The
   existing XP / level / season system stays as it is. The Leaderboard shows no XP board.

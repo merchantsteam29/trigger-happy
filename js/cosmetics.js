@@ -34,6 +34,11 @@ const M = {
   surf: new THREE.MeshStandardMaterial({ color: '#29c4b8', roughness: 0.4 }),
   demon: new THREE.MeshStandardMaterial({ color: '#3a0a12', roughness: 0.6, emissive: '#2a0006' }),
   beard: new THREE.MeshStandardMaterial({ color: '#4a3220', roughness: 0.95 }),
+  pumpkin: new THREE.MeshStandardMaterial({ color: '#f07a12', roughness: 0.7 }),
+  stem: new THREE.MeshStandardMaterial({ color: '#4f7a2a', roughness: 0.8 }),
+  pearl: new THREE.MeshStandardMaterial({ color: '#fff4fb', roughness: 0.3, metalness: 0.2, emissive: '#3a2238' }),
+  hot: new THREE.MeshStandardMaterial({ color: '#ff2d75', roughness: 0.5 }),
+  teddy: new THREE.MeshStandardMaterial({ color: '#a8743e', roughness: 0.95 }),
 };
 const hairMats = new Map();
 const hairMat = (c) => { if (!hairMats.has(c)) hairMats.set(c, new THREE.MeshStandardMaterial({ color: c, roughness: 0.9 })); return hairMats.get(c); };
@@ -51,7 +56,7 @@ const C = (r0, r1, h, s = 16) => new THREE.CylinderGeometry(r0, r1, h, s);
 const dome = (r) => new THREE.SphereGeometry(r, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2);
 
 // Hats that cover the top of the head hide spiky / mohawk hair.
-export const COVERING = ['helmet', 'cap', 'beanie', 'cowboy', 'tophat', 'viking', 'pirate', 'chef', 'wizard', 'sombrero', 'beret', 'propeller', 'santa', 'samurai', 'astro'];
+export const COVERING = ['helmet', 'cap', 'beanie', 'cowboy', 'tophat', 'viking', 'pirate', 'chef', 'wizard', 'sombrero', 'beret', 'propeller', 'santa', 'samurai', 'astro', 'hardhat', 'grad', 'pumpkin'];
 
 const HATS = {
   helmet(g, body) {
@@ -174,6 +179,29 @@ const HATS = {
     add(g, new THREE.TorusGeometry(0.2, 0.035, 8, 24), M.white, 0, -0.04, 0, Math.PI / 2);
     add(g, B(0.04, 0.04, 0.04), M.red, 0.16, 0.0, 0.1);
   },
+  hardhat(g) {
+    add(g, dome(0.17), M.yellow, 0, 0.25, 0).scale.set(1, 0.75, 1.05);
+    add(g, C(0.215, 0.215, 0.02, 20), M.yellow, 0, 0.26, -0.01).scale.set(1, 1, 1.12);
+    add(g, B(0.045, 0.03, 0.3), M.yellow, 0, 0.375, 0);
+  },
+  grad(g) {
+    add(g, C(0.15, 0.15, 0.08), M.black, 0, 0.32, 0);
+    add(g, B(0.36, 0.02, 0.36), M.black, 0, 0.37, 0, 0, Math.PI / 4, 0);
+    add(g, new THREE.SphereGeometry(0.016, 8, 6), M.gold, 0, 0.385, 0);
+    add(g, B(0.2, 0.008, 0.008), M.gold, 0.1, 0.383, 0);
+    add(g, B(0.012, 0.13, 0.012), M.gold, 0.2, 0.32, 0);
+  },
+  unicorn(g) {
+    add(g, new THREE.ConeGeometry(0.035, 0.22, 12), M.pearl, 0, 0.39, -0.08, -0.35);
+    for (const [y, r] of [[0.33, 0.032], [0.38, 0.025], [0.43, 0.018]]) add(g, new THREE.TorusGeometry(r, 0.006, 6, 14), M.gold, 0, y, -0.08 - (y - 0.3) * 0.36, Math.PI / 2 - 0.35);
+    for (const s of [-1, 1]) add(g, new THREE.ConeGeometry(0.035, 0.07, 4), M.pearl, s * 0.1, 0.32, 0.02, 0, Math.PI / 4, s * 0.4);
+  },
+  pumpkin(g) {
+    add(g, new THREE.SphereGeometry(0.26, 18, 12), M.pumpkin, 0, 0.15, 0).scale.set(1, 0.88, 1);
+    for (const s of [-1, 1]) add(g, B(0.06, 0.05, 0.02), M.black, s * 0.08, 0.2, -0.243);
+    add(g, B(0.16, 0.035, 0.02), M.black, 0, 0.08, -0.246);
+    add(g, C(0.02, 0.026, 0.08, 8), M.stem, 0.01, 0.41, 0, 0, 0, -0.2);
+  },
 };
 const HAIR = {
   short(g, mat, covered) {
@@ -215,6 +243,19 @@ const HAIR = {
   mullet(g, mat, covered) {
     HAIR.short(g, mat, covered);
     add(g, B(0.27, 0.22, 0.06), mat, 0, 0.1, 0.16);
+  },
+  curly(g, mat, covered) {
+    if (covered) return HAIR.short(g, mat, true);
+    for (const x of [-0.09, 0, 0.09]) for (const z of [-0.08, 0.01, 0.1]) add(g, new THREE.SphereGeometry(0.068, 10, 8), mat, x, 0.3, z);
+    for (const s of [-1, 1]) for (const z of [-0.02, 0.09]) add(g, new THREE.SphereGeometry(0.055, 10, 8), mat, s * 0.14, 0.22, z);
+    for (const x of [-0.08, 0.08]) add(g, new THREE.SphereGeometry(0.06, 10, 8), mat, x, 0.2, 0.15);
+  },
+  braids(g, mat, covered) {
+    HAIR.short(g, mat, covered);
+    for (const s of [-1, 1]) {
+      for (let i = 0; i < 4; i++) add(g, new THREE.SphereGeometry(0.035 - i * 0.003, 8, 6), mat, s * 0.155, 0.14 - i * 0.06, 0.05);
+      add(g, B(0.03, 0.02, 0.03), M.hot, s * 0.155, -0.11, 0.05);
+    }
   },
 };
 
@@ -269,6 +310,19 @@ const FACE = {
     for (const s of [-1, 1]) add(g, B(0.075, 0.06, 0.01), M.black, s * 0.06, 0.18, -0.166);
     add(g, B(0.03, 0.04, 0.01), M.black, 0, 0.12, -0.166);
     for (let i = -2; i <= 2; i++) add(g, B(0.025, 0.035, 0.01), i % 2 ? M.black : M.bone, i * 0.03, 0.05, -0.166);
+  },
+  smiley(g) {
+    add(g, C(0.125, 0.125, 0.02, 24), M.yellow, 0, 0.15, -0.155, Math.PI / 2);
+    for (const s of [-1, 1]) add(g, B(0.025, 0.05, 0.01), M.black, s * 0.042, 0.185, -0.167);
+    add(g, new THREE.TorusGeometry(0.055, 0.011, 6, 16, Math.PI), M.black, 0, 0.14, -0.167, 0, 0, Math.PI);
+    add(g, B(0.29, 0.02, 0.29), M.black, 0, 0.19, 0);
+  },
+  vr(g) {
+    add(g, B(0.28, 0.11, 0.1), M.white, 0, 0.19, -0.18);
+    add(g, B(0.24, 0.075, 0.01), M.black, 0, 0.19, -0.232);
+    add(g, B(0.2, 0.012, 0.012), M.visor, 0, 0.15, -0.232).castShadow = false;
+    add(g, B(0.29, 0.035, 0.29), M.dark, 0, 0.19, 0);
+    add(g, B(0.035, 0.03, 0.31), M.dark, 0, 0.3, 0);
   },
 };
 
@@ -341,6 +395,24 @@ const BACK = {
         m.castShadow = false;
       }
     }
+  },
+  teddy(g) {
+    add(g, B(0.04, 0.55, 0.02), M.leather, 0, 0.32, 0.155, 0, 0, 0.75);
+    add(g, new THREE.SphereGeometry(0.1, 12, 10), M.teddy, -0.05, 0.3, 0.26).scale.set(1, 1.1, 0.85);
+    add(g, new THREE.SphereGeometry(0.075, 12, 10), M.teddy, -0.05, 0.46, 0.26);
+    for (const s of [-1, 1]) add(g, new THREE.SphereGeometry(0.03, 8, 6), M.teddy, -0.05 + s * 0.055, 0.52, 0.26);
+    for (const s of [-1, 1]) add(g, new THREE.SphereGeometry(0.035, 8, 6), M.teddy, -0.05 + s * 0.09, 0.33, 0.29);
+    add(g, new THREE.SphereGeometry(0.03, 8, 6), M.horn, -0.05, 0.44, 0.325);
+    add(g, new THREE.SphereGeometry(0.012, 6, 4), M.black, -0.05, 0.45, 0.352);
+    for (const s of [-1, 1]) add(g, new THREE.SphereGeometry(0.01, 6, 4), M.black, -0.05 + s * 0.028, 0.48, 0.326);
+  },
+  rocket(g) {
+    add(g, C(0.07, 0.07, 0.36, 14), M.white, 0, 0.33, 0.25);
+    add(g, new THREE.ConeGeometry(0.07, 0.15, 14), M.hot, 0, 0.585, 0.25);
+    for (const s of [-1, 1]) add(g, B(0.07, 0.13, 0.015), M.hot, s * 0.09, 0.19, 0.25, 0, 0, s * 0.3);
+    add(g, B(0.015, 0.13, 0.07), M.hot, 0, 0.19, 0.33);
+    add(g, C(0.03, 0.03, 0.012, 12), M.lens, 0, 0.42, 0.318, Math.PI / 2);
+    add(g, new THREE.ConeGeometry(0.045, 0.14, 8), M.flame, 0, 0.08, 0.25, Math.PI, 0, 0).castShadow = false;
   },
 };
 

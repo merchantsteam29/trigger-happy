@@ -504,6 +504,17 @@ export function drawAvatar(canvas, cos, body) {
     g.fillStyle = '#3a0a12';
     for (const s of [-1, 1]) { g.beginPath(); g.moveTo(cx + s * 30, 112); g.lineTo(cx + s * 80, 84); g.lineTo(cx + s * 72, 118); g.lineTo(cx + s * 62, 108); g.lineTo(cx + s * 58, 138); g.lineTo(cx + s * 46, 124); g.lineTo(cx + s * 30, 150); g.fill(); }
   }
+  if (cos.back === 'teddy') {
+    g.fillStyle = '#a8743e'; g.beginPath(); g.ellipse(cx - 44, 132, 16, 22, 0, 0, 7); g.fill();
+    g.beginPath(); g.arc(cx - 42, 96, 14, 0, 7); g.arc(cx - 52, 83, 5, 0, 7); g.arc(cx - 32, 83, 5, 0, 7); g.fill();
+    g.fillStyle = '#efe6cf'; g.beginPath(); g.arc(cx - 42, 101, 5, 0, 7); g.fill();
+    R(-48, 91, 3, 3, '#141518'); R(-39, 91, 3, 3, '#141518');
+  }
+  if (cos.back === 'rocket') {
+    R(34, 70, 14, 70, '#f4f4f4'); g.fillStyle = '#ff2d75'; g.beginPath(); g.moveTo(cx + 34, 70); g.lineTo(cx + 41, 50); g.lineTo(cx + 48, 70); g.fill();
+    R(28, 126, 6, 14, '#ff2d75'); R(48, 126, 6, 14, '#ff2d75'); R(36, 140, 10, 14, '#ffb347');
+    g.fillStyle = '#1a3a5a'; g.beginPath(); g.arc(cx + 41, 88, 4, 0, 7); g.fill();
+  }
   // Legs, body, vest, arms
   R(-26, 168, 22, 40, '#2b2f36'); R(4, 168, 22, 40, '#2b2f36');
   R(-36, 106, 72, 66, body);
@@ -521,7 +532,9 @@ export function drawAvatar(canvas, cos, body) {
   R(hx, hy, hs, hs, skin);
   R(hx + 14, hy + 22, 8, 8, '#222'); R(hx + 34, hy + 22, 8, 8, '#222');
   if (cos.hair === 'bun' && !covered) { g.fillStyle = hair; g.beginPath(); g.arc(cx, hy - 14, 13, 0, 7); g.fill(); }
-  if (['short', 'ponytail', 'bun', 'mullet'].includes(cos.hair) || (covered && ['mohawk', 'spiky', 'afro'].includes(cos.hair))) R(hx, hy - 6, hs, 12, hair);
+  if (['short', 'ponytail', 'bun', 'mullet', 'braids'].includes(cos.hair) || (covered && ['mohawk', 'spiky', 'afro', 'curly'].includes(cos.hair))) R(hx, hy - 6, hs, 12, hair);
+  if (cos.hair === 'curly' && !covered) { g.fillStyle = hair; g.beginPath(); for (let i = 0; i < 5; i++) g.arc(cx - 24 + i * 12, hy - 2, 9, 0, 7); g.fill(); g.beginPath(); g.arc(cx - 30, hy + 10, 8, 0, 7); g.arc(cx + 30, hy + 10, 8, 0, 7); g.fill(); }
+  if (cos.hair === 'braids') for (const s of [-1, 1]) { g.fillStyle = hair; g.beginPath(); for (let i = 0; i < 4; i++) g.arc(cx + s * 32, hy + 22 + i * 12, 6 - i * 0.5, 0, 7); g.fill(); R(s * 32 - 4, hy + 66, 8, 5, '#ff2d75'); }
   if (cos.hair === 'long' && !covered) R(hx - 2, hy - 6, hs + 4, 12, hair);
   if (cos.hair === 'mohawk' && !covered) R(-6, hy - 24, 12, 26, hair);
   if (cos.hair === 'spiky' && !covered) {
@@ -543,6 +556,12 @@ export function drawAvatar(canvas, cos, body) {
     R(hx + 2, hy + 4, hs - 4, hs - 4, '#ece6d6'); R(hx + 10, hy + 18, 14, 12, '#141518'); R(hx + 32, hy + 18, 14, 12, '#141518'); R(-3, hy + 33, 6, 7, '#141518');
     for (let i = 0; i < 5; i++) R(hx + 12 + i * 7, hy + 44, 4, 6, '#141518');
   }
+  if (cos.face === 'smiley') {
+    g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(cx, hy + 30, 22, 0, 7); g.fill();
+    R(-10, hy + 20, 5, 10, '#141518'); R(5, hy + 20, 5, 10, '#141518');
+    g.strokeStyle = '#141518'; g.lineWidth = 3; g.beginPath(); g.arc(cx, hy + 31, 11, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+  }
+  if (cos.face === 'vr') { R(hx - 4, hy + 14, hs + 8, 22, '#f4f4f4'); R(hx + 2, hy + 18, hs - 4, 13, '#141518'); R(hx + 6, hy + 32, hs - 12, 2, '#19d6ff'); }
   // Hat
   const hat = {
     helmet: () => { R(hx - 4, hy - 16, hs + 8, 24, body); R(hx - 6, hy + 4, hs + 12, 6, dark); },
@@ -604,6 +623,24 @@ export function drawAvatar(canvas, cos, body) {
     astro: () => {
       g.fillStyle = 'rgba(191,230,255,0.28)'; g.strokeStyle = '#e8eef4'; g.lineWidth = 3; g.beginPath(); g.arc(cx, hy + 28, 46, 0, 7); g.fill(); g.stroke();
       R(-40, hy + 66, 80, 10, '#f4f4f4');
+    },
+    hardhat: () => { R(hx - 4, hy - 16, hs + 8, 22, '#ffd23f'); R(hx - 10, hy + 2, hs + 20, 6, '#ffd23f'); R(-4, hy - 20, 8, 6, '#e6b800'); },
+    grad: () => {
+      R(hx + 6, hy - 10, hs - 12, 14, '#141518');
+      g.fillStyle = '#141518'; g.beginPath(); g.moveTo(cx - 44, hy - 12); g.lineTo(cx, hy - 24); g.lineTo(cx + 44, hy - 12); g.lineTo(cx, hy - 2); g.fill();
+      R(0, hy - 14, 30, 2, '#e8b923'); R(30, hy - 14, 3, 22, '#e8b923');
+    },
+    unicorn: () => {
+      g.fillStyle = '#fff4fb'; g.beginPath(); g.moveTo(cx - 8, hy + 2); g.lineTo(cx, hy - 36); g.lineTo(cx + 8, hy + 2); g.fill();
+      g.strokeStyle = '#e8b923'; g.lineWidth = 2; g.beginPath(); for (const y of [-6, -16, -26]) { g.moveTo(cx - 7 + (y + 36) * -0.03, hy + y + 3); g.lineTo(cx + 6, hy + y - 2); } g.stroke();
+    },
+    pumpkin: () => {
+      g.fillStyle = '#f07a12'; g.beginPath(); g.ellipse(cx, hy + 28, 42, 38, 0, 0, 7); g.fill();
+      g.strokeStyle = '#c45a08'; g.lineWidth = 2; g.beginPath(); g.ellipse(cx, hy + 28, 16, 38, 0, 0, 7); g.stroke();
+      g.fillStyle = '#141518';
+      for (const s of [-1, 1]) { g.beginPath(); g.moveTo(cx + s * 8, hy + 26); g.lineTo(cx + s * 16, hy + 12); g.lineTo(cx + s * 24, hy + 26); g.fill(); }
+      R(-16, hy + 40, 32, 7, '#141518'); R(-8, hy + 40, 5, 4, '#f07a12'); R(4, hy + 43, 5, 4, '#f07a12');
+      R(-3, hy - 16, 7, 10, '#4f7a2a');
     },
   }[cos.hat];
   if (hat) hat();

@@ -246,7 +246,7 @@ the weapon you had out before.
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
 ("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Character → Banner**:
 Standard and Carbon are free; Tiger, Woodland / Arctic Camo, Ocean, Sunset, Hazard, Bloodbath, Neon Grid, Code Rain,
-Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold and Diamond cost tokens (several are animated). Some can only be
+Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm and Vaporwave cost tokens (several are animated). Some can only be
 earned: season pass banners, a banner for each holiday event, ranked season banners and **Top Clan**. Bots wear random ones.
 
 ## Levels, daily rewards & challenges

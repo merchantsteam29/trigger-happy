@@ -1,8 +1,9 @@
 {
-  "version": "2026.10.12.2",
+  "version": "2026.10.12.3",
   "notes": [
-    "Servers that have closed no longer linger in the server list, and Quick Play skips them",
-    "Hosting: if the connection players join through drops, your server reconnects by itself (players already in keep playing)"
+    "New cosmetics: Hard Hat, Graduation Cap, Unicorn Horn, Pumpkin Head, Curly and Braids hair, Smiley Mask, VR Headset, Teddy Bear and Toy Rocket",
+    "New banners: Candy Stripe, Trigger Happy, Thunderstorm and Vaporwave",
+    "Small fixes and polish"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

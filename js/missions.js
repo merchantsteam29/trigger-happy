@@ -2,6 +2,7 @@ import { store } from './util.js';
 import { HOLIDAY_BANNER_ITEMS } from './holidays.js';
 import { RANKED_BANNER_ITEMS } from './ranked.js';
 import { camoOf } from './camos.js';
+import { roles } from './roles.js';
 
 // Cosmetics shown on your character to other players. `free` items are owned from the start;
 // everything else is bought with tokens earned from missions (`price`).
@@ -30,6 +31,10 @@ export const COSMETICS = {
     { id: 'antlers', name: 'Antlers', price: 300 },
     { id: 'samurai', name: 'Samurai Helmet', price: 450 },
     { id: 'astro', name: 'Space Helmet', price: 550 },
+    { id: 'hardhat', name: 'Hard Hat', price: 150 },
+    { id: 'grad', name: 'Graduation Cap', price: 250 },
+    { id: 'unicorn', name: 'Unicorn Horn', price: 350 },
+    { id: 'pumpkin', name: 'Pumpkin Head', price: 450 },
   ],
   hair: [
     { id: 'none', name: 'Buzz Cut', free: true },
@@ -41,6 +46,8 @@ export const COSMETICS = {
     { id: 'afro', name: 'Afro', price: 200 },
     { id: 'bun', name: 'Top Bun', price: 150 },
     { id: 'mullet', name: 'Mullet', price: 200 },
+    { id: 'curly', name: 'Curly', price: 200 },
+    { id: 'braids', name: 'Braids', price: 200 },
   ],
   face: [
     { id: 'goggles', name: 'Goggles', free: true },
@@ -55,6 +62,8 @@ export const COSMETICS = {
     { id: 'monocle', name: 'Monocle', price: 200 },
     { id: 'visor', name: 'Cyber Visor', price: 350 },
     { id: 'skull', name: 'Skull Mask', price: 400 },
+    { id: 'smiley', name: 'Smiley Mask', price: 300 },
+    { id: 'vr', name: 'VR Headset', price: 350 },
   ],
   back: [
     { id: 'backpack', name: 'Backpack', free: true },
@@ -69,6 +78,8 @@ export const COSMETICS = {
     { id: 'surfboard', name: 'Surfboard', price: 300 },
     { id: 'shield', name: 'Shield', price: 350 },
     { id: 'demon', name: 'Demon Wings', price: 650 },
+    { id: 'teddy', name: 'Teddy Bear', price: 300 },
+    { id: 'rocket', name: 'Toy Rocket', price: 450 },
   ],
   // Shown behind your name on the death screen of everyone you kill (see banners.js).
   banner: [
@@ -89,6 +100,10 @@ export const COSMETICS = {
     { id: 'rainbow', name: 'Rainbow', price: 450 },
     { id: 'gold', name: 'Solid Gold', price: 600 },
     { id: 'diamond', name: 'Diamond', price: 800 },
+    { id: 'candy', name: 'Candy Stripe', price: 200 },
+    { id: 'happy', name: 'Trigger Happy', price: 250 },
+    { id: 'storm', name: 'Thunderstorm', price: 300 },
+    { id: 'vapor', name: 'Vaporwave', price: 350 },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },
     { id: 's1elite', name: 'Ignition Elite (S1)', reward: true, how: 'Season 1, tier 25' },
@@ -214,7 +229,15 @@ export function claimMissions() {
 claimMissions();
 
 function findItem(slot, id) { return COSMETICS[slot] && COSMETICS[slot].find((c) => c.id === id); }
+// The owner (GIGACHAD, checked against this device's key in roles.js) has every cosmetic and wrap,
+// including ones added later. It's a check, not a grant: nothing is added to the owned list.
+const ownsEverything = () => roles.isOwner();
 export function isOwned(slot, id) {
+  const item = findItem(slot, id);
+  return !!item && (item.free || owned.has(slot + ':' + id) || ownsEverything());
+}
+// Earned or bought for real (achievements count these, not the owner's everything-unlocked).
+export function isEarned(slot, id) {
   const item = findItem(slot, id);
   return !!item && (item.free || owned.has(slot + ':' + id));
 }
@@ -233,7 +256,7 @@ export function buy(slot, id) {
 }
 
 // Weapon wraps (camos.js): free ones are always yours; premium ones are bought with tokens.
-export const ownsWrap = (id) => { const c = camoOf(id); return c.id === id && ((!c.price && !c.reward) || owned.has('wrap:' + id)); };
+export const ownsWrap = (id) => { const c = camoOf(id); return c.id === id && ((!c.price && !c.reward) || owned.has('wrap:' + id) || ownsEverything()); };
 export function buyWrap(id) {
   if (ownsWrap(id)) return true;
   const c = camoOf(id);

@@ -66,6 +66,21 @@ export const BANNER_STYLE = {
     bg: 'linear-gradient(120deg, transparent 0 30%, #ffffff55 40%, transparent 50%), conic-gradient(from 30deg at 30% 50%, #bfefff, #e8f9ff, #9fd8ff, #d8c8ff, #bfefff), #bfefff',
     accent: '#ffffff', emblem: '💎', anim: 'shine', dark: true,
   },
+  candy: {
+    bg: 'repeating-linear-gradient(120deg, #ffffff 0 14px, #ff4f8b 14px 28px)', accent: '#ff2d75', emblem: '🍬', dark: true,
+  },
+  happy: {
+    bg: 'repeating-linear-gradient(-60deg, #ffffff14 0 2px, transparent 2px 18px), radial-gradient(circle at 85% 0%, #ffd23a66, transparent 45%), linear-gradient(110deg, #ff3f84, #ff2d75 45%, #ff8a1f)',
+    accent: '#ffd23a', emblem: '😁',
+  },
+  storm: {
+    bg: 'radial-gradient(ellipse at 20% 0%, #8fa3c044 0 30%, transparent 55%), radial-gradient(ellipse at 75% 10%, #5a6a8a44 0 25%, transparent 50%), linear-gradient(180deg, #0b0f1c, #1d2640 60%, #2c3a5c)',
+    accent: '#ffe94a', emblem: '⚡', anim: 'flicker',
+  },
+  vapor: {
+    bg: 'linear-gradient(0deg, #ff2fd844 1px, transparent 1px) 0 0 / 100% 12px, radial-gradient(circle at 50% 125%, #ffd23a 0 26%, #ff5f9e 27% 36%, transparent 37%), linear-gradient(180deg, #1a0b3a, #6a1b8a 60%, #ff5f9e)',
+    accent: '#2de2ff', emblem: '🌴', anim: 'scroll',
+  },
 };
 
 // Holiday banners (holidays.js)

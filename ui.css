@@ -156,7 +156,8 @@ body:not(.mobile) .rail-foot, body.tablet .rail-foot { grid-area: foot; position
 .rail-foot .controls[open] summary { margin-bottom: 4px; border-color: var(--accent); color: var(--text); width: fit-content; }
 .rail-foot .controls .grid { grid-template-columns: 1fr 1fr; gap: 5px 14px; max-height: 46vh; overflow-y: auto; }
 .rail-foot .kb-change { display: inline-block; margin: 10px 14px 0 0; color: var(--accent-hi); }
-.rail-foot .install-btn { padding: 6px 14px; font-size: 12px; border-radius: 999px; }
+.rail-foot .install-btn { flex: none; width: auto; margin: 0; padding: 6px 14px; font-size: 12px; border-radius: 999px; }
+.rail-foot .controls summary { white-space: nowrap; }
 
 /* Narrower windows: tighten the tabs, then drop their icons, then show only the selected tab's name. */
 @media (max-width: 1380px) {
