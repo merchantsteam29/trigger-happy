@@ -1,5 +1,6 @@
 import { opts, setOpt, resetOpts, onOpts } from './settings.js';
 import { styleCrosshair } from './hud.js';
+import { HIT_SOUNDS, KILL_SOUNDS, hitSound, killSound, setFeedbackSounds, initAudio } from './audio.js';
 import { openUpdates, closeUpdates } from './changelog.js';
 import { ACTIONS, binds, setBind, resetBinds, keyName, mouseCode } from './binds.js';
 import { store, esc } from './util.js';
@@ -62,6 +63,8 @@ const TABS = [
   { name: 'HUD & Audio', rows: [
     { special: 'timezone' },
     { key: 'volume', label: 'Volume', type: 'range', min: 0, max: 1, step: 0.05, fmt: pct },
+    { key: 'hitSound', label: 'Hit sound', hint: 'Plays when your shot lands (a brighter version for headshots)', type: 'choice', options: HIT_SOUNDS, preview: 'hit' },
+    { key: 'killSound', label: 'Kill sound', type: 'choice', options: KILL_SOUNDS, preview: 'kill' },
     { key: 'showChat', label: 'Show party chat', hint: 'Turn off to hide all chat messages', type: 'check' },
     { key: 'voiceVolume', label: 'Voice chat volume', type: 'range', min: 0, max: 1, step: 0.05, fmt: pct },
     { key: 'voicePtt', label: 'Push to talk', hint: 'Only send your voice while holding V (otherwise your mic is open while you\'re in voice)', type: 'check' },
@@ -162,7 +165,11 @@ export class SettingsUI {
       input.oninput = () => { const v = Number(input.value); out.textContent = r.fmt(v); setOpt(r.key, v); };
     } else if (r.type === 'choice') {
       el.innerHTML = `<div class="set-label">${r.label}${hint}</div><div class="seg set-choice">${r.options.map((o) => `<button data-v="${o.id}" class="${opts[r.key] === o.id ? 'sel' : ''}" ${o.hint ? `title="${o.hint}"` : ''}>${o.name}</button>`).join('')}</div>`;
-      el.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => { setOpt(r.key, b.dataset.v); this.render(); }; });
+      el.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => {
+        setOpt(r.key, b.dataset.v);
+        if (r.preview) { initAudio(); setFeedbackSounds(opts.hitSound, opts.killSound); (r.preview === 'hit' ? hitSound : killSound)(false, 0.9); } // hear it
+        this.render();
+      }; });
     } else if (r.type === 'swatch') {
       el.innerHTML = `<div class="set-label">${r.label}</div><div class="swatches">${r.options.map((c) => `<button style="background:${c}" class="${opts[r.key] === c ? 'sel' : ''}" data-c="${c}" title="${c}"></button>`).join('')}</div>`;
       el.querySelectorAll('[data-c]').forEach((b) => { b.onclick = () => { setOpt(r.key, b.dataset.c); this.render(); }; });

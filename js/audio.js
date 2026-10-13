@@ -140,6 +140,34 @@ sfx.p_gatling = play((o) => { nz(o, { dur: 0.09, f0: 3000, f1: 500, gain: 0.8 })
 sfx.p_railcannon = play((o) => { tone(o, { dur: 0.6, f0: 3200, f1: 90, type: 'sawtooth', gain: 0.45 }); nz(o, { dur: 0.35, f0: 7000, f1: 900, type: 'highpass', gain: 0.8 }); tone(o, { dur: 0.3, f0: 60, f1: 25, gain: 0.9 }); });
 sfx.p_hellfire = play((o) => { nz(o, { dur: 0.5, f0: 700, f1: 3400, type: 'bandpass', gain: 1.1, attack: 0.01 }); tone(o, { dur: 0.25, f0: 90, f1: 35, gain: 0.9 }); });
 sfx.p_thunder = play((o) => { nz(o, { dur: 0.3, f0: 2200, f1: 160, gain: 1.4 }); tone(o, { dur: 0.18, f0: 80, f1: 28, gain: 1.1 }); });
+// Hit and kill sounds you can pick in Settings (HUD & Audio). 'classic' is the original pair.
+let hitStyle = 'classic', killStyle = 'classic';
+export function setFeedbackSounds(hit, kill) { hitStyle = hit || 'classic'; killStyle = kill || 'classic'; }
+const HITS = {
+  ding: [play((o) => { tone(o, { dur: 0.13, f0: 1320, gain: 0.32 }); }), play((o) => { tone(o, { dur: 0.16, f0: 1760, gain: 0.32 }); tone(o, { dur: 0.16, f0: 2640, gain: 0.12 }); })],
+  click: [play((o) => { nz(o, { dur: 0.025, f0: 3600, type: 'highpass', gain: 0.7 }); }), play((o) => { nz(o, { dur: 0.03, f0: 5200, type: 'highpass', gain: 0.8 }); tone(o, { dur: 0.04, f0: 3200, gain: 0.15 }); })],
+  thud: [play((o) => { tone(o, { dur: 0.09, f0: 170, f1: 70, gain: 0.7 }); }), play((o) => { tone(o, { dur: 0.11, f0: 240, f1: 80, gain: 0.8 }); nz(o, { dur: 0.05, f0: 1200, f1: 400, gain: 0.3 }); })],
+};
+const KILLS = {
+  bell: play((o) => { tone(o, { dur: 0.6, f0: 1046, gain: 0.3 }); tone(o, { dur: 0.6, f0: 2093, gain: 0.12 }); tone(o, { dur: 0.5, f0: 3136, gain: 0.06 }); }),
+  chime: play((o) => { tone(o, { dur: 0.14, f0: 1318, gain: 0.3, type: 'triangle' }); tone(o, { dur: 0.14, f0: 1661, gain: 0.3, type: 'triangle', delay: 0.08 }); tone(o, { dur: 0.3, f0: 1975, gain: 0.3, type: 'triangle', delay: 0.16 }); }),
+  boom: play((o) => { tone(o, { dur: 0.35, f0: 120, f1: 40, gain: 0.9 }); nz(o, { dur: 0.25, f0: 900, f1: 150, gain: 0.5 }); }),
+};
+// When your shot lands (head: a headshot).
+export function hitSound(head, vol = 0.8) {
+  if (hitStyle === 'off') return;
+  const h = HITS[hitStyle];
+  if (h) h[head ? 1 : 0](vol); else (head ? sfx.head : sfx.hit)(vol);
+}
+// When you get a kill (head: headshot kill).
+export function killSound(head, vol = 0.85) {
+  if (killStyle === 'off') return;
+  const k = KILLS[killStyle];
+  if (k) k(vol); else (head ? sfx.headKill : sfx.kill)(vol);
+}
+export const HIT_SOUNDS = [{ id: 'classic', name: 'Classic' }, { id: 'ding', name: 'Ding' }, { id: 'click', name: 'Click' }, { id: 'thud', name: 'Thud' }, { id: 'off', name: 'Off' }];
+export const KILL_SOUNDS = [{ id: 'classic', name: 'Classic' }, { id: 'bell', name: 'Bell' }, { id: 'chime', name: 'Chime' }, { id: 'boom', name: 'Boom' }, { id: 'off', name: 'Off' }];
+
 // Low health heartbeat: two soft thumps.
 sfx.heartbeat = play((o) => { tone(o, { dur: 0.12, f0: 70, f1: 45, gain: 0.7 }); tone(o, { dur: 0.12, f0: 60, f1: 40, gain: 0.5, delay: 0.22 }); });
 // Footsteps by surface (game.js picks one from the material underfoot).

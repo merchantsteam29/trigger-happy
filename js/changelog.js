@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.15', name: 'Hit Sounds', banner: 'vapor', notes: [
+    'Pick your hit sound (Classic, Ding, Click, Thud or Off) and kill sound (Classic, Bell, Chime, Boom or Off)',
+    'In Settings > HUD & Audio. You hear each one when you pick it',
+  ] },
   { v: '2026.10.12.14', name: 'Duel', banner: 'blood', notes: [
     'New mode: Duel. 1v1, first to 5',
     'Every kill starts a new round: you both respawn far apart with the same new random loadout',

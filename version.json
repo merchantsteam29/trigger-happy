@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.14",
+  "version": "2026.10.12.15",
   "notes": [
-    "New mode: Duel. 1v1, first to 5, and every round you both get the same new random loadout"
+    "Pick your own hit and kill sounds in Settings > HUD & Audio"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

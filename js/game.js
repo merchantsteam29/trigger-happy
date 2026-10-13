@@ -20,7 +20,7 @@ import { clamp, esc, store } from './util.js';
 import { opts, onOpts } from './settings.js';
 import { applyColorblind, pal } from './access.js';
 import { SPRAY_PALETTE } from './clans.js';
-import { setVolume } from './audio.js';
+import { setVolume, setFeedbackSounds, hitSound, killSound } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
@@ -133,6 +133,7 @@ export class Game {
       this.vm.camera.updateProjectionMatrix();
       if (!this.active || !this.ads) { this.camera.fov = o.fov * this.fovK; this.camera.updateProjectionMatrix(); }
       setVolume(o.volume);
+      setFeedbackSounds(o.hitSound, o.killSound);
       this.hud.applyOpts(o);
       if (o.colorblind !== this.cbMode) { this.cbMode = o.colorblind; applyColorblind(o.colorblind); if (this.active && this.players) this.refreshColors(); }
     });
@@ -1049,7 +1050,7 @@ export class Game {
       this.lastKillAt = t;
       this.hud.killBanner(v.name, v.color, !!m.head);
       this.hud.hit('kill', !!m.head);
-      if (m.head) sfx.headKill(0.9); else sfx.kill(0.8);
+      killSound(!!m.head, m.head ? 0.9 : 0.8);
       if (!this.teams || (pk && pv && pk.team !== pv.team)) {
         const practice = this.rules.mode === 'practice'; // targets don't count for missions
         const W = WEAPONS[m.w];
@@ -1904,9 +1905,9 @@ export class Game {
       this.rep(id).dmg += h.dmg;
       this.showHit(vid, Math.round(h.dmg), h.head);
       this.hud.hit(h.head ? 'head' : null, !!h.head, h.dmg);
-      (h.head ? sfx.head : sfx.hit)(0.8);
+      hitSound(!!h.head, 0.8);
     }
-    if (aimHit) { this.hud.hit(null); sfx.hit(0.8); }
+    if (aimHit) { this.hud.hit(null); hitSound(false, 0.8); }
     if (this.rules.mode === 'prophunt' && this.myTeam === 2 && !hits.size) this.net.send({ t: 'miss' }); // misses cost hunters health
     for (const [pid, dmg] of propHits) this.net.send({ t: 'prop', id: pid, dmg: Math.round(dmg) });
     this.net.send({ t: 'shot', w: id, o: arr(muzzle), e: ends, q: w.quiet ? 1 : 0 });
@@ -2238,7 +2239,7 @@ export class Game {
             if (!p.counted) { p.counted = true; this.rep(p.kind).hits++; }
             this.showHit(victim.id, dmg, head);
             this.hud.hit(head || dmg >= 100 ? 'head' : null);
-            (head ? sfx.head : sfx.hit)(0.8);
+            hitSound(!!head, 0.8);
             if (W.bolt) { this.fx.blood(p.pos); this.net.send({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind }); this.removeProjectile(p); }
             else this.explode(p, victim.id);
             continue;
@@ -2371,7 +2372,7 @@ export class Game {
       this.showHit(rp.id, Math.round(W.splash * k), false);
       any = true;
     }
-    if (any && !directId) { this.hud.hit(null); sfx.hit(0.8); }
+    if (any && !directId) { this.hud.hit(null); hitSound(false, 0.8); }
 
     const me = this.me;
     if (me.alive) {

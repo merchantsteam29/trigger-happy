@@ -22,6 +22,8 @@ const DEFAULTS = {
   crossGap: 4,         // gap from the center (px), before spread
   crossOutline: true,  // thin dark outline
   crossDynamic: true,  // opens up as your shots spread (moving, jumping)
+  hitSound: 'classic', // hitmarker sound (audio.js HIT_SOUNDS)
+  killSound: 'classic', // kill sound (audio.js KILL_SOUNDS)
   showFps: false,
   blood: true,
   killcam: true,
