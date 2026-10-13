@@ -23,6 +23,7 @@ import { SPRAY_PALETTE } from './clans.js';
 import { setVolume } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
+import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -378,7 +379,9 @@ export class Game {
   onAction(act) {
     if (!act || !this.me.alive || this.matchOver) return;
     const n = { slot1: 0, slot2: 1, slot3: 2, slot4: 3 }[act];
-    if (n !== undefined) this.switchSlot(n);
+    if (n !== undefined && this.emoteOpen) this.doEmote(n); // emote bar open: 1–4 pick an emote
+    else if (n !== undefined) this.switchSlot(n);
+    else if (act === 'emote') this.toggleEmotes();
     else if (act === 'swap') this.swapLast();
     else if (act === 'reload') this.startReload();
     else if (act === 'grenade') this.quickThrow();
@@ -1248,6 +1251,7 @@ export class Game {
     if (me.alive && !this.matchOver && !this.frozen && !this.huntBlind()) this.updateMovement(dt);
     this.updateProp();
     this.updateGrapple(dt);
+    if (this.emoteOpen && performance.now() > this.emoteOpen) this.toggleEmotes(false);
     this.assist = null;
     if ((this.touch || this.padMode) && opts.aimAssist && me.alive && !this.matchOver) this.aimAssist(dt);
 
@@ -1918,6 +1922,31 @@ export class Game {
     this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
   }
 
+  // ---------- Emotes ----------
+  // B shows the bar for a few seconds; 1–4 (or a click, when the mouse is free) picks one.
+  toggleEmotes(show = !this.emoteOpen) {
+    if (!this.emoteEl) {
+      this.emoteEl = document.createElement('div');
+      this.emoteEl.className = 'emote-bar hidden';
+      this.emoteEl.innerHTML = EMOTES.map((e, i) => `<button data-em="${i}"><kbd>${i + 1}</kbd><span>${e.icon}</span><small>${e.name}</small></button>`).join('');
+      this.emoteEl.querySelectorAll('[data-em]').forEach((b) => { b.onclick = () => this.doEmote(Number(b.dataset.em)); });
+      document.getElementById('hud').appendChild(this.emoteEl);
+    }
+    this.emoteOpen = show ? performance.now() + 3500 : 0;
+    this.emoteEl.classList.toggle('hidden', !show);
+  }
+
+  doEmote(i) {
+    const e = EMOTES[i];
+    this.toggleEmotes(false);
+    if (!e || !this.me.alive) return;
+    const now = performance.now();
+    if (now - (this.emoteT || 0) < EMOTE_COOLDOWN * 1000) { this.hud.say('WAIT A MOMENT'); return; }
+    this.emoteT = now;
+    this.net.send({ t: 'fx', k: 'emote', e: e.id });
+    this.hud.say(`${e.icon} ${e.name.toUpperCase()}`);
+  }
+
   // ---------- Match report (results screen) ----------
   resetReport() { this.report = { guns: {} }; }
   // Per-gun tallies for this match: shots fired, shots that hit someone, damage dealt, kills.
@@ -2390,6 +2419,8 @@ export class Game {
     if (m.k === 'melee' && r) {
       r.melee(m.s);
       this.posSound(m.s === 'chop' ? sfx.axe : sfx.knife, r.pos, 0.6, { k: 'mel' + m.id, label: 'Melee swing', enemy: !this.isAlly(r) });
+    } else if (m.k === 'emote' && r) {
+      r.emote(m.e);
     } else if (m.k === 'rope') { // someone's grappling hook: draw their rope until they let go
       if (Array.isArray(m.p)) this.ropeFor(m.id).end = new THREE.Vector3(...m.p);
       else this.ropeFor(m.id).end = null;

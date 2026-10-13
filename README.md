@@ -80,6 +80,11 @@ rounds, then a 1v1 final). See [Game Night](#quick-play--game-night).
 Frenzy, Tank Rockets, Pistol Panic, One-Shot Gun Game, Chaos CTF, Headshot Hill, Moon Zombies). **Play** on the home
 screen joins or starts a server playing it. Finish 3 matches of it in a week for 🪙 150.
 
+## Emotes
+
+Press **B** (rebindable) in a match, then **1–4** (or click) to **wave 👋**, **dance 💃**, **salute 🫡** or **laugh 😂**.
+Everyone else sees your character do it, with the emoji over your head. One every 3 seconds.
+
 ## Pings (team modes)
 
 In team modes, press **Z** (rebindable), **D-pad up** on a controller, or the **📍** button on touch to ping. Aiming at

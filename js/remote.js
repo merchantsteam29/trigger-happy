@@ -11,6 +11,7 @@ const RoundedBoxGeometry = function (sx, sy, sz, seg, r) {
 };
 import { WEAPONS } from './weapons.js';
 import { buildDisguise, disguiseBox } from './prophunt.js';
+import { EMOTES, EMOTE_TIME, emoteHand, emoteBubble } from './emotes.js';
 import { angLerp } from './util.js';
 import { Limb, solveIK } from './rig.js';
 
@@ -417,6 +418,11 @@ export class RemotePlayer {
       if (this.deathT > 3) this.root.position.y -= (this.deathT - 3) * 0.6;
     } else {
       this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw);
+      if (this.emoteT > 0 && this.emoteId === 'dance') { // dance: twist and bounce
+        const t = EMOTE_TIME - this.emoteT;
+        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, Math.sin(t * 6) * 0.5));
+        this.root.position.y += Math.abs(Math.sin(t * 8)) * 0.08;
+      }
     }
 
     // Body: the hips dip on every footstep and sway side to side, the torso counter-rotates
@@ -526,12 +532,15 @@ export class RemotePlayer {
     const flop = this.deathT > 0 ? Math.min(1, this.deathT / 0.45) : 0;
     if (flop) this.root.localToWorld(_b.set(0.62 * (this.deathSplay || 1), 1.05 - flop * 0.15, 0.1));
     else if (gun) gun.localToWorld(_b.set(0, -0.02, 0.03)); else this.root.localToWorld(_b.set(0.3, 0.9, -0.2));
+    this.emoteArm(1);
     this.placeArm(this.armsR, _b, 1);
     if (flop) this.root.localToWorld(_b.set(-0.6 * (this.deathSplay || 1), 1.15 - flop * 0.2, -0.05));
     else if (parts.fore && !this.reload) parts.fore.getWorldPosition(_b);
     else if (gun && this.reload > 0.01) gun.localToWorld(_b.set(0, -0.15 - Math.abs(Math.sin(this.phase * 2 + performance.now() / 300)) * 0.05, -0.1));
     else this.root.localToWorld(_b.set(-0.33, 0.78 - this.crouch * 0.3, -0.05 + Math.sin(this.phase) * 0.12 * moving));
+    this.emoteArm(-1);
     this.placeArm(this.armsL, _b, -1);
+    this.updateEmote(dt);
 
     const vis = this.deathT > 0 ? this.deathT < 4 : this.alive;
     this.root.visible = this.limbs.visible = vis;
@@ -542,6 +551,33 @@ export class RemotePlayer {
       if (this.propMesh) { this.propMesh.visible = this.alive; this.propMesh.position.copy(this.pos); this.propMesh.rotation.y = this.root.rotation.y; }
     }
     this.updateHat(dt);
+  }
+
+  // Emotes (emotes.js): wave, dance, salute or laugh, with an emoji over the head.
+  emote(id) {
+    const e = EMOTES.find((x) => x.id === id);
+    if (!e || !this.alive) return;
+    this.emoteId = id;
+    this.emoteT = EMOTE_TIME;
+    if (this.bubble) this.scene.remove(this.bubble);
+    this.bubble = emoteBubble(e.icon);
+    this.scene.add(this.bubble);
+  }
+
+  emoteArm(side) {
+    if (!(this.emoteT > 0) || !this.alive || this.disguise) return;
+    const h = emoteHand(this.emoteId, side, EMOTE_TIME - this.emoteT);
+    if (h) this.root.localToWorld(_b.set(h[0], h[1] - this.crouch * 0.3, h[2]));
+  }
+
+  updateEmote(dt) {
+    if (!(this.emoteT > 0)) return;
+    this.emoteT -= dt;
+    if (this.emoteT <= 0 || !this.alive) { this.emoteT = 0; if (this.bubble) { this.scene.remove(this.bubble); this.bubble = null; } return; }
+    if (this.bubble) {
+      this.bubble.position.set(this.pos.x, this.pos.y + 2.45 - this.crouch * 0.3 + Math.sin((EMOTE_TIME - this.emoteT) * 4) * 0.04, this.pos.z);
+      this.bubble.material.opacity = Math.min(1, this.emoteT * 3);
+    }
   }
 
   placeArm(arm, hand, side) {
@@ -593,6 +629,7 @@ export class RemotePlayer {
   dispose() {
     this.scene.remove(this.root, this.limbs);
     if (this.propMesh) this.scene.remove(this.propMesh);
+    if (this.bubble) this.scene.remove(this.bubble);
     if (this.hatFly && this.hat) this.scene.remove(this.hat);
   }
 }

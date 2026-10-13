@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.13', name: 'Emotes', banner: 'rainbow', notes: [
+    'Press B in a match, then 1 to 4: wave, dance, salute or laugh',
+    'Everyone else sees your character do it, with the emoji over your head',
+  ] },
   { v: '2026.10.12.12', name: 'Match Report', banner: 'carbon', notes: [
     'The results screen now shows Your match: kills, damage dealt, accuracy and headshot kills',
     'Plus your top guns, with kills, damage and hit rate for each',

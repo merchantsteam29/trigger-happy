@@ -714,3 +714,12 @@ body.mobile:not(.tablet) .topbar .share-btn span { display: none; }
 .rep-gun span { font-size: 11px; opacity: 0.75; }
 #endscreen.mvp-phase #end-report { display: none; }
 body.mobile:not(.tablet) .rep-guns { display: none; }
+
+/* Emote bar (B, then 1-4) */
+.emote-bar { position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%); display: flex; gap: 8px; z-index: 12; pointer-events: auto; }
+.emote-bar button { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 74px; padding: 8px 4px 6px; border-radius: 12px;
+  background: rgba(12,8,24,0.82); border: 1px solid var(--line-2, rgba(255,255,255,0.18)); color: #fff; }
+.emote-bar button:hover { border-color: var(--accent); }
+.emote-bar kbd { font-size: 10px; opacity: 0.7; font-family: var(--font-ui); }
+.emote-bar span { font-size: 26px; line-height: 1.1; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
+.emote-bar small { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
