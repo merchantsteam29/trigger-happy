@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.15",
+  "version": "2026.10.12.16",
   "notes": [
-    "Pick your own hit and kill sounds in Settings > HUD & Audio"
+    "Loadout codes: share your loadout (with attachments and wraps) as a code friends can paste in"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

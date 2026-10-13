@@ -558,6 +558,21 @@ const customPresets = () => {
   const saved = store.get('presets', []);
   return [0, 1, 2].map((i) => (saved[i] && Array.isArray(saved[i].l) ? { ...saved[i], l: validLoadout(saved[i].l) } : null));
 };
+// Loadout codes: your 4 picks plus their attachments / wraps, packed into "L-…" to share.
+function loadoutCode() {
+  const m = {};
+  for (const id of settings.loadout) if (settings.mods[id]) m[id] = settings.mods[id];
+  const json = JSON.stringify({ l: settings.loadout, m });
+  return 'L-' + btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function readLoadoutCode(code) {
+  try {
+    const s = String(code).trim().replace(/^L-/i, '').replace(/-/g, '+').replace(/_/g, '/');
+    const o = JSON.parse(decodeURIComponent(escape(atob(s))));
+    if (!o || !Array.isArray(o.l)) return null;
+    return { l: validLoadout(o.l), m: o.m && typeof o.m === 'object' ? cleanModMap(o.m) : null };
+  } catch { return null; }
+}
 function useLoadout(l, mods = null) {
   settings.loadout = validLoadout(l);
   store.set('loadout', settings.loadout);
@@ -579,7 +594,8 @@ function presetsBar() {
     `<button class="lo-preset ${same(p.l) ? 'sel' : ''}" data-preset="${i}" title="${p.l.map((id) => WEAPONS[id].name).join(' · ')}">${p.icon} ${p.name}</button>`).join('')}
     <span class="lo-presets-sep"></span>${custom.map((p, i) => p
       ? `<span class="lo-custom ${same(p.l) ? 'sel' : ''}"><button data-custom="${i}" title="${p.l.map((id) => WEAPONS[id].name).join(' · ')}">★ ${esc(p.name)}</button><button class="ghost" data-csave="${i}" title="Save current loadout here">💾</button><button class="ghost" data-cname="${i}" title="Rename">✎</button></span>`
-      : `<button class="lo-custom-empty" data-csave="${i}" title="Save your current loadout here">+ Save as custom ${i + 1}</button>`).join('')}</div>`;
+      : `<button class="lo-custom-empty" data-csave="${i}" title="Save your current loadout here">+ Save as custom ${i + 1}</button>`).join('')}
+    <span class="lo-presets-sep"></span><button class="ghost lo-code" data-lcode="copy" title="Copy a code for this loadout (with attachments and wraps)">🔗 Share code</button><button class="ghost lo-code" data-lcode="use" title="Paste a loadout code from a friend">📥 Use code</button></div>`;
 }
 function bindPresets(el) {
   el.querySelectorAll('[data-preset]').forEach((b) => { b.onclick = () => useLoadout(PRESETS[Number(b.dataset.preset)].l); });
@@ -595,6 +611,21 @@ function bindPresets(el) {
       renderLoadout($('menu-loadout'));
       renderLoadout($('pause-loadout'));
       toast(`Saved as "${all[i].name}"`);
+    };
+  });
+  el.querySelectorAll('[data-lcode]').forEach((b) => {
+    b.onclick = async () => {
+      if (b.dataset.lcode === 'copy') {
+        const code = loadoutCode();
+        try { await navigator.clipboard.writeText(code); toast('Loadout code copied. Send it to a friend!'); } catch { prompt('Copy this loadout code:', code); }
+        return;
+      }
+      const code = prompt('Paste a loadout code (starts with L-):');
+      if (!code) return;
+      const got = readLoadoutCode(code);
+      if (!got) { toast("That is not a loadout code."); return; }
+      useLoadout(got.l, got.m);
+      toast(`Loadout: ${got.l.map((id) => WEAPONS[id].name).join(' · ')}`);
     };
   });
   el.querySelectorAll('[data-cname]').forEach((b) => {

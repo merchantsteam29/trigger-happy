@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.16', name: 'Loadout Codes', banner: 'ocean', notes: [
+    'Share your loadout as a code: Loadout > Share code copies it, with attachments and wraps',
+    'Friends paste it with Use code to get the same loadout',
+  ] },
   { v: '2026.10.12.15', name: 'Hit Sounds', banner: 'vapor', notes: [
     'Pick your hit sound (Classic, Ding, Click, Thud or Off) and kill sound (Classic, Bell, Chime, Boom or Off)',
     'In Settings > HUD & Audio. You hear each one when you pick it',

@@ -155,7 +155,8 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
 
 **Presets** (top of Loadout and the pause menu's loadout): 6 ready-made ones (Rifleman, Rusher, Sniper, Heavy,
 Shotgunner, Fun) plus 3 custom slots. **💾** saves your current weapons with each gun's attachments and wrap, **✎**
-renames it, and one click switches back.
+renames it, and one click switches back. **🔗 Share code** copies your loadout (with attachments and wraps) as a code
+starting with `L-`; a friend pastes it with **📥 Use code**.
 
 Pick one per slot in the menu or pause menu (applies on next spawn). Weapons are grouped by class and each shows how
 many shots it takes to kill and how fast; hover (or focus with a controller) to see exact damage, headshot damage,
