@@ -418,7 +418,7 @@ function holidayRow() {
   const on = activeHolidays();
   const done = new Set(store.get('holDone', []));
   if (on.length) {
-    return on.map((h) => `<div class="hs-tile banner-row hs-holiday"><span class="hs-ic">${h.icon}</span><span class="hs-txt"><b>${esc(h.name)} event · ${esc(h.greet)}</b><small>${esc(h.who)} · ${HOLIDAY_XP}x XP · ${done.has(h.id + h.year) ? '✓ banner earned' : `finish a match for the ${esc(h.name)} banner + 🪙 ${HOLIDAY_TOKENS}`} · ends in ${fmtDuration(h.end - Date.now())}</small></span></div>`).join('');
+    return on.map((h) => `<div class="hs-tile banner-row hs-holiday"><span class="hs-ic">${h.icon}</span><span class="hs-txt"><b>${esc(h.name)} event · ${esc(h.greet)}</b><small>${esc(h.who)} · ${h.noXp ? '' : `${HOLIDAY_XP}x XP · `}${h.extra ? esc(h.extra) + ' · ' : ''}${done.has(h.id + h.year) ? '✓ banner earned' : `finish a match for the ${esc(h.name)} banner + 🪙 ${HOLIDAY_TOKENS}`} · ends in ${fmtDuration(h.end - Date.now())}</small></span></div>`).join('');
   }
   const next = upcomingHolidays(1)[0];
   if (next && next.start - Date.now() < 7 * 86400000) return `<div class="hs-tile banner-row hs-holiday soon"><span class="hs-ic">${next.icon}</span><span class="hs-txt"><b>Coming up: ${esc(next.name)}</b><small>${esc(next.who)} · holiday event starts in ${fmtDuration(next.start - Date.now())}</small></span></div>`;
@@ -1401,7 +1401,7 @@ game.onMatchStart = () => {
   for (const h of activeHolidays()) {
     if (holGreeted.has(h.id)) continue;
     holGreeted.add(h.id);
-    chat.system(`${h.icon} ${h.greet} Holiday event: ${HOLIDAY_XP}x XP, and finish a match for the ${h.name} banner.`);
+    chat.system(`${h.icon} ${h.greet} Holiday event: ${h.noXp ? '' : `${HOLIDAY_XP}x XP, and `}finish a match for the ${h.name} banner${h.extra ? `. Also: ${h.extra}` : ''}.`);
   }
 };
 const holGreeted = new Set();
@@ -1612,7 +1612,7 @@ leaderboard.onChampion = (boards) => {
   renderChip();
 };
 // Double XP in Game Night servers while it's live.
-setXpBoost(() => !game.active ? 1 : (game.rules.gn && gameNight.isLive() ? GN_XP : 1) * (game.rules.mode === featuredMode() ? FEATURED_XP : 1) * (activeHolidays().length ? HOLIDAY_XP : 1));
+setXpBoost(() => !game.active ? 1 : (game.rules.gn && gameNight.isLive() ? GN_XP : 1) * (game.rules.mode === featuredMode() ? FEATURED_XP : 1) * (activeHolidays().some((h) => !h.noXp) ? HOLIDAY_XP : 1));
 // Finishing a match in a Game Night server earns the Midnight wrap (once).
 game.onMatchTracked = () => {
   invites.matchDone(settings.name);

@@ -325,10 +325,10 @@ profile automatically.
 
 ## Achievements
 
-**Missions → Achievements** has 28 feats you unlock once and keep: kill milestones, headshots, streaks, triple kills,
+**Missions → Achievements** has 29 feats you unlock once and keep: kill milestones, headshots, streaks, triple kills,
 air / low-health / long-range / suppressed / melee / explosive / barrel kills, using 20 guns, wins, matches, every map
-and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners and
-ranked divisions. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
+and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners,
+ranked divisions and smashing 31 Halloween jack-o'-lanterns. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
 
 ## Update history
 
@@ -426,6 +426,10 @@ Holidays of many faiths and cultures (New Year's, Lunar New Year, Holi, Purim, N
 Orthodox Easter, Vaisakhi, Vesak, Eid al-Adha, Rosh Hashanah, Diwali, Guru Nanak Gurpurab, Hanukkah, Bodhi Day,
 Christmas). While one is on, the home screen and matches greet you, XP is 1.25x, and your first match of it earns that
 holiday's banner and 🪙 150 (once a year). Moon-based dates can be a day off depending on where you live.
+
+**Halloween** (Oct 24–31) works the same way but without the XP boost: the sky turns a dusky purple and every
+match hides 10 glowing jack-o'-lanterns near the spawns. Shoot them to smash them (each player has their own set);
+smash 31 for the **Pumpkin Smasher** achievement.
 
 ## Report a bug
 

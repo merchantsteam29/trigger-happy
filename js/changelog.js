@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.9', name: 'Halloween', banner: 'hol_halloween', notes: [
+    'Halloween event from Oct 24 to 31: a dusky purple sky and 10 glowing jack-o'-lanterns hidden near the spawns in every match',
+    'Shoot them to smash them, and smash 31 for the new Pumpkin Smasher achievement',
+    'Play a match during the event for the Halloween banner and 150 tokens',
+  ] },
   { v: '2026.10.12.8', name: 'Crosshair Editor', banner: 'neon', notes: [
     'Make your own crosshair in Settings > HUD & Audio, with a live preview',
     'Pick a shape (cross, T, circle or dot only), then line length, thickness, gap, outline and color',

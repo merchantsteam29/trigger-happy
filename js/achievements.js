@@ -44,6 +44,7 @@ export const ACHIEVEMENTS = [
   { id: 'festive', name: 'Festive', icon: '🎉', tier: 'bronze', desc: 'Earn 3 holiday banners', have: holidayBanners, goal: 3 },
   { id: 'elite', name: 'Elite', icon: '✦', tier: 'gold', desc: 'Reach Elite in ranked', have: bestDivision, goal: DIVISIONS.findIndex((d) => d.id === 'elite') },
   { id: 'legend', name: 'Legend', icon: '♛', tier: 'legend', desc: 'Reach Legend in ranked', have: bestDivision, goal: DIVISIONS.findIndex((d) => d.id === 'legend') },
+  { id: 'pumpkins', name: 'Pumpkin Smasher', icon: '🎃', tier: 'silver', desc: "Smash 31 jack-o'-lanterns during Halloween", have: st('pumpkins'), goal: 31 },
 ];
 export const ACH = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 export const TIER_COLOR = { bronze: '#cd8b52', silver: '#c8d0d8', gold: '#ffcf4a', legend: '#ff5ad2' };

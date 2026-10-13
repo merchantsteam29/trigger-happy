@@ -27,6 +27,9 @@ function orthodoxEaster(y) {
 const md = (t) => new Date(t).toISOString().slice(5, 10);
 
 export const HOLIDAYS = [
+  // Halloween: no XP boost (new events reward banners, tokens and badges); jack-o'-lanterns on every map (halloween.js).
+  { id: 'halloween', name: 'Halloween', who: 'Everyone', icon: '🎃', greet: 'Happy Halloween!', when: fixed('10-24', 8), noXp: true,
+    extra: "smash jack-o'-lanterns around the map", banner: { bg: 'radial-gradient(circle at 80% 30%, #ffe9a8 0 9%, #ffd34a 10%, transparent 11%), radial-gradient(ellipse at 20% 120%, #ff7a12 0 30%, transparent 31%), linear-gradient(180deg, #12061f, #3a1452 60%, #6a2a18)', accent: '#ff8a1f', emblem: '🎃', anim: 'flicker' } },
   { id: 'newyear', name: "New Year's", who: 'Everyone', icon: '🎆', greet: 'Happy New Year!', when: fixed('12-31', 2),
     banner: { bg: 'radial-gradient(circle at 20% 40%, #ffd34a 0 3%, transparent 4%), radial-gradient(circle at 70% 30%, #ff5fd2 0 3%, transparent 4%), radial-gradient(circle at 45% 70%, #5fd8ff 0 3%, transparent 4%), linear-gradient(100deg, #070b24, #1b1650)', accent: '#ffd34a', emblem: '🎆', anim: 'twinkle' } },
   { id: 'lunarny', name: 'Lunar New Year', who: 'Chinese, Korean, Vietnamese and other traditions', icon: '🧧', greet: 'Happy Lunar New Year!',

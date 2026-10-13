@@ -21,6 +21,7 @@ import { opts, onOpts } from './settings.js';
 import { applyColorblind, pal } from './access.js';
 import { SPRAY_PALETTE } from './clans.js';
 import { setVolume } from './audio.js';
+import { Pumpkins, spookySky } from './halloween.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -97,6 +98,7 @@ export class Game {
     this.scene.add(this.camera);
     this.mapId = null;
     this.mapGroup = null;
+    this.pumpkins = new Pumpkins(this.scene); // Halloween event only
 
     this.vm = new Viewmodel();
     this.mods = {}; // weapon id -> attachments (set from the loadout screen)
@@ -209,6 +211,7 @@ export class Game {
       this.scene.remove(this.mapGroup);
       this.mapGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.isMesh && o.material && !o.material.userData.shared) o.material.dispose(); });
       this.mapGroup = buildMapScene(this.scene, this.mapId);
+      spookySky(this.scene);
       this.fogFar0 = this.scene.fog ? this.scene.fog.far : 300;
     }
     this.applyGfx();
@@ -296,7 +299,9 @@ export class Game {
       });
     }
     this.mapGroup = buildMapScene(this.scene, id);
+    spookySky(this.scene);
     this.mapId = id;
+    this.pumpkins.place(id);
     this.fogFar0 = this.scene.fog ? this.scene.fog.far : 300;
     if (this.gfx === 'potato' && this.scene.fog) this.scene.fog.far = Math.min(this.fogFar0, 65);
     for (const p of this.projectiles || []) this.scene.remove(p.mesh);
@@ -936,6 +941,7 @@ export class Game {
         // The mouse was freed for the map vote: offer "Resume" to get back in.
         if (!this.locked && !this.touch && !this.padMode && this.onUnlock && this.endInfo) setTimeout(() => this.onUnlock && !this.locked && this.onUnlock(), 0);
         this.loadMap(m.map);
+        this.pumpkins.place(this.mapId, String(m.map) + (m.seed || performance.now())); // a fresh set each match
         this.matchOver = false;
         this.endInfo = null;
         this.hud.end(false);
@@ -1829,7 +1835,10 @@ export class Game {
         const t = rayAABB(o.x, o.y, o.z, dir.x, dir.y, dir.z, bx[0], bx[1], bx[2], bx[3], bx[4], bx[5], maxT);
         if (t >= 0 && t < maxT) { maxT = t; prop = x[0]; best = null; }
       }
+      const pk = this.pumpkins.ray(o, dir, maxT); // Halloween jack-o'-lanterns
+      if (pk) { maxT = pk.t; best = null; prop = null; }
       const end = o.clone().addScaledVector(dir, maxT);
+      if (pk) this.smashPumpkin(pk.k, end);
       if (prop) {
         let dmg = w.dmg;
         if (w.falloff) { const [near, far, min] = w.falloff; dmg *= 1 - clamp((maxT - near) / (far - near), 0, 1) * (1 - min); }
@@ -1861,6 +1870,17 @@ export class Game {
     if (aimHit) { this.hud.hit(null); sfx.hit(0.8); }
     for (const [pid, dmg] of propHits) this.net.send({ t: 'prop', id: pid, dmg: Math.round(dmg) });
     this.net.send({ t: 'shot', w: id, o: arr(muzzle), e: ends, q: w.quiet ? 1 : 0 });
+  }
+
+  // Halloween: a jack-o'-lantern was shot.
+  smashPumpkin(k, at) {
+    if (!this.pumpkins.smash(k)) return;
+    this.fx.burst(at.clone(), null, '#ff7a12', 16, 5, 0.08, 0.6);
+    this.fx.burst(at.clone(), null, '#ffd34a', 6, 3, 0.05, 0.4);
+    sfx.hit(0.6);
+    track.stat({ pumpkins: 1 });
+    const left = this.pumpkins.left;
+    this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
   }
 
   los(a, b) {
