@@ -723,3 +723,25 @@ body.mobile:not(.tablet) .rep-guns { display: none; }
 .emote-bar kbd { font-size: 10px; opacity: 0.7; font-family: var(--font-ui); }
 .emote-bar span { font-size: 26px; line-height: 1.1; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
 .emote-bar small { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+
+/* Map editor */
+.editor-panel { width: min(1240px, calc(100vw - 20px)); height: min(820px, calc(100vh - 20px)); display: flex; flex-direction: column; }
+.editor-panel .hp-head { margin-bottom: 8px; }
+.ed-sub { opacity: 0.7; margin-left: 10px; }
+.ed-body { flex: 1; min-height: 0; display: flex; gap: 14px; }
+.ed-stage { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
+#ed-canvas { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); cursor: crosshair; touch-action: none; }
+.ed-panel { width: 280px; flex: none; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+.ed-l { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
+.ed-l input[type=range] { width: 100%; }
+.ed-seg { display: flex; flex-wrap: wrap; }
+.ed-seg button { flex: 1; font-size: 12px; padding: 6px 4px; }
+.ed-hint { font-size: 11px; opacity: 0.7; }
+.ed-btns { display: flex; gap: 6px; }
+.ed-btns > * { flex: 1; }
+.ed-maps { display: flex; flex-direction: column; gap: 4px; }
+.ed-map { display: flex; gap: 4px; }
+.ed-map button:first-child { flex: 1; text-align: left; }
+.ed-map.sel button:first-child { border-color: var(--accent); color: var(--accent); }
+body.mobile:not(.tablet) .ed-body { flex-direction: column; }
+body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }

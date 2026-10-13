@@ -97,6 +97,7 @@
 <link rel="modulepreload" href="js/halloween.js">
 <link rel="modulepreload" href="js/prophunt.js">
 <link rel="modulepreload" href="js/emotes.js">
+<link rel="modulepreload" href="js/editor.js">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -246,6 +247,7 @@
         <button data-pane="friends"><span class="ic">☻</span><span class="lbl">Friends<small>Gamertags &amp; party chat</small></span><b id="nav-friends-count" class="alert"></b></button>
         <button data-pane="mod" id="nav-mod" class="hidden"><span class="ic">🛡</span><span class="lbl">Mod Panel<small>Warn, ban, rename players</small></span></button>
         <button id="btn-practice"><span class="ic">🎯</span><span class="lbl">Practice<small>Solo range · every weapon</small></span></button>
+        <button id="btn-editor"><span class="ic">🛠</span><span class="lbl">Map editor<small>Build your own map</small></span></button>
         <button id="btn-settings-menu"><span class="ic">⚙</span><span class="lbl">Settings<small>Controls, video, audio</small></span></button>
       </nav>
       <div class="rail-foot">
@@ -540,6 +542,14 @@
     <div id="set-tabs" class="set-tabs"></div>
     <div id="set-body"></div>
     <div class="set-foot"><button id="set-reset" class="danger">Reset all to defaults</button></div>
+  </div>
+</div>
+
+<!-- Map editor (editor.js) -->
+<div id="editor" class="overlay hidden">
+  <div class="panel editor-panel">
+    <div class="hp-head"><h2>MAP EDITOR</h2><small class="ed-sub">Seen from above · 60 × 44 m · 1 square = 1 m</small></div>
+    <div class="ed-body"><div class="ed-stage"><canvas id="ed-canvas"></canvas></div><div id="ed-panel" class="ed-panel"></div></div>
   </div>
 </div>
 

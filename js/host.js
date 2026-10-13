@@ -181,6 +181,7 @@ export class HostLogic {
     this.players = new Map();
     this.specs = new Map(); // staff spectating: get every update but aren't players
     this.s = defaultSettings(MODES[opts.mode] ? opts.mode : 'ffa', MAPS[opts.map] ? opts.map : MAP_ORDER[0]);
+    if (this.s.map === 'custom' && opts.customMap) { this.s.customMap = opts.customMap; this.s.rotate = false; } // a map from the editor (editor.js)
     if (opts.gn) this.s.gn = true; // Game Night server (double XP for players while it's live)
     if (opts.war && opts.war.a && opts.war.b) this.s.war = { a: String(opts.war.a).slice(0, 5), b: String(opts.war.b).slice(0, 5) }; // clan war: [a] red vs [b] blue, members only
     if (opts.motw) this.s.motw = String(opts.motw).slice(0, 16); // a Mode of the week server (modeweek.js)
@@ -1718,7 +1719,7 @@ export class HostLogic {
   }
 
   nextMap() {
-    if (!this.s.rotate) return this.s.map;
+    if (!this.s.rotate || this.s.customMap) return this.s.map;
     return MAP_ORDER[(MAP_ORDER.indexOf(this.s.map) + 1) % MAP_ORDER.length];
   }
 

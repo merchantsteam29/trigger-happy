@@ -24,6 +24,7 @@ import { setVolume, setFeedbackSounds, hitSound, killSound } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
+import { registerCustomMap } from './editor.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -259,6 +260,8 @@ export class Game {
   }
 
   applySettings(s) {
+    // A map from the editor travels in the settings: build it as map 'custom' (rebuilt if it changed).
+    if (s.customMap && registerCustomMap(s.customMap) && this.mapId === 'custom') this.mapId = null;
     const modeChanged = s.mode !== this.rules.mode;
     this.rules = { ...this.rules, ...s };
     phys.gravity = this.rules.gravity;
@@ -713,6 +716,7 @@ export class Game {
         this.frozen = false;
         this.hud.el.classList.toggle('spec', this.spectating);
         this.applySettings(m.settings);
+        if (m.settings.customMap && registerCustomMap(m.settings.customMap) && this.mapId === 'custom') this.mapId = null;
         this.loadMap(m.settings.map);
         this.players.clear();
         this.aliases = new Map(); this.realNames = new Map();

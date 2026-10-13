@@ -49,6 +49,7 @@ import { addTokens, grantItem, track } from './missions.js';
 import { addXp } from './progress.js';
 import { leaderboard, BOARDS, MODE_BOARDS, weekEnds, CHAMP_TOKENS } from './leaderboard.js';
 import { qrSvg } from './qr.js';
+import { MapEditor, registerCustomMap } from './editor.js';
 import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanModMap, statsFor } from './mods.js';
 
 const $ = (id) => document.getElementById(id);
@@ -1926,6 +1927,15 @@ async function startPractice(tut = false) {
   if (tut) tutorial.start(game);
 }
 $('btn-practice').onclick = () => startPractice();
+// Map editor (editor.js): build a map, then host a private server on it.
+const mapEditor = new MapEditor({
+  toast,
+  onPlay: (map, mode) => {
+    registerCustomMap(map);
+    hostLobby({ map: 'custom', mode, max: 8, bots: 4, vis: 'private', name: map.name, rotate: false, customMap: map });
+  },
+});
+$('btn-editor').onclick = () => mapEditor.open();
 // A slow device gets one suggestion to switch to Low-end graphics.
 game.onSlow = (fps) => {
   const tip = document.createElement('div');
@@ -1993,7 +2003,7 @@ async function hostLobby(preset = null) {
     net = newNet();
     try {
       await net.host(code, settings.name || 'Player', settings.color,
-        preset ? { map: preset.map, mode: preset.mode, maxPlayers: preset.max, botFill: Math.min(preset.bots, preset.max), gn: !!preset.gn, ranked: !!preset.ranked, war: preset.war || null, rules: preset.rules || null, motw: preset.motw || null }
+        preset ? { map: preset.map, mode: preset.mode, maxPlayers: preset.max, botFill: Math.min(preset.bots, preset.max), gn: !!preset.gn, ranked: !!preset.ranked, war: preset.war || null, rules: preset.rules || null, motw: preset.motw || null, customMap: preset.customMap || null }
           : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), rules }, myCos());
       net.logic.s.rotate = preset ? preset.rotate : serverCfg.rotate;
       net.logic.onFlag = (p, details) => moderation.autoFlag({ target: p.name, lobby: net.code, details });

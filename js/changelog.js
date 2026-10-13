@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.2', name: 'Map Editor', banner: 'neon', notes: [
+    'Build your own map: 🛠 Map editor in the menu. Draw blocks, stairs and spawn points from above',
+    'Pick materials, heights and a theme (Day, Night, Snow or Desert). Save up to 5, or share one as a code',
+    'Press Play to host a private server on your map. Everyone who joins gets it too',
+  ] },
   { v: '2026.10.13.1', name: 'Snowball Fight', banner: 'arctic', notes: [
     'New mode: Snowball Fight. Red vs Blue with nothing but snowballs',
     'Lob them at the other team: three hits knock someone out. First team to 40',

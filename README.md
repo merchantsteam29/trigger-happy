@@ -345,6 +345,19 @@ air / low-health / long-range / suppressed / melee / explosive / barrel kills, u
 and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners,
 ranked divisions and smashing 31 Halloween jack-o'-lanterns. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
 
+## Map editor
+
+**🛠 Map editor** (in the menu) lets you build your own map from above on a 60 × 44 m grid:
+- **Block:** drag to draw one. Pick its material (concrete, brick, wood, crates, stone, containers, snow, neon and more),
+  its **height**, and where it **starts** (raise it for bridges and floating platforms).
+- **Stairs:** drag the way the steps should go up.
+- **Spawn:** click to place spawn points (up to 16, on top of blocks too). **Erase** removes things, **Undo** undoes.
+- **Theme:** Day, Night, Snow or Desert.
+
+**Save** keeps up to 5 maps on your device, **Code** copies a map code (starts with `M-`) and **Load code** opens one.
+**Play** hosts a private server on your map (Free For All, Team Deathmatch, Gun Game, Infection, King of the Hill or
+Prop Hunt, with bots); everyone who joins gets your map.
+
 ## Update history
 
 **Settings → 📜 Updates** lists every update so far, newest first: each one's name on a banner that fits it, with
