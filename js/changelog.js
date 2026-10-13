@@ -8,7 +8,7 @@ import { APP_VERSION } from './version.js';
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
   { v: '2026.10.12.9', name: 'Halloween', banner: 'hol_halloween', notes: [
-    'Halloween event from Oct 24 to 31: a dusky purple sky and 10 glowing jack-o'-lanterns hidden near the spawns in every match',
+    "Halloween event from Oct 24 to 31: a dusky purple sky and 10 glowing jack-o'-lanterns hidden near the spawns in every match",
     'Shoot them to smash them, and smash 31 for the new Pumpkin Smasher achievement',
     'Play a match during the event for the Halloween banner and 150 tokens',
   ] },
