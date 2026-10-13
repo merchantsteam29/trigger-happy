@@ -27,6 +27,7 @@ const v3 = () => ({ x: 0, y: 0, z: 0 });
 // Bot stats for a weapon; projectile weapons are approximated as heavy hitscan.
 function stats(id) {
   const w = WEAPONS[id] || WEAPONS.ar;
+  if (w.snow) return { ...w, type: 'gun', dmg: w.directDmg, head: w.head || 1, pellets: 1, spread: 0.03, range: 40 }; // snowballs: their real damage
   if (w.type === 'proj') return w.auto
     ? { ...w, type: 'gun', dmg: w.directDmg, head: w.head || 1, pellets: 1, spread: 0.02, range: 60 } // e.g. the nailgun
     : { ...w, type: 'gun', dmg: 65, head: 1, pellets: 1, spread: 0.03, range: 60, auto: false };
@@ -413,7 +414,12 @@ export class Bot {
       }
     }
     const o = [eye.x + fx * 0.6, eye.y - 0.25, eye.z + fz * 0.6].map((v) => Math.round(v * 100) / 100);
-    L.broadcast({ t: 'shot', id: this.p.id, w: this.weapon, o, e: ends });
+    const W0 = WEAPONS[this.weapon];
+    if (W0 && W0.snow && ends[0]) { // everyone sees the snowball fly, lobbed to land where the throw was decided
+      const [ex, ey, ez] = ends[0], d = Math.hypot(ex - o[0], ey - o[1], ez - o[2]) || 1, t = d / W0.projSpeed;
+      const v = [(ex - o[0]) / t, (ey - o[1]) / t + 0.5 * W0.projGravity * t, (ez - o[2]) / t].map((n) => Math.round(n * 100) / 100);
+      L.broadcast({ t: 'proj', id: this.p.id, k: this.weapon, p: o, v, pid: Math.floor(Math.random() * 1e9) });
+    } else L.broadcast({ t: 'shot', id: this.p.id, w: this.weapon, o, e: ends });
     // Players' positions reach the host a moment late, so a player who just ducked behind cover
     // could still be hit where the host last saw them (it looks like a shot through the wall).
     // The hit lands 0.1 s later, and only if the target is still in sight from this bot then.

@@ -1930,6 +1930,13 @@ export class Game {
     this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
   }
 
+  // Snowball Fight: a puff of snow where a snowball lands.
+  snowPuff(pos) {
+    this.fx.burst(pos.clone(), null, '#ffffff', 12, 3.5, 0.08, 0.5);
+    this.fx.burst(pos.clone(), null, '#cfe6ff', 6, 2, 0.05, 0.4);
+    this.posSound(sfx.snowhit, pos, 0.7);
+  }
+
   // ---------- Search & Destroy ----------
   // Tell the host while Use (E) is held; draw the bomb when it's on the ground.
   updateSnd(now) {
@@ -2278,11 +2285,12 @@ export class Game {
             this.showHit(victim.id, dmg, head);
             this.hud.hit(head || dmg >= 100 ? 'head' : null);
             hitSound(!!head, 0.8);
-            if (W.bolt) { this.fx.blood(p.pos); this.net.send({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind }); this.removeProjectile(p); }
+            if (W.bolt) { if (W.snow) this.snowPuff(p.pos); else this.fx.blood(p.pos); this.net.send({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind }); this.removeProjectile(p); }
             else this.explode(p, victim.id);
             continue;
           }
           if (wh) {
+            if (W.snow) { this.snowPuff(p.pos); this.removeProjectile(p); continue; } // snowballs burst
             if (W.bolt) {
               // Embed in the surface and stay there for a while.
               p.pos.addScaledVector(dir, 0.08);
@@ -2435,6 +2443,7 @@ export class Game {
     const pos = new THREE.Vector3(...m.p);
     if (W.smoke) this.smokeFx(pos);
     else if (W.flash) this.flashFx(pos);
+    else if (W.snow) this.snowPuff(pos);
     else if (W.bolt) this.fx.blood(pos);
     else this.boomFx(pos, W.radius, W);
   }

@@ -303,6 +303,15 @@ export const WEAPONS = {
     spread: 0.055, moveSpread: 0.015, adsMul: 0.75, range: 70, falloff: [15, 45, 0.5],
     recoil: 0.04, speedMul: 1.05, switch: 0.35, reloadStyle: 'mag',
   },
+  // Snowball Fight only (not in SLOTS): a lobbed snowball, 3 hits to knock someone out; scoop another
+  // straight away. Flies like a bolt but bursts into a puff of snow (game.js snowPuff).
+  snowball: {
+    id: 'snowball', name: 'Snowball', type: 'proj', auto: false, bolt: true, snow: true,
+    rate: 0.32, mag: 1, reload: 0.45,
+    projSpeed: 34, projGravity: 9, directDmg: 34, head: 1.5,
+    spread: 0, moveSpread: 0, adsMul: 1,
+    recoil: 0.01, speedMul: 1.05, switch: 0.2, reloadStyle: 'mag',
+  },
   // ---------- Fun / experimental ----------
   flamethrower: {
     // Short range, continuous: many tiny hits that fall off fast. No headshot bonus.
@@ -357,7 +366,7 @@ export function validLoadout(l) {
 export const SHORT = {
   ar: 'AR', smg: 'SMG', burst: 'Burst', lmg: 'LMG', sniper: 'Sniper', shotgun: 'Shotgun', gl: 'Launcher',
   pistol: 'Pistol', revolver: 'Revolver', mpistol: 'M-Pistol', knife: 'Knife', axe: 'Axe',
-  frag: 'Frag', sticky: 'Sticky', smoke: 'Smoke', grapple: 'Grapple', claws: 'Claws',
+  frag: 'Frag', sticky: 'Sticky', smoke: 'Smoke', grapple: 'Grapple', snowball: 'Snowball', claws: 'Claws',
   dmr: 'DMR', minigun: 'Minigun', rocket: 'Rocket', br: 'Battle', vector: 'Vector', doublebarrel: 'Dbl Barrel',
   p_gatling: 'Gatling', p_railcannon: 'Rail Cannon', p_hellfire: 'Hellfire', p_thunder: 'Thunder SG',
   railgun: 'Railgun', sledge: 'Sledge', vortex: 'Vortex', carbine: 'Carbine', pdw: 'PDW', laser: 'Laser', amr: 'H-Sniper',

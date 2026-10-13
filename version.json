@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.18",
+  "version": "2026.10.13.1",
   "notes": [
-    "New mode: Search & Destroy. Plant or defuse the bomb (hold E), one life per round, first to 4"
+    "New mode: Snowball Fight. Red vs Blue with nothing but snowballs, three hits and you're out"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -182,6 +182,6 @@ Built and committed but **not yet tested with real people**:
 
 Built on 2026-10-12 at the owner's request ("do the max amount of updates"), not yet played by real people: crosshair editor,
 Halloween event, grappling hook, Prop Hunt, match report, emotes, Duel, hit / kill sounds, loadout codes, Haunted Manor
-map, Search & Destroy.
+map, Search & Destroy, Snowball Fight.
 
 Ideas the owner hasn't picked yet: a map editor.

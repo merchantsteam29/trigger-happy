@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.1', name: 'Snowball Fight', banner: 'arctic', notes: [
+    'New mode: Snowball Fight. Red vs Blue with nothing but snowballs',
+    'Lob them at the other team: three hits knock someone out. First team to 40',
+  ] },
   { v: '2026.10.12.18', name: 'Search & Destroy', banner: 'flames', notes: [
     'New mode: Search & Destroy. Red vs Blue rounds with one life, and the sides swap every round',
     'Attackers plant the bomb at A or B (hold E). Defenders stop them or defuse it in 35 seconds',

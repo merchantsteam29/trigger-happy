@@ -158,6 +158,13 @@ const builders = {
     anchor(g, 'fore', 0, 0, -0.22);
     anchor(g, 'muzzle', 0, 0.08, -0.6);
   },
+  snowball(g) {
+    // A packed snowball in the hand.
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), M.white || new THREE.MeshStandardMaterial({ color: '#f4f8ff', roughness: 0.9 }));
+    s.position.set(0, 0.02, -0.06);
+    g.add(s);
+    anchor(g, 'muzzle', 0, 0.02, -0.14);
+  },
   grapple(g) {
     // Grappling hook launcher: pistol grip, a short barrel and the three-pronged hook in it.
     rbox(g, M.dark, 0.05, 0.06, 0.2, 0, 0.03, -0.05);
@@ -279,6 +286,10 @@ export function buildProjectile(kind) {
     nose.rotation.x = -Math.PI / 2;
     nose.position.z = -0.04;
     g.add(nose);
+  } else if (kind === 'snowball') {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), M.white || new THREE.MeshStandardMaterial({ color: '#f4f8ff', roughness: 0.9 }));
+    g.add(s);
+    g.userData.aligned = false;
   } else if (kind === 'nailgun') {
     cyl(g, M.steel, 0.004, 0.07, 0, 0, 0, 6);
     cyl(g, M.steel, 0.009, 0.004, 0, 0, 0.035, 8);

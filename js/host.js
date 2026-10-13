@@ -36,6 +36,9 @@ export const MODES = {
   zombies: { name: 'Zombie Survival', short: 'ZOMBIES', teams: true, coop: true, score: 0, time: 0, desc: 'Co-op. Hold out against waves of zombies that get bigger, tougher and faster. Downed players come back when the wave is cleared. Every 5th wave brings a Brute.' },
   dom: { name: 'Domination', short: 'DOMINATION', teams: true, redBlue: true, dom: true, score: 200, time: 10, desc: 'Red vs Blue over three zones (A, B, C). Stand in a zone with only your team to capture it; every zone you own scores a point per second.' },
 };
+// Snowball Fight: Red vs Blue with nothing but snowballs. 3 hits knock someone out; first team to 40.
+MODES.snowball = { name: 'Snowball Fight', short: 'SNOWBALLS', teams: true, redBlue: true, score: 40, time: 8, loadout: ['snowball'],
+  desc: 'Red vs Blue with nothing but snowballs. Three hits knock someone out (a headshot hits harder). First team to 40.' };
 // Search & Destroy: Red vs Blue rounds, one life each, sides swap every round. The attackers plant
 // the bomb at A (the middle) or B (deep in the defenders' half) by holding Use for 3 s; once it's
 // planted the defenders have 35 s to defuse it (hold Use for 5 s). Win a round by wiping out the
@@ -73,7 +76,7 @@ const BR_RARE = ['railgun', 'minigun', 'rocket', 'amr', 'gl'];
 // Single-player only (main menu → Practice Range): no timer, no score limit, target dummies.
 MODES.practice = { name: 'Practice Range', short: 'PRACTICE', teams: false, practice: true, score: 0, time: 0, desc: 'Solo target practice with every weapon.' };
 export const MODE_ORDER = ['ffa', 'tdm', 'gungame', 'koth', 'infection', 'ctf', 'dom', 'hardpoint', 'killconfirmed', 'juggernaut', 'bounty', 'lms', 'oitc',
-  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt', 'duel', 'snd'];
+  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt', 'duel', 'snd', 'snowball'];
 const FLAG_RETURN_MS = 20000;
 
 // Runs fn every ms. Browsers slow main-thread timers to once a second in background tabs, which
@@ -938,6 +941,7 @@ export class HostLogic {
 
     switch (this.s.mode) {
       case 'tdm':
+      case 'snowball':
         if (enemyKill) this.teamScore[attacker.team]++;
         attacker.score = attacker.kills;
         if (this.teamScore[attacker.team] >= this.s.scoreLimit) this.endMatch();

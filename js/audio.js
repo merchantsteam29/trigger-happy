@@ -140,6 +140,9 @@ sfx.p_gatling = play((o) => { nz(o, { dur: 0.09, f0: 3000, f1: 500, gain: 0.8 })
 sfx.p_railcannon = play((o) => { tone(o, { dur: 0.6, f0: 3200, f1: 90, type: 'sawtooth', gain: 0.45 }); nz(o, { dur: 0.35, f0: 7000, f1: 900, type: 'highpass', gain: 0.8 }); tone(o, { dur: 0.3, f0: 60, f1: 25, gain: 0.9 }); });
 sfx.p_hellfire = play((o) => { nz(o, { dur: 0.5, f0: 700, f1: 3400, type: 'bandpass', gain: 1.1, attack: 0.01 }); tone(o, { dur: 0.25, f0: 90, f1: 35, gain: 0.9 }); });
 sfx.p_thunder = play((o) => { nz(o, { dur: 0.3, f0: 2200, f1: 160, gain: 1.4 }); tone(o, { dur: 0.18, f0: 80, f1: 28, gain: 1.1 }); });
+// Snowball Fight: a soft throw and a crunchy splat.
+sfx.snowball = play((o) => { nz(o, { dur: 0.16, f0: 700, f1: 2400, type: 'bandpass', q: 1.2, gain: 0.45, attack: 0.01 }); });
+sfx.snowhit = play((o) => { nz(o, { dur: 0.18, f0: 1800, f1: 500, gain: 0.6 }); nz(o, { dur: 0.08, f0: 5000, type: 'highpass', gain: 0.3 }); });
 // Hit and kill sounds you can pick in Settings (HUD & Audio). 'classic' is the original pair.
 let hitStyle = 'classic', killStyle = 'classic';
 export function setFeedbackSounds(hit, kill) { hitStyle = hit || 'classic'; killStyle = kill || 'classic'; }
