@@ -100,6 +100,8 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver) | gifts.js |
 | `ref/…` | invite rewards | invites.js |
 | `gamenight` | Game Night schedule (owner-signed) | gamenight.js |
+| `link/<chan>/r`, `link/<chan>/a` | linking a device (not retained, encrypted with the QR's one-time secret) | devices.js |
+| `sync/<id>/<device>` | linked devices' progress (retained, encrypted with a key derived from the account key) | devices.js |
 
 Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.js`).
 
@@ -122,7 +124,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every
   screen's look). Classes and ids are shared with the JS, so restyle in `ui.css` and keep them. Icons: `icons/icon.svg` is the
   source; the PNGs (favicon, 192/512, maskable, apple-touch) are rendered from it. `icons/mark.svg` is the logo without its tile.
-- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button)
+- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `devices.js` (linked devices: one account on several devices, progress sync)
 
 ### Where to add things
 - **Mode:** `MODES` and `MODE_ORDER` in `host.js`, the objective text in `game.js` `modeBar()`, the score
@@ -133,6 +135,8 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Cosmetic or banner:** `COSMETICS` in `missions.js` (`price`, or `reward` with `how`), with its look in `cosmetics.js` /
   `banners.js`. Earn-only items use `grantItem` / `grantWrap`.
 - **Achievement:** `ACHIEVEMENTS` in `achievements.js` (stat-based; event stats come in via `track.stat`).
+- **New progress saved with `store`:** add the key to `COUNTERS` / `SETS` / `MAPS` / `LWW` in `devices.js`, or it won't sync
+  between linked devices (counters need a `flat()` rule). Per-device things (settings, UI state) stay out.
 - **Something stored on the relay:** follow `gifts.js` / `profiles.js`: sign on send, verify on receive,
   cap and clean every field, and use retained messages for anything that must survive.
 
@@ -169,5 +173,6 @@ Built and committed but **not yet tested with real people**:
 - Battle Royale and tournament starting from a real Game Night schedule
 - ranked season banners being handed out (first season ends Nov 16)
 - how wall-running feels with a mouse
+- linked devices on real phones / PCs over the public relays (tested with two browser identities and a local relay stand-in)
 
 Ideas the owner hasn't picked yet: a grappling hook (left out of the movement update), a map editor, Prop Hunt.

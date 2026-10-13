@@ -669,3 +669,15 @@ body.mobile:not(.tablet) .topbar .share-btn span { display: none; }
 .share-panel .inv-row { margin-bottom: 10px; }
 .share-panel .rp-btns { justify-content: flex-end; }
 .share-panel .rp-btns button:not(.hidden) { flex: 1; }
+
+/* Your devices (Friends): link a device with a QR code */
+.devices-card { margin-bottom: 12px; }
+.devices-card .note { margin: 8px 0; }
+.devices-card .rp-btns { margin-top: 8px; }
+.devices-card .dv-qr { width: min(200px, 60vw, 34vh); margin: 10px auto; }
+.devices-card .dv-ask { margin: 10px 0 0; font-size: 16px; }
+.devices-card .dv-code { font-family: var(--font-display); letter-spacing: 3px; color: var(--accent); }
+.devices-card .dv-code.big { font-size: 34px; text-align: center; margin: 6px 0; }
+.devices-card .dv-err { color: var(--danger); }
+.devices-card details.dv-other { margin-top: 10px; }
+.devices-card details.dv-other summary { cursor: pointer; font-size: 13px; opacity: 0.8; }

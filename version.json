@@ -1,14 +1,14 @@
 {
-  "version": "2026.10.12.4",
+  "version": "2026.10.12.5",
   "notes": [
-    "New Share button at the top of the menu: your link as a QR code that friends scan with their phone",
-    "With a gamertag it's your invite link, so you both get tokens"
+    "New: play your account on more than one device. Friends → Your devices → Link a device, then scan the code",
+    "Level, tokens, items and stats stay in sync between linked devices"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
     "js/audio.js", "js/banners.js", "js/bot.js", "js/chat.js", "js/cosmetics.js", "js/effects.js", "js/game.js", "js/gamepad.js", "js/guns.js", "js/host.js",
     "js/hostpanel.js", "js/hud.js", "js/main.js", "js/maps.js", "js/missions.js", "js/moderation.js", "js/modpanel.js", "js/radar.js", "js/mods.js", "js/modelkit.js", "js/models.js", "js/nav.js",
     "js/net.js", "js/physics.js", "js/relay.js", "js/remote.js", "js/roles.js", "js/rig.js", "js/servers.js", "js/settings.js", "js/settingsui.js", "js/showroom.js", "js/social.js",
-    "js/touch.js", "js/updater.js", "js/util.js", "js/medals.js", "js/camos.js", "js/binds.js", "js/progress.js", "js/gamenight.js", "js/leaderboard.js", "js/seasons.js", "js/invites.js", "js/profiles.js", "js/clans.js", "js/rulesets.js", "js/ranked.js", "js/tutorial.js", "js/highlights.js", "ui.css", "icons/icon.svg", "icons/mark.svg", "js/access.js", "js/events.js", "js/holidays.js", "js/achievements.js", "js/gifts.js", "js/shop.js", "js/modeweek.js", "js/qr.js", "js/version.js", "js/viewmodel.js", "js/voice.js", "js/weapons.js"
+    "js/touch.js", "js/updater.js", "js/util.js", "js/medals.js", "js/camos.js", "js/binds.js", "js/progress.js", "js/gamenight.js", "js/leaderboard.js", "js/seasons.js", "js/invites.js", "js/profiles.js", "js/clans.js", "js/rulesets.js", "js/ranked.js", "js/tutorial.js", "js/highlights.js", "ui.css", "icons/icon.svg", "icons/mark.svg", "js/access.js", "js/events.js", "js/holidays.js", "js/achievements.js", "js/gifts.js", "js/shop.js", "js/modeweek.js", "js/qr.js", "js/devices.js", "js/version.js", "js/viewmodel.js", "js/voice.js", "js/weapons.js"
   ]
 }

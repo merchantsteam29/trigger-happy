@@ -328,6 +328,14 @@ air / low-health / long-range / suppressed / melee / explosive / barrel kills, u
 and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners and
 ranked divisions. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
 
+## Your devices
+
+Play your account on more than one phone, PC or browser. On the device that has it, open **Friends → Your devices →
+Link a device**: it shows a QR code. Scan it with the other device's camera (or open the link there), check that both
+screens show the same 4-digit code, and tap **Approve**. Level, tokens, items and stats then stay in sync between them
+(changes made during a match arrive when you're back in the menu). A gamertag the other device had is released and its
+progress moves into your account. Only link your own devices: a linked device keeps your account for good.
+
 ## Invite friends
 
 **Friends → Invite friends** gives you a link with your gamertag (the pause menu's **Copy invite** includes it too).

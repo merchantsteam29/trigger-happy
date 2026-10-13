@@ -1,3 +1,4 @@
+import { devices } from './devices.js'; // first: it tracks progress changes from the start
 import { Game } from './game.js';
 import { Net } from './net.js';
 import { initAudio } from './audio.js';
@@ -1013,6 +1014,7 @@ setTimeout(claimTopClan, 20000);
 
 function renderFriends() {
   renderInvite();
+  devices.render($('devices-card'));
   renderClan();
   const n = social.pendingCount;
   $('nav-friends-count').textContent = n ? String(n) : '';
@@ -1580,6 +1582,24 @@ if (invites.pending()) setTimeout(() => toast(`${invites.pending()} invited you:
 game.onRanked = (r) => { if (r.newDiv) game.hud.mission(r.delta >= 0 ? `Promoted to ${r.newDiv.name}` : `Dropped to ${r.newDiv.name}`, `${r.sr} SR`, 'RANKED'); };
 gameNight.init(social);
 leaderboard.init(social);
+// Linked devices: merged progress reloads the page, so never mid-match. A gamertag released by
+// linking also drops its profile and board entries.
+devices.init(social, {
+  canReload: () => !net && !game.active,
+  onRelease: (old) => {
+    const t = old.toLowerCase();
+    for (const topic of [`prof/${t}`, `lb/${leaderboard.week}/${t}`, `lb/all/${t}`, `lb/aim/${t}`]) social.clear('whffa/v1/' + topic);
+  },
+});
+{
+  const n = devices.note();
+  if (n) setTimeout(() => toast(n === 'linked' ? `Linked! You're playing as ${social.tag || 'your account'} on this device.` : 'Progress synced from your other device.'), 800);
+  if (params.get('link')) {
+    showPane('friends');
+    devices.prepareJoin(location.search);
+    history.replaceState(null, '', location.pathname + location.hash);
+  }
+}
 moderation.onPerma = () => { leaderboard.updateChamps(); if (leaderboard.onChange) leaderboard.onChange(); if (clans.onChange) clans.onChange(); if (!game.active) renderFriends(); };
 leaderboard.onChange = () => {
   clearTimeout(lbT);
