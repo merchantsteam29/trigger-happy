@@ -953,6 +953,8 @@ export class Game {
 
   respawn(m) {
     this.mantle = null; this.wallrun = null; this.lastWall = null;
+    if (this.grapple) this.endGrapple(false);
+    this.utilCd = 0;
     const me = this.me;
     this.endKillcam();
     this.endDeathSpectate(); // back to your own view
@@ -1236,6 +1238,7 @@ export class Game {
     const w = this.W(this.curW);
 
     if (me.alive && !this.matchOver && !this.frozen) this.updateMovement(dt);
+    this.updateGrapple(dt);
     this.assist = null;
     if ((this.touch || this.padMode) && opts.aimAssist && me.alive && !this.matchOver) this.aimAssist(dt);
 
@@ -1484,6 +1487,21 @@ export class Game {
     }
 
     const jumpDown = this.down('jump');
+    // ---- Grappling hook: pulled toward the anchor (top speed under the host's speed check); ends on
+    // arrival, after 1.6 s, or when you jump (which gives a small hop off the rope).
+    if (this.grapple) {
+      const g = this.grapple;
+      g.t += dt;
+      const dx = g.x - me.pos.x, dy = g.y - (me.pos.y + 1), dz = g.z - me.pos.z, d = Math.hypot(dx, dy, dz);
+      const jumpNow = jumpDown && !this.jumpHeld;
+      if (d < 1.6 || g.t > 1.6 || jumpNow) this.endGrapple(jumpNow);
+      else {
+        const k = 1 - Math.exp(-dt * 7);
+        me.vel.x += (dx / d * g.pull - me.vel.x) * k;
+        me.vel.z += (dz / d * g.pull - me.vel.z) * k;
+        me.vel.y += (dy / d * g.pull + 4 - me.vel.y) * k; // a little lift against gravity
+      }
+    }
     // ---- Mantle: in the air, moving forward into a ledge you can't step up: climb onto it.
     if (!me.onGround && f > 0 && !me.crouch && me.vel.y < 4 && !this.wallrun && this.tryMantle()) return;
     // ---- Wall-run: in the air at sprint speed, moving forward along a wall: run on it for a
@@ -1512,7 +1530,7 @@ export class Game {
         this.wallStep = (this.wallStep || 0) + dt * 7;
         if (this.wallStep >= 1) { this.wallStep = 0; this.stepSound(me.pos.x, me.pos.y, me.pos.z)(0.18); }
       }
-    } else if (!me.onGround && f > 0 && this.wallCd <= 0 && Math.hypot(me.vel.x, me.vel.z) > WALK * 1.12 && me.vel.y < 6 && !me.crouch) {
+    } else if (!this.grapple && !me.onGround && f > 0 && this.wallCd <= 0 && Math.hypot(me.vel.x, me.vel.z) > WALK * 1.12 && me.vel.y < 6 && !me.crouch) {
       for (const side of [1, -1]) { // 1: wall on the right
         const dx = cy * side, dz = -sy * side;
         const hit = raycast(me.pos.x, me.pos.y + 1, me.pos.z, dx, 0, dz, 0.75);
@@ -1883,6 +1901,79 @@ export class Game {
     this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
   }
 
+  // ---------- Grappling hook ----------
+  fireGrapple(w) {
+    if (this.util <= 0 || this.grapple) { sfx.empty(0.6); return; }
+    this.camBasis();
+    const o = this.camera.position;
+    const hit = raycast(o.x, o.y, o.z, _f.x, _f.y, _f.z, w.range);
+    this.fireCd = w.rate;
+    if (!hit) { sfx.empty(0.5); this.hud.say('TOO FAR'); return; } // missed: no charge used
+    if (!this.rules.infiniteAmmo) this.util--;
+    if (!this.utilCd) this.utilCd = w.recharge;
+    const p = o.clone().addScaledVector(_f, hit.t - 0.05);
+    this.grapple = { x: p.x, y: p.y, z: p.z, t: 0, pull: w.pull * this.rules.moveSpeed };
+    if (this.wallrun) this.endWallrun();
+    this.me.onGround = false;
+    this.vm.fire(w);
+    sfx.harpoon ? sfx.harpoon(0.6) : sfx.equip(0.8);
+    this.ropeFor(this.myId).end = p;
+    this.net.send({ t: 'fx', k: 'rope', p: arr(p) });
+  }
+
+  endGrapple(hop) {
+    if (!this.grapple) return;
+    this.grapple = null;
+    if (hop) { this.me.vel.y = Math.max(this.me.vel.y, JUMP * this.rules.jump * 0.8); sfx.jump(0.4); }
+    this.ropeFor(this.myId).end = null;
+    this.net.send({ t: 'fx', k: 'rope' });
+  }
+
+  // One rope line per player (yours from the gun, others' from their hand).
+  ropeFor(id) {
+    this.ropes ||= new Map();
+    let r = this.ropes.get(id);
+    if (!r) {
+      const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: '#d8c79a' }));
+      line.frustumCulled = false;
+      line.visible = false;
+      const hook = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 6), new THREE.MeshStandardMaterial({ color: '#9aa4b2', metalness: 0.7, roughness: 0.4 }));
+      hook.visible = false;
+      this.scene.add(line, hook);
+      r = { line, hook, end: null, t: 0 };
+      this.ropes.set(id, r);
+    }
+    r.t = 0;
+    return r;
+  }
+
+  updateGrapple(dt) {
+    const w = this.utilId && WEAPONS[this.utilId];
+    // Charges come back one at a time.
+    if (w && w.recharge && this.util < w.count && this.me.alive) {
+      this.utilCd = (this.utilCd || w.recharge) - dt;
+      if (this.utilCd <= 0) { this.util++; this.utilCd = this.util < w.count ? w.recharge : 0; }
+    }
+    if (this.grapple && !this.me.alive) this.endGrapple(false);
+    if (!this.ropes) return;
+    for (const [id, r] of this.ropes) {
+      r.t += dt;
+      const from = id === this.myId ? (this.me.alive ? this.vm.muzzleWorld(this.camera, new THREE.Vector3()) : null)
+        : (() => { const p = this.remotes.get(id); return p && p.alive ? p.pos.clone().add(new THREE.Vector3(0, 1.3, 0)) : null; })();
+      const on = !!(r.end && from && r.t < 3);
+      r.line.visible = r.hook.visible = on;
+      if (!on) { if (r.end && r.t >= 3) r.end = null; continue; }
+      const a = r.line.geometry.attributes.position;
+      a.setXYZ(0, from.x, from.y, from.z);
+      a.setXYZ(1, r.end.x, r.end.y, r.end.z);
+      a.needsUpdate = true;
+      r.hook.position.copy(r.end);
+      r.hook.lookAt(from);
+      r.hook.rotateX(-Math.PI / 2);
+    }
+  }
+
   los(a, b) {
     _d.subVectors(b, a);
     const len = _d.length();
@@ -1959,6 +2050,7 @@ export class Game {
   throwUtil(quick) {
     const id = this.utilId, w = WEAPONS[id];
     if (!w) return;
+    if (w.grapple) return this.fireGrapple(w);
     if (this.util <= 0) { sfx.empty(0.6); return; }
     if (!this.rules.infiniteAmmo) this.util--;
     this.fireCd = w.rate;
@@ -2218,6 +2310,9 @@ export class Game {
     if (m.k === 'melee' && r) {
       r.melee(m.s);
       this.posSound(m.s === 'chop' ? sfx.axe : sfx.knife, r.pos, 0.6, { k: 'mel' + m.id, label: 'Melee swing', enemy: !this.isAlly(r) });
+    } else if (m.k === 'rope') { // someone's grappling hook: draw their rope until they let go
+      if (Array.isArray(m.p)) this.ropeFor(m.id).end = new THREE.Vector3(...m.p);
+      else this.ropeFor(m.id).end = null;
     } else if (m.k === 'stick') {
       const p = this.projectiles.find((q) => q.owner === m.id && q.pid === m.pid);
       if (p && Array.isArray(m.off)) {

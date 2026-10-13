@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.9",
+  "version": "2026.10.12.10",
   "notes": [
-    "Halloween event (Oct 24 to 31): jack-o'-lanterns to smash in every match, a spooky sky and a Halloween banner"
+    "New utility: the Grappling Hook. Aim at a wall or ledge and throw it (G) to get pulled there. 3 charges that refill"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

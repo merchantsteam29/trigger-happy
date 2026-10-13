@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { M, box, rbox, cyl, grp, anchor, modelQuality } from './modelkit.js';
+import { M, box, rbox, cyl, grp, anchor, grip, trigger, modelQuality } from './modelkit.js';
 import { GUNS, finishGun } from './guns.js';
 import { camoOf } from './camos.js';
 
@@ -157,6 +157,21 @@ const builders = {
     g.add(spike);
     anchor(g, 'fore', 0, 0, -0.22);
     anchor(g, 'muzzle', 0, 0.08, -0.6);
+  },
+  grapple(g) {
+    // Grappling hook launcher: pistol grip, a short barrel and the three-pronged hook in it.
+    rbox(g, M.dark, 0.05, 0.06, 0.2, 0, 0.03, -0.05);
+    box(g, M.orange, 0.052, 0.012, 0.18, 0, 0.065, -0.05);
+    cyl(g, M.gunmetal, 0.026, 0.12, 0, 0.03, -0.2, 10);
+    grip(g, M.poly, 0, -0.02, 0.04, 0.09, -0.2);
+    trigger(g, 0.015, -0.0);
+    cyl(g, M.rope || M.tan, 0.012, 0.05, 0, 0.03, 0.08, 6); // rope spool
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * Math.PI * 2;
+      const prong = box(g, M.steel, 0.008, 0.008, 0.07, Math.cos(a) * 0.022, 0.03 + Math.sin(a) * 0.022, -0.29);
+      prong.rotation.set(Math.sin(a) * 0.5, -Math.cos(a) * 0.5, 0);
+    }
+    anchor(g, 'muzzle', 0, 0.03, -0.3);
   },
   frag(g) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 12), M.olive);

@@ -177,7 +177,7 @@ slot, and so on). Attachments show on the gun model, and other players see yours
 | Primary | Assault Rifle, Carbine, Battle Rifle, Burst Rifle, SMG, PDW, Vector, LMG, Minigun, DMR, Sniper Rifle, Heavy Sniper Rifle, Railgun, Shotgun, Auto Shotgun, Slug Shotgun, Double Barrel, Grenade Launcher, Rocket Launcher, Crossbow, Harpoon Gun, Flamethrower (short-range stream of fire, no headshot bonus) |
 | Secondary | Pistol, Burst Pistol, Hand Cannon, Revolver, Auto Revolver, Machine Pistol, Micro SMG, Sawed-Off, Flare Gun, Nailgun (rapid-fire nails that stick) |
 | Melee | Combat Knife, Katana, Baseball Bat (knockback), Fire Axe, Sledgehammer (one-shot, knockback), Frying Pan (two hits, *clang*) — backstabs one-shot |
-| Utility | Frag, Sticky, Throwing Knives, Smoke, Flashbang, Vortex (pulls players in) |
+| Utility | Frag, Sticky, Throwing Knives, Smoke, Flashbang, Vortex (pulls players in), Grappling Hook (pulls you to walls and ledges) |
 
 ## Party chat
 
@@ -226,6 +226,8 @@ X clan spray · V push to talk · Tab scoreboard · Esc pause/loadout
 walking down stairs, can still jump for a moment after running off a ledge, a jump pressed just before landing
 still counts, and you hop onto edges you only just clip when jumping.
 - **Mantle:** jump at a ledge up to about 2 m high and keep moving forward to climb onto it.
+- **Grappling hook** (utility): aim at a wall or ledge within 38 m and throw it (G, or slot 4 and fire) to get pulled
+  there. Jump to let go early. 3 charges, one comes back every 6 s; a miss doesn't use one. Others see your rope.
 - **Wall-run:** sprint-jump along a wall beside you to run on it for up to 1.2 s (your view tilts). Jump to kick off
   the wall. Land before running on the same wall again.
 

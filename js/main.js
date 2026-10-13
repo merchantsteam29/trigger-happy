@@ -536,6 +536,7 @@ function modsPanel(id) {
 // One-line summary under each weapon in the picker.
 function weaponBlurb(id) {
   const w = WEAPONS[id], k = killStats(id);
+  if (w.grapple) return `×${w.count} · ${w.range}m · refills`;
   if (w.type === 'throw') return `×${w.count}${w.splash ? ` · ${w.splash} dmg` : ''}`;
   if (!k) return '';
   if (w.type === 'melee') return k.shots === 1 ? 'one hit' : `${k.shots} hits · ${k.ttk.toFixed(2)}s`;

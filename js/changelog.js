@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.10', name: 'Grappling Hook', banner: 'camo', notes: [
+    'New utility: the Grappling Hook. Aim at a wall or ledge and throw it (G) to get pulled there',
+    'Jump to let go early. 3 charges, and one comes back every 6 seconds',
+    'Everyone can see your rope',
+  ] },
   { v: '2026.10.12.9', name: 'Halloween', banner: 'hol_halloween', notes: [
     "Halloween event from Oct 24 to 31: a dusky purple sky and 10 glowing jack-o'-lanterns hidden near the spawns in every match",
     'Shoot them to smash them, and smash 31 for the new Pumpkin Smasher achievement',

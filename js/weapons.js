@@ -158,6 +158,13 @@ export const WEAPONS = {
     rate: 0.45, count: 3, fuse: 8, throwSpeed: 30, projGravity: 9, directDmg: 70, head: 2,
     spread: 0, moveSpread: 0, speedMul: 1.05, switch: 0.2,
   },
+  grapple: {
+    // Utility: fire a hook at a wall or ledge and get pulled to it (game.js fireGrapple). Charges refill
+    // over time. A 'throw' type so the HUD, touch buttons and pickers treat it like other utility.
+    id: 'grapple', name: 'Grappling Hook', type: 'throw', grapple: true,
+    rate: 0.35, count: 3, recharge: 6, range: 38, pull: 19,
+    spread: 0, moveSpread: 0, speedMul: 1.05, switch: 0.25,
+  },
   smoke: {
     id: 'smoke', name: 'Smoke Grenade', type: 'throw', smoke: true,
     rate: 0.9, count: 1, fuse: 1.2, throwSpeed: 15,
@@ -336,7 +343,7 @@ export const SLOTS = [
     'shotgun', 'autoshot', 'slug', 'doublebarrel', 'gl', 'rocket', 'crossbow', 'harpoon', 'flamethrower'],
   ['pistol', 'bpistol', 'handcannon', 'revolver', 'autorev', 'mpistol', 'microsmg', 'sawedoff', 'flare', 'nailgun'],
   ['knife', 'katana', 'bat', 'axe', 'sledge', 'pan'],
-  ['frag', 'sticky', 'tknife', 'smoke', 'flash', 'vortex'],
+  ['frag', 'sticky', 'tknife', 'smoke', 'flash', 'vortex', 'grapple'],
 ];
 export const SLOT_NAMES = ['Primary', 'Secondary', 'Melee', 'Utility'];
 export const DEFAULT_LOADOUT = ['ar', 'pistol', 'knife', 'frag'];
@@ -350,7 +357,7 @@ export function validLoadout(l) {
 export const SHORT = {
   ar: 'AR', smg: 'SMG', burst: 'Burst', lmg: 'LMG', sniper: 'Sniper', shotgun: 'Shotgun', gl: 'Launcher',
   pistol: 'Pistol', revolver: 'Revolver', mpistol: 'M-Pistol', knife: 'Knife', axe: 'Axe',
-  frag: 'Frag', sticky: 'Sticky', smoke: 'Smoke', claws: 'Claws',
+  frag: 'Frag', sticky: 'Sticky', smoke: 'Smoke', grapple: 'Grapple', claws: 'Claws',
   dmr: 'DMR', minigun: 'Minigun', rocket: 'Rocket', br: 'Battle', vector: 'Vector', doublebarrel: 'Dbl Barrel',
   p_gatling: 'Gatling', p_railcannon: 'Rail Cannon', p_hellfire: 'Hellfire', p_thunder: 'Thunder SG',
   railgun: 'Railgun', sledge: 'Sledge', vortex: 'Vortex', carbine: 'Carbine', pdw: 'PDW', laser: 'Laser', amr: 'H-Sniper',
@@ -429,6 +436,12 @@ export function weaponInfo(id, w = WEAPONS[id]) {
     facts.push(['Damage', `${w.dmg} · backstab ${w.backstab}`]);
     facts.push(['Kill', ks.shots === 1 ? 'one hit' : `${ks.shots} hits · ${ks.ttk.toFixed(2)}s`]);
     facts.push(['Reach', `${w.range}m`]);
+  } else if (w.grapple) {
+    tags.push('Pulls you to walls and ledges', `×${w.count}`, `refills every ${w.recharge}s`);
+    rate = 0.3 / w.rate;
+    range = w.range / 40;
+    facts.push(['Range', `${w.range}m`]);
+    facts.push(['Charges', `×${w.count} · one back every ${w.recharge}s`]);
   } else {
     tags.push(w.smoke ? 'Blocks vision' : w.flash ? 'Blinds' : w.sticky ? 'Sticks to targets' : w.bolt ? 'Thrown blade' : w.impact ? 'Explodes on impact' : w.pull ? 'Pulls players in' : `${w.fuse}s fuse`, `×${w.count}`);
     dmg = (w.splash || w.directDmg || 0) / 110;
