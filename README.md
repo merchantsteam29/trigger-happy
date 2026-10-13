@@ -330,6 +330,11 @@ air / low-health / long-range / suppressed / melee / explosive / barrel kills, u
 and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners and
 ranked divisions. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
 
+## Update history
+
+**Settings → 📜 Updates** lists every update so far, newest first: each one's name on a banner that fits it, with
+everything that was new.
+
 ## Your devices
 
 Play your account on more than one phone, PC or browser. On the device that has it, open **Friends → Your devices →

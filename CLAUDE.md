@@ -17,6 +17,8 @@ MQTT relays, signed by the players' own keys.
   every earlier commit). Don't write git config.
 - **Every release bumps the version** (`node tools/release.mjs`, below). Players' games update
   themselves from `version.json`, and the notes in it are shown to players.
+- **Players see the update history** (Settings → 📜 Updates, `UPDATES` in `js/changelog.js`). For a release players would
+  notice, add an entry at the top: a short name, a banner id from `banners.js` that fits the update, and the new features.
 - **Test before committing**, in a browser, against a local server.
 - **Keep tests private.** Host test matches as *Private*. Never publish test data (reports, gifts,
   leaderboard posts, clan records, server listings) to the public relays. See "Testing" for how to stub them.
@@ -124,7 +126,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every
   screen's look). Classes and ids are shared with the JS, so restyle in `ui.css` and keep them. Icons: `icons/icon.svg` is the
   source; the PNGs (favicon, 192/512, maskable, apple-touch) are rendered from it. `icons/mark.svg` is the logo without its tile.
-- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `devices.js` (linked devices: one account on several devices, progress sync)
+- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `devices.js` (linked devices: one account on several devices, progress sync), `changelog.js` (`UPDATES`: the update history in Settings → 📜 Updates)
 
 ### Where to add things
 - **Mode:** `MODES` and `MODE_ORDER` in `host.js`, the objective text in `game.js` `modeBar()`, the score

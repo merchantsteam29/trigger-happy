@@ -93,6 +93,7 @@
 <link rel="modulepreload" href="js/modeweek.js">
 <link rel="modulepreload" href="js/qr.js">
 <link rel="modulepreload" href="js/devices.js">
+<link rel="modulepreload" href="js/changelog.js">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -531,10 +532,18 @@
 <!-- Settings -->
 <div id="settings" class="overlay hidden">
   <div class="panel settings-panel">
-    <div class="hp-head"><h2>SETTINGS</h2><button id="set-close" class="primary">Done</button></div>
+    <div class="hp-head"><h2>SETTINGS</h2><button id="set-updates" class="ghost">📜 Updates</button><button id="set-close" class="primary">Done</button></div>
     <div id="set-tabs" class="set-tabs"></div>
     <div id="set-body"></div>
     <div class="set-foot"><button id="set-reset" class="danger">Reset all to defaults</button></div>
+  </div>
+</div>
+
+<!-- Update history (Settings → Updates) -->
+<div id="chl-pop" class="overlay hidden">
+  <div class="panel chl-panel">
+    <div class="hp-head"><h2>UPDATES</h2><button id="chl-close" class="primary">Back</button></div>
+    <div id="chl-list" class="chl-list"></div>
   </div>
 </div>
 

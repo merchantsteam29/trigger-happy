@@ -2162,10 +2162,11 @@ document.addEventListener('keydown', (e) => {
 });
 touch.onChat = () => { game.keys.clear(); game.mouse.left = false; chat.open(); };
 
-// Esc backs out of Share, Settings and the Host panel.
+// Esc backs out of Share, Updates, Settings and the Host panel.
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (!$('share-pop').classList.contains('hidden')) { e.preventDefault(); $('share-pop').classList.add('hidden'); }
+  else if (!$('chl-pop').classList.contains('hidden')) { e.preventDefault(); $('chl-pop').classList.add('hidden'); }
   else if (!$('settings').classList.contains('hidden')) { e.preventDefault(); settingsUI.close(); }
   else if (!$('host-panel').classList.contains('hidden')) { e.preventDefault(); hostPanel.close(); }
 });

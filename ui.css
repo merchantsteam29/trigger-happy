@@ -681,3 +681,14 @@ body.mobile:not(.tablet) .topbar .share-btn span { display: none; }
 .devices-card .dv-err { color: var(--danger); }
 .devices-card details.dv-other { margin-top: 10px; }
 .devices-card details.dv-other summary { cursor: pointer; font-size: 13px; opacity: 0.8; }
+
+/* Update history (Settings → Updates) */
+.settings-panel .hp-head h2 { margin-right: auto; }
+.settings-panel .hp-head #set-updates { margin-left: auto; margin-right: 0; }
+.settings-panel .hp-head #set-close { margin-left: 0; }
+.chl-panel { width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 40px); display: flex; flex-direction: column; }
+.chl-list { overflow-y: auto; padding: 4px 2px 8px; display: flex; flex-direction: column; gap: 16px; }
+#chl-list .chl-item .bnr { width: 100%; max-width: none; box-sizing: border-box; }
+.chl-item .bnr-name { white-space: normal; }
+.chl-item ul { margin: 10px 0 0; padding-left: 20px; line-height: 1.5; font-size: 14px; color: var(--text); }
+.chl-item li + li { margin-top: 3px; }

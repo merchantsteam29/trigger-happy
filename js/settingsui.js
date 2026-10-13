@@ -1,4 +1,5 @@
 import { opts, setOpt, resetOpts } from './settings.js';
+import { openUpdates, closeUpdates } from './changelog.js';
 import { ACTIONS, binds, setBind, resetBinds, keyName, mouseCode } from './binds.js';
 import { store, esc } from './util.js';
 import { bannerOf, bannerHtml } from './banners.js';
@@ -102,6 +103,8 @@ export class SettingsUI {
     this.tab = 0;
     this.onClose = null;
     $('set-close').onclick = () => this.close();
+    $('set-updates').onclick = () => openUpdates();
+    $('chl-close').onclick = () => closeUpdates();
     $('set-reset').onclick = () => {
       if (!confirm('Reset every setting (including your button layout) to the defaults?')) return;
       resetOpts();
