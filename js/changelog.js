@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.17', name: 'Haunted Manor', banner: 'galaxy', notes: [
+    'New map: Haunted Manor. A dark manor at night with three rooms and a roof terrace up the outside stairs',
+    'Graveyards with a walk-in crypt on both sides, hedges, a pumpkin patch and dead trees',
+  ] },
   { v: '2026.10.12.16', name: 'Loadout Codes', banner: 'ocean', notes: [
     'Share your loadout as a code: Loadout > Share code copies it, with attachments and wraps',
     'Friends paste it with Use code to get the same loadout',

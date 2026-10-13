@@ -150,6 +150,7 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
 | Sky Islands | Floating grass islands joined by bridges, high corner islands, and jump pads up to a perch over the middle. Fall off and you die |
 | Arctic Base | Big snowy research base: labs and barracks with roof access, a radar tower, fuel tanks and a frozen lake |
 | Neon Streets | Night city blocks with shops you can walk through, alleys, parked cars and a raised highway down the middle |
+| Haunted Manor | A dark manor at night: three rooms inside, outside stairs up to a roof terrace with an attic tower, graveyards with a crypt on both sides, hedges, a pumpkin patch and dead trees |
 
 ## Loadout
 

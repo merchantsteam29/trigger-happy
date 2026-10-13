@@ -5,7 +5,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // These arrays are mutated in place when the map changes so importers keep valid references.
 export const boxes = [];
 export const spawns = [];
-export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets'];
+export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets', 'manor'];
 // Short descriptions for the map pickers and the end-of-match vote.
 export const MAP_BLURB = {
   warehouse: 'Indoor · mezzanines', yard: 'Outdoor · containers', town: 'Rooftops · houses', pit: 'Small · jump pads',
@@ -14,7 +14,7 @@ export const MAP_BLURB = {
   station: 'Sci-fi · reactor', canyon: 'Mesas · bridge', construction: 'Floors · crane',
   castle: 'Keep · ramparts', hangar: 'Plane · catwalks', mall: 'Shops · 2 floors',
   temple: 'Pyramid · jungle', oilrig: 'Decks · derrick', subway: 'Tracks · platforms',
-  skyislands: 'Floating · don\'t fall', arctic: 'Snow · big base', neonstreets: 'Night city · highway',
+  skyislands: 'Floating · don\'t fall', arctic: 'Snow · big base', neonstreets: 'Night city · highway', manor: 'Night · graveyard · roof',
 };
 // Render quality (lowered on mobile before any map is built).
 export const quality = { shadowSize: 2048, pointLights: true, decor: true }; // decor: off in Low-end graphics
@@ -773,6 +773,91 @@ export const MAPS = {
       cloth.push(new THREE.BoxGeometry(1.6, 1, 0.05).translate(0.8, 6.5, 0));
       addMerged(g, poles, M.steel);
       addMerged(g, cloth, M.banner);
+    },
+  },
+
+  manor: {
+    name: 'Haunted Manor',
+    theme: { sky: '#1a1030', fog: [24, 85], hemi: ['#9a88c8', '#2a2030', 1.6], sun: ['#c8b8ff', 1.1, [-20, 40, 12]], night: true },
+    bounds: 30,
+    hills: [[0, 3.9, 0, 2.5], [-20, 0, -10, 3], [20, 0, 10, 3], [0, 0, -14, 3], [0, 0, 14, 3]],
+    build({ add, add2, spawn2, stairs, building, crate2, wallZ }) {
+      add(-30, -1, -22, 30, 0, 22, 'grass');
+      add(-30, 0, -1.4, 30, 0.02, 1.4, 'gravel'); // the drive up to the front doors
+      // Crumbling estate wall
+      add(-30, 0, 21.6, 30, 2.6, 22, 'castleDark');
+      add(-30, 0, -22, 30, 2.6, -21.6, 'castleDark');
+      add(29.6, 0, -21.6, 30, 2.6, 21.6, 'castleDark');
+      add(-30, 0, -21.6, -29.6, 2.6, 21.6, 'castleDark');
+      // The manor: four doors, windows, two inner walls splitting it into three rooms
+      building(-9, -6, 9, 6, 3.6,
+        [{ side: 'n', at: 0, w: 2 }, { side: 's', at: 0, w: 2 }, { side: 'e', at: 0, w: 2 }, { side: 'w', at: 0, w: 2 },
+          { side: 'n', at: -5.5, w: 1.3, y0: 1.1, h: 1.1 }, { side: 'n', at: 5.5, w: 1.3, y0: 1.1, h: 1.1 },
+          { side: 's', at: -5.5, w: 1.3, y0: 1.1, h: 1.1 }, { side: 's', at: 5.5, w: 1.3, y0: 1.1, h: 1.1 }],
+        { mat: 'brickDark', roofMat: 'castleStone' }, add);
+      wallZ(-3, -5.7, 5.7, [[-3, 1.6], [3, 1.6]], 0, 3.6, 'brick');
+      add2(-8.4, 0, -5.4, -6.6, 1, -4.6, 'wood'); // old furniture
+      add2(-1.2, 0, -5.6, 1.2, 0.9, -4.9, 'wood');
+      // Roof terrace: outside stairs up the east and west walls, low walls round the edge, the attic tower
+      stairs(9.05, 1, 11, 6, 0, 3.9, '-z', 'wood');
+      add2(9.05, 3.9, 0.7, 11, 4.7, 1, 'brickDark'); // a low wall at the top so nobody walks off the end
+      add2(-9, 3.9, 5.7, 9, 4.7, 6, 'brickDark');
+      add2(8.7, 3.9, -6, 9, 4.7, 0.6, 'brickDark');
+      add(-2, 3.9, -2, 2, 7.2, 2, 'castleDark');
+      // Graveyards: rows of headstones, a crypt you can walk into, hedges
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) add2(15 + i * 2.4, 0, -16 + j * 2.6, 15.6 + i * 2.4, 1.1, -15.75 + j * 2.6, 'stone');
+      building(18, 6, 25, 12, 3, [{ side: 'w', at: 9, w: 1.8 }, { side: 'n', at: 21.5, w: 1.2, y0: 1, h: 0.8 }], { mat: 'castleDark', roofMat: 'castleStone' });
+      add2(-26, 0, -18, -14, 1.7, -17.4, 'hedge');
+      add2(-14.6, 0, -18, -14, 1.7, -11, 'hedge');
+      add2(-27, 0, 3, -21, 1.7, 3.6, 'hedge');
+      // Pumpkin patch hay bales and a broken cart
+      add2(-12, 0, 10, -10.6, 1.1, 11.4, 'hay');
+      add2(-17, 0, 14, -15.6, 1.1, 15.4, 'hay');
+      add2(-6, 0, 15, -3, 1.2, 16.4, 'wood');
+      crate2(-20, 0.5); crate2(-24, -6);
+      spawn2(-24, 0, -10);
+      spawn2(-24, 0, 7);
+      spawn2(-14, 0, -20);
+      spawn2(-6, 0, -3);
+      spawn2(-5, 3.9, -4.5);
+      spawn2(-18, 0, 18);
+      spawn2(-27, 0, -19);
+    },
+    decor(g, M) {
+      // Dead trees, crosses on the graves, lit windows, small pumpkins, the tower's spire, lanterns
+      const bark = [], cross = [], lit = [], pump = [], spire = [], lamp = [];
+      for (const s of [1, -1]) {
+        for (const [x, z] of [[-26, -8], [-22, 12], [-11, -19], [-27, 16]]) {
+          const X = x * s, Z = z * s;
+          bark.push(new THREE.CylinderGeometry(0.18, 0.32, 5, 6).translate(X, 2.5, Z));
+          for (const [a, h, l] of [[0.6, 3.2, 1.8], [-0.9, 3.8, 1.5], [2.2, 4.3, 1.2]]) {
+            const b = new THREE.CylinderGeometry(0.06, 0.12, l, 5).translate(0, l / 2, 0);
+            b.rotateZ(0.9); b.rotateY(a); b.translate(X, h, Z);
+            bark.push(b);
+          }
+        }
+        for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+          if ((i + j) % 2) continue;
+          const x = (15.3 + i * 2.4) * s, z = (-15.9 + j * 2.6) * s;
+          cross.push(new THREE.BoxGeometry(0.12, 0.7, 0.12).translate(x, 1.45, z), new THREE.BoxGeometry(0.45, 0.12, 0.12).translate(x, 1.6, z));
+        }
+        for (const x of [-5.5, 5.5]) lit.push(new THREE.BoxGeometry(1.2, 1, 0.04).translate(x * s, 1.65, 6.04 * s));
+        for (const [x, z] of [[-11.3, 10.7], [-16.3, 14.7], [-10.6, 12], [-14, 13.2]]) pump.push(new THREE.SphereGeometry(0.28, 10, 8).scale(1.15, 0.85, 1.15).translate(x * s, z === 12 || z === 13.2 ? 0.24 : 1.34, z * s));
+        lamp.push(new THREE.BoxGeometry(0.3, 0.45, 0.3).translate(1.6 * s, 2.6, 6.25 * s));
+      }
+      for (const z of [-2.5, 0, 2.5]) for (const x of [-9.04, 9.04]) lit.push(new THREE.BoxGeometry(0.04, 1, 1).translate(x, 1.65, z === 0 ? 3.6 : z));
+      spire.push(new THREE.ConeGeometry(1.6, 3, 4).rotateY(Math.PI / 4).translate(0, 8.7, 0));
+      addMerged(g, bark, M.steel);
+      addMerged(g, cross, M.merlon);
+      addMerged(g, lit, M.windowLit);
+      addMerged(g, pump, M.pumpkin);
+      addMerged(g, spire, M.funnel);
+      addMerged(g, lamp, M.lamp);
+      if (quality.pointLights) for (const [c, x, y, z] of [['#ff9a3a', 1.6, 2.6, 7], ['#ff9a3a', -1.6, 2.6, -7], ['#b06bff', 20, 2, 9], ['#b06bff', -20, 2, -9]]) {
+        const l = new THREE.PointLight(c, 22, 16, 1.6);
+        l.position.set(x, y, z);
+        g.add(l);
+      }
     },
   },
 
@@ -1666,6 +1751,7 @@ const DECOR_MATS = {
   lifeboat: new THREE.MeshStandardMaterial({ color: '#e8742b', roughness: 0.6 }),
   iceHole: new THREE.MeshBasicMaterial({ color: '#1b3a55' }),
   merlon: new THREE.MeshStandardMaterial({ color: '#b9b2a6', roughness: 0.95 }),
+  pumpkin: new THREE.MeshStandardMaterial({ color: '#ff7a12', roughness: 0.6, emissive: '#5a1d00', emissiveIntensity: 0.5 }),
   roadLine: new THREE.MeshBasicMaterial({ color: '#e8d24a' }),
   ocean: new THREE.MeshStandardMaterial({ color: '#1d4e6e', roughness: 0.15, metalness: 0.4 }),
   tunnel: new THREE.MeshBasicMaterial({ color: '#05070a' }),
