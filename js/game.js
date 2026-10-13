@@ -1074,7 +1074,7 @@ export class Game {
         if (!practice && this.onMoment) this.onMoment(momentOf(medalIds, MEDALS, dist)); // highlight clip
         if (revenge) this.lastKiller = null; // one REVENGE per death
         if (!practice) track.kill({
-          weapon: m.w, weaponType: W && W.type, head: !!m.head, mode: this.rules.mode,
+          bot: !!(pv && pv.bot), weapon: m.w, weaponType: W && W.type, head: !!m.head, mode: this.rules.mode,
           secondary: SLOTS[1].includes(m.w),
           multi: this.multi, revenge, air: !this.me.onGround, lowHp: this.me.hp <= 25,
           silent: !!(W && W.type === 'gun' && this.W(m.w).quiet),

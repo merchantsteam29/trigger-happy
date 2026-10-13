@@ -7,6 +7,13 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.3', name: 'Weekly Seasons', banner: 'storm', notes: [
+    'Seasons are now one week long: a new season starts every Monday. Season 1 ends Monday 19 October, then Season 2 Frostbite',
+    'The season pass is harder to finish: each tier needs 100 XP more than the one before (73,500 XP for all 30)',
+    'Kills on bots give 30 XP instead of 100. Kills on real players still give 100',
+    'Ranked seasons are weekly too, so you can earn ranked banners every week',
+    '7 new missions and 7 new achievements for the long haul, including kills on real players only',
+  ] },
   { v: '2026.10.13.2', name: 'Map Editor', banner: 'neon', notes: [
     'Build your own map: 🛠 Map editor in the menu. Draw blocks, stairs and spawn points from above',
     'Pick materials, heights and a theme (Day, Night, Snow or Desert). Save up to 5, or share one as a code',

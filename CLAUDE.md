@@ -117,7 +117,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Weapons and rules:** `weapons.js` (stats, `SLOTS`), `mods.js` (attachments), `rulesets.js` (rule presets),
   `modeweek.js`, `events.js` (Game Night event times), `holidays.js`
 - **Progress and economy:** `progress.js` (XP, levels, daily), `missions.js` (stats, missions, tokens,
-  owned cosmetics, `track.*`), `seasons.js`, `achievements.js`, `ranked.js`, `shop.js`, `gifts.js`, `invites.js`
+  owned cosmetics, `track.*`), `seasons.js` (weekly season pass; season dates live in `ranked.js` `seasonNow` / `seasonDates`), `achievements.js`, `ranked.js`, `shop.js`, `gifts.js`, `invites.js`
 - **Social and online:** `relay.js`, `social.js`, `profiles.js`, `clans.js`, `leaderboard.js`, `servers.js`,
   `gamenight.js`, `voice.js`, `chat.js`
 - **Staff:** `roles.js`, `moderation.js`, `modpanel.js`, `hostpanel.js`
@@ -177,7 +177,7 @@ Built and committed but **not yet tested with real people**:
 - a real clan war between two clans
 - watching a Game Night event as a viewer (and how the spectator overlay looks)
 - Battle Royale and tournament starting from a real Game Night schedule
-- ranked season banners being handed out (first season ends Nov 16)
+- ranked season banners being handed out (first season ends Oct 19; seasons are weekly after that)
 - how wall-running feels with a mouse
 - linked devices on real phones / PCs over the public relays (tested with two browser identities and a local relay stand-in)
 

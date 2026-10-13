@@ -1,7 +1,9 @@
 {
-  "version": "2026.10.13.2",
+  "version": "2026.10.13.3",
   "notes": [
-    "Map editor: build your own map, save it, share it as a code, and host a private server on it"
+    "Weekly seasons: a new season every Monday",
+    "The season pass is harder: each tier needs more XP, and kills on bots give less",
+    "7 new missions and 7 new achievements"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

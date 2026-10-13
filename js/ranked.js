@@ -15,8 +15,11 @@ export const DIVISIONS = [
   { id: 'master', name: 'Master', min: 1550, color: '#ff8a3a', icon: '✷' },
   { id: 'legend', name: 'Legend', min: 1700, color: '#ff3a6a', icon: '♛' },
 ];
-// Season numbers, matching seasons.js (6-week seasons from Monday 5 Oct 2026).
-const seasonNow = (t = Date.now()) => Math.max(1, Math.floor((t - Date.UTC(2026, 9, 5)) / (42 * 864e5)) + 1);
+// Season dates, shared with the season pass (seasons.js): Season 1 ran two weeks from Monday 5 Oct 2026,
+// then every season is one week, Monday 00:00 UTC to the next Monday.
+const WEEK = 7 * 864e5, S1_START = Date.UTC(2026, 9, 5), S2_START = Date.UTC(2026, 9, 19);
+export const seasonNow = (t = Date.now()) => (t < S2_START ? 1 : 2 + Math.floor((t - S2_START) / WEEK));
+export const seasonDates = (n) => (n <= 1 ? { start: S1_START, end: S2_START } : { start: S2_START + (n - 2) * WEEK, end: S2_START + (n - 1) * WEEK });
 // Season reward banners: one per division above Rookie.
 export const RANKED_BANNERS = Object.fromEntries(DIVISIONS.slice(1).map((d) => ['rks_' + d.id, {
   bg: `radial-gradient(circle at 82% 50%, ${d.color}66 0 16%, transparent 42%), repeating-linear-gradient(115deg, transparent 0 18px, ${d.color}22 18px 20px), linear-gradient(100deg, #0b0e14, #1a1f2a 60%, ${d.color}55)`,
@@ -39,7 +42,7 @@ export function srBadge(sr, placing = false) {
 // Your best division in the current season (index into DIVISIONS), and when the season ends.
 export function seasonPeak() {
   const r = load(), n = seasonNow();
-  return { div: DIVISIONS[(r.peaks || {})[n] || 0], ends: Date.UTC(2026, 9, 5) + n * 42 * 864e5 };
+  return { div: DIVISIONS[(r.peaks || {})[n] || 0], ends: seasonDates(n).end };
 }
 // Seasons that have ended: banners for your best division and every one below it (once).
 // grant(slot, id) gives the item; returns the divisions newly rewarded.

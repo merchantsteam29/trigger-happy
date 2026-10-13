@@ -44,6 +44,13 @@ export const ACHIEVEMENTS = [
   { id: 'festive', name: 'Festive', icon: '🎉', tier: 'bronze', desc: 'Earn 3 holiday banners', have: holidayBanners, goal: 3 },
   { id: 'elite', name: 'Elite', icon: '✦', tier: 'gold', desc: 'Reach Elite in ranked', have: bestDivision, goal: DIVISIONS.findIndex((d) => d.id === 'elite') },
   { id: 'legend', name: 'Legend', icon: '♛', tier: 'legend', desc: 'Reach Legend in ranked', have: bestDivision, goal: DIVISIONS.findIndex((d) => d.id === 'legend') },
+  { id: 'manhunter', name: 'Manhunter', icon: '🧍‍♂️', tier: 'gold', desc: 'Get 500 kills on real players (not bots)', have: st('playerKills'), goal: 500 },
+  { id: 'tenk', name: 'Ten Thousand', icon: '🩸', tier: 'legend', desc: 'Get 10,000 kills', have: st('kills'), goal: 10000 },
+  { id: 'eagle', name: 'Eagle Eye', icon: '🦅', tier: 'legend', desc: 'Get 2,000 headshot kills', have: st('headshots'), goal: 2000 },
+  { id: 'rampage', name: 'Rampage', icon: '🔥', tier: 'legend', desc: 'Get a 25-kill streak', have: st('bestStreak'), goal: 25 },
+  { id: 'warlord', name: 'Warlord', icon: '⚜️', tier: 'legend', desc: 'Win 500 matches', have: st('wins'), goal: 500 },
+  { id: 'lifer', name: 'Lifer', icon: '⏳', tier: 'gold', desc: 'Play 1,000 matches', have: st('matches'), goal: 1000 },
+  { id: 'seasoned', name: 'Seasoned', icon: '📅', tier: 'gold', desc: 'Finish 4 season passes (tier 30)', have: () => store.get('seasonBadges', []).length, goal: 4 },
   { id: 'pumpkins', name: 'Pumpkin Smasher', icon: '🎃', tier: 'silver', desc: "Smash 31 jack-o'-lanterns during Halloween", have: st('pumpkins'), goal: 31 },
 ];
 export const ACH = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));

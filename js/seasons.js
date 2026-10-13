@@ -1,19 +1,20 @@
 import { store } from './util.js';
 import { addTokens, grantWrap, grantItem } from './missions.js';
 import { onProgress } from './progress.js';
+import { seasonNow, seasonDates } from './ranked.js';
 
-// Seasons: a free 30-tier pass every 6 weeks. All XP you earn during the season fills it
-// (1,000 XP a tier). Every tier pays tokens; some give season-only wraps and banners that
+// Seasons: a free 30-tier pass every week (dates in ranked.js). All XP you earn during the season
+// fills it; each tier costs more than the last (tierXp). Every tier pays tokens; some give season-only wraps and banners that
 // can't be bought. Reaching tier 30 earns that season's badge, kept forever.
 // To add a season, add an entry to SEASONS (its wraps go in camos.js, banners in banners.js
 // and missions.js COSMETICS.banner, all with `reward: true`). Seasons without an entry pay
 // tokens only.
 
-const DAY = 86400000;
-export const SEASON_EPOCH = Date.UTC(2026, 9, 5); // Monday 5 Oct 2026: Season 1 starts
-export const SEASON_LEN = 42 * DAY;
 export const TIERS = 30;
-export const TIER_XP = 1000;
+// XP to go from tier t - 1 to tier t: 1,000 for tier 1, 100 more each tier (73,500 for all 30).
+// Season 1 kept its flat 1,000 a tier.
+export const tierXp = (t, n = 2) => (n <= 1 ? 1000 : 1000 + 100 * (t - 1));
+export const tierFor = (xp, n) => { let t = 0; while (t < TIERS && xp >= tierXp(t + 1, n)) xp -= tierXp(++t, n); return { tier: t, into: xp }; };
 export const tierTokens = (tier) => (tier % 5 === 0 ? 100 : 40);
 
 export const SEASONS = {
@@ -41,11 +42,18 @@ export const SEASONS = {
   },
 };
 
+// Seasons after the ones above take a name and color from this list (tokens and the badge only).
+const WEEKLY = [
+  { name: 'Overdrive', color: '#ff4a6a' }, { name: 'Blackout', color: '#8a7dff' }, { name: 'Wildfire', color: '#ff8a1a' },
+  { name: 'Riptide', color: '#2ad1c9' }, { name: 'Venom', color: '#7ce03a' }, { name: 'Eclipse', color: '#c86bff' },
+  { name: 'Sandstorm', color: '#e0b25a' }, { name: 'Thunderclap', color: '#ffe14a' }, { name: 'Nightfall', color: '#4a7dff' },
+  { name: 'Ironclad', color: '#9fb0c2' }, { name: 'Inferno', color: '#ff3a1a' }, { name: 'Glacier', color: '#9ae6ff' },
+];
+
 export function seasonAt(t = Date.now()) {
-  const n = Math.max(1, Math.floor((t - SEASON_EPOCH) / SEASON_LEN) + 1);
-  const start = SEASON_EPOCH + (n - 1) * SEASON_LEN;
-  const def = SEASONS[n] || { name: `Season ${n}`, color: '#ffb020', items: {} };
-  return { n, start, end: start + SEASON_LEN, ...def };
+  const n = seasonNow(t), { start, end } = seasonDates(n);
+  const def = SEASONS[n] || { ...WEEKLY[(n - 3) % WEEKLY.length], items: {} };
+  return { n, start, end, ...def };
 }
 
 class Seasons {
@@ -62,14 +70,15 @@ class Seasons {
 
   info() {
     if (seasonAt().n !== this.state.n) this.load();
-    const s = seasonAt(), tier = Math.min(TIERS, Math.floor(this.state.xp / TIER_XP));
-    return { ...s, xp: this.state.xp, tier, into: tier >= TIERS ? TIER_XP : this.state.xp % TIER_XP, done: tier >= TIERS };
+    const s = seasonAt(), { tier, into } = tierFor(this.state.xp, s.n), done = tier >= TIERS;
+    const need = done ? 0 : tierXp(tier + 1, s.n);
+    return { ...s, xp: this.state.xp, tier, into: done ? 1 : into, need: done ? 1 : need, done };
   }
 
   add(xp) {
     if (seasonAt().n !== this.state.n) this.load();
     this.state.xp += xp;
-    const s = seasonAt(), tier = Math.min(TIERS, Math.floor(this.state.xp / TIER_XP));
+    const s = seasonAt(), { tier } = tierFor(this.state.xp, s.n);
     while (this.state.tier < tier) {
       const t = ++this.state.tier;
       const item = s.items[t] || null;

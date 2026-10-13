@@ -172,6 +172,13 @@ export const MISSIONS = [
   { id: 'teamplayer', name: 'Team Player', desc: 'Win 5 team matches', stat: 'teamWins', goal: 5, tokens: 250 },
   { id: 'collector', name: 'Collector', desc: 'Buy 10 cosmetics or banners', stat: 'bought', goal: 10, tokens: 150 },
   { id: 'fashion', name: 'Fashionista', desc: 'Buy 25 cosmetics or banners', stat: 'bought', goal: 25, tokens: 400 },
+  { id: 'carnage', name: 'Carnage', desc: 'Get 2,500 kills', stat: 'kills', goal: 2500, tokens: 1500 },
+  { id: 'brainiac', name: 'Big Brain', desc: 'Get 500 headshot kills', stat: 'headshots', goal: 500, tokens: 1000 },
+  { id: 'marathon', name: 'Marathon', desc: 'Play 100 matches to the end', stat: 'matches', goal: 100, tokens: 800 },
+  { id: 'ironman', name: 'Iron Will', desc: 'Play 250 matches to the end', stat: 'matches', goal: 250, tokens: 1200 },
+  { id: 'conqueror', name: 'Conqueror', desc: 'Win 50 matches', stat: 'wins', goal: 50, tokens: 800 },
+  { id: 'captain', name: 'Team Captain', desc: 'Win 25 team matches', stat: 'teamWins', goal: 25, tokens: 600 },
+  { id: 'realdeal', name: 'The Real Deal', desc: 'Get 100 kills on real players (not bots)', stat: 'playerKills', goal: 100, tokens: 800 },
 ];
 
 // Before tokens, these missions unlocked these items. Players who finished them keep the item.
@@ -340,9 +347,11 @@ function bump(updates, pre = null, mode = null) {
 }
 
 export const track = {
-  kill({ weapon, weaponType, head, secondary, explosive, juggernaut, mode, multi = 1, dist = 0, revenge, air, silent, lowHp }) {
+  kill({ bot, weapon, weaponType, head, secondary, explosive, juggernaut, mode, multi = 1, dist = 0, revenge, air, silent, lowHp }) {
     streak++;
     const u = { kills: 1, bestStreak: streak };
+    if (bot) u.botKills = 1; // bots give less XP (progress.js)
+    else u.playerKills = 1; // kills on real players (achievements)
     if (weapon) u['w_' + weapon] = 1; // per-gun kills (favorite gun on your profile)
     if (head) u.headshots = 1;
     if (weaponType === 'melee') u.melee = 1;

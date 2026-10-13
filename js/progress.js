@@ -5,7 +5,7 @@ import { onStats, addTokens, grantWrap, getStat } from './missions.js';
 // three daily challenges. Everything is saved on this device.
 
 // ---------- XP, levels and ranks ----------
-export const XP = { kill: 100, headshot: 25, multi: 50, match: 250, win: 250 };
+export const XP = { kill: 100, botKill: 30, headshot: 25, multi: 50, match: 250, win: 250 };
 export const MAX_LEVEL = 100;
 export const xpToNext = (lvl) => 400 + 60 * lvl; // XP from `lvl` to `lvl + 1`
 
@@ -176,7 +176,7 @@ function checkDaily() {
 
 // XP and challenges follow the lifetime stats (missions.js).
 onStats((u) => {
-  addXp((u.kills || 0) * XP.kill + (u.headshots || 0) * XP.headshot + (u.multiKills || 0) * XP.multi
+  addXp((u.kills || 0) * XP.kill - (u.botKills || 0) * (XP.kill - XP.botKill) + (u.headshots || 0) * XP.headshot + (u.multiKills || 0) * XP.multi
     + (u.matches || 0) * XP.match + (u.wins || 0) * XP.win);
   checkDaily();
 });

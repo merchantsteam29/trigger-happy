@@ -38,7 +38,7 @@ import { Shop } from './shop.js';
 import { grantWrap, COSMETICS, allStats } from './missions.js';
 import { profiles } from './profiles.js';
 import { clans, CLAN_COLORS, MAX_MEMBERS, SPRAY_PALETTE, SPRAY_RE } from './clans.js';
-import { seasons, TIERS, TIER_XP, tierTokens } from './seasons.js';
+import { seasons, TIERS, tierXp, tierTokens } from './seasons.js';
 import { bannerOf, bannerHtml } from './banners.js';
 import { invites, INVITE_TOKENS, MAX_INVITES } from './invites.js';
 import { RULE_PRESETS, presetRules, savedPresets, WEAPON_RULES } from './rulesets.js';
@@ -382,10 +382,10 @@ function seasonHtml() {
   const nextItem = Object.keys(s.items).map(Number).find((x) => x > s.tier);
   return `<div class="card sp" style="--sp:${s.color}">
     <div class="dl-head"><h3>Season ${s.n}: ${esc(s.name)}</h3><span>Tier ${s.tier} / ${TIERS}</span><small>Ends in ${fmtDuration(s.end - Date.now())}</small></div>
-    <span class="hs-bar big sp-bar"><i style="width:${s.done ? 100 : (s.into / TIER_XP) * 100}%"></i></span>
-    <small class="sp-sub">${s.done ? '✓ Season complete! You earned the season badge.' : `${(TIER_XP - s.into).toLocaleString()} XP to tier ${s.tier + 1}${nextItem ? ` · next item at tier ${nextItem}: ${esc(seasonItemName(s.items[nextItem]))}` : ''}`}</small>
+    <span class="hs-bar big sp-bar"><i style="width:${s.done ? 100 : (s.into / s.need) * 100}%"></i></span>
+    <small class="sp-sub">${s.done ? '✓ Season complete! You earned the season badge.' : `${(s.need - s.into).toLocaleString()} XP to tier ${s.tier + 1}${nextItem ? ` · next item at tier ${nextItem}: ${esc(seasonItemName(s.items[nextItem]))}` : ''}`}</small>
     <div class="sp-track">${cells}</div>
-    <p class="note">Free for everyone. All XP you earn this season fills it (${TIER_XP.toLocaleString()} XP a tier). Every tier pays tokens; season wraps and banners can't be bought and won't come back. Tier ${TIERS} earns the Season ${s.n} badge.</p>
+    <p class="note">Free for everyone. A new season starts every Monday. All XP you earn this season fills it (${s.n <= 1 ? '1,000 XP a tier' : `${tierXp(1).toLocaleString()} XP for tier 1, 100 more for each tier after`}; kills on bots give less XP than kills on players). Every tier pays tokens; season wraps and banners can't be bought and won't come back. Tier ${TIERS} earns the Season ${s.n} badge.</p>
   </div>`;
 }
 function dailyHtml() {

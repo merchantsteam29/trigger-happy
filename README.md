@@ -291,7 +291,7 @@ don't count, and it needs at least 2 players). The first 5 matches are placement
 Rookie, Contender (1,100), Veteran (1,250), Elite (1,400), Master (1,550) and Legend (1,700). Ranked servers use the
 standard rules, show their rating in the server list, and your division shows on your profile.
 
-**Season rewards:** your best division each season is remembered. When the season ends you get the **Ranked**
+**Season rewards:** ranked seasons follow the season pass (a new one every Monday). Your best division each season is remembered. When the season ends you get the **Ranked**
 banner for that division and every one below it (Contender, Veteran, Elite, Master, Legend).
 
 ## Quick Play & Game Night
@@ -340,10 +340,10 @@ profile automatically.
 
 ## Achievements
 
-**Missions → Achievements** has 29 feats you unlock once and keep: kill milestones, headshots, streaks, triple kills,
+**Missions → Achievements** has 36 feats you unlock once and keep: kill milestones, headshots, streaks, triple kills,
 air / low-health / long-range / suppressed / melee / explosive / barrel kills, using 20 guns, wins, matches, every map
 and 15 modes, Zombie Survival waves, winning a Battle Royale or a Tournament, Game Night matches, holiday banners,
-ranked divisions and smashing 31 Halloween jack-o'-lanterns. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
+ranked divisions, kills on real players, finishing 4 season passes and smashing 31 Halloween jack-o'-lanterns. Each is a badge (bronze, silver, gold or legend); tap an unlocked one to show it on your profile.
 
 ## Map editor
 
@@ -379,8 +379,9 @@ When a new player opens it and finishes their first match, you both get 🪙 200
 
 ## Season pass
 
-A free 30-tier pass every 6 weeks (Season 1 **Ignition** started Monday 5 October 2026, then Season 2 **Frostbite**).
-All XP you earn fills it, 1,000 XP a tier. Every tier pays tokens; tiers 5, 10, 15, 20, 25 and 30 give season-only
+A free 30-tier pass every week: a new season starts every Monday 00:00 UTC (Season 1 **Ignition** ran 5 to 19 October 2026,
+then Season 2 **Frostbite**, then a new named season each week). All XP you earn fills it. Each tier needs 100 XP more than the
+last (1,000 for tier 1, 73,500 for all 30). Kills on bots give 30 XP, kills on real players 100. Every tier pays tokens; tiers 5, 10, 15, 20, 25 and 30 give season-only
 wraps and banners that can't be bought, and tier 30 earns the season badge. See it at the top of **Missions**.
 
 ## Featured mode of the day
@@ -438,7 +439,7 @@ Open **Settings** from the main menu or the pause menu. Everything is saved in y
 | HUD & Audio | Time zone (shows your device's; change it in your system settings), volume, **hit sound** (Classic, Ding, Click, Thud or Off) and **kill sound** (Classic, Bell, Chime, Boom or Off), each previewed when you pick it, party chat, voice chat, **streamer mode** (hides server codes and shows other players as Player 1, Player 2…), minimap on/off, HUD size, and a **crosshair editor** with a live preview: shape (cross, T, circle, dot only), color, size, line length, thickness, gap, center dot, outline, and whether it spreads while you move |
 | Accessibility | **Colorblind mode** (Protanopia, Deuteranopia, Tritanopia, Grayscale: team, zombie and health bar colors), **sound captions** (footsteps, gunfire, reloads, explosions on screen with an arrow to where they came from) and caption size, kill cam, blood |
 | Mobile | Edit button layout (drag any touch button anywhere, resize each one), button size, button opacity |
-| Missions | 50 missions (kills, headshots, sniper / shotgun / melee / secondary / explosive kills, streaks, multi-kills, long shots, revenge, airborne, suppressed and low-health kills, matches, wins, team wins, maps and modes played, mode-specific goals, collecting cosmetics). Each one pays tokens 🪙 |
+| Missions | 57 missions (kills, headshots, sniper / shotgun / melee / secondary / explosive kills, streaks, multi-kills, long shots, revenge, airborne, suppressed and low-health kills, matches, wins, team wins, maps and modes played, mode-specific goals, collecting cosmetics, kills on real players). Each one pays tokens 🪙 |
 | Customize | 23 hats, 9 hair styles (+ colors), 12 face items, 12 back items and 17 banners. Tap anything to preview it, then spend tokens on whatever you want. Other players see what you wear |
 
 ## Shop & gifts
