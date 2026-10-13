@@ -67,6 +67,7 @@ real match. Replay it any time from **Keyboard & mouse → Play the tutorial** i
 | Bounty Hunter | The leader carries a bounty (gold). Killing them is worth 3 points, anyone else 1. First to 30 |
 | Domination | Red vs Blue over three zones A, B, C. Stand in a zone with only your team to capture it; each zone you own scores a point per second. First to 200 |
 | Zombie Survival | Co-op against waves of zombies that get bigger, tougher and faster; runners from wave 3 and a Brute every 5th wave. Downed players come back when the wave is cleared; the last few zombies show on the minimap. Survive as many waves as you can |
+| Prop Hunt | Props hide as a crate, barrel, box, traffic cone or tires (R switches; you see yourself in third person and can't shoot). Hunters are blind for the first 25 s, then search; every shot that hits nothing costs a hunter 3 health. Found props join the hunters. Props score for every 20 s hidden and win if any survive the 5 minutes |
 | Lights Out | Horror Infection: night, thick fog, rain and lightning. Survivors carry flashlights and hear a heartbeat when a zombie is close; zombies have glowing eyes, no name tags and see a little better in the dark. Survive until time runs out |
 
 **Game Night only:** **Battle Royale** (one life, everyone starts with a pistol, loot guns, health and ammo around the

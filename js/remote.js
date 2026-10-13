@@ -10,6 +10,7 @@ const RoundedBoxGeometry = function (sx, sy, sz, seg, r) {
   return modelQuality.rounded ? new RoundedBox(sx, sy, sz, seg, r) : new THREE.BoxGeometry(sx, sy, sz);
 };
 import { WEAPONS } from './weapons.js';
+import { buildDisguise, disguiseBox } from './prophunt.js';
 import { angLerp } from './util.js';
 import { Limb, solveIK } from './rig.js';
 
@@ -536,6 +537,10 @@ export class RemotePlayer {
     this.root.visible = this.limbs.visible = vis;
     this.tag.visible = this.alive && this.deathT === 0;
     this.posed = this.alive && this.deathT === 0;
+    if (this.disguise) {
+      this.root.visible = this.limbs.visible = false;
+      if (this.propMesh) { this.propMesh.visible = this.alive; this.propMesh.position.copy(this.pos); this.propMesh.rotation.y = this.root.rotation.y; }
+    }
     this.updateHat(dt);
   }
 
@@ -559,7 +564,16 @@ export class RemotePlayer {
 
   // Head box follows the model's actual head (crouching, leaning while sprinting, looking up or
   // down), so what you see is what you hit. It's checked first so headshots win on overlap.
+  // Prop Hunt: drawn (and hit) as a prop instead of a person.
+  setDisguise(kind) {
+    if (kind === (this.disguise || null)) return;
+    if (this.propMesh) { this.scene.remove(this.propMesh); this.propMesh = null; }
+    this.disguise = kind || null;
+    if (kind) { this.propMesh = buildDisguise(kind); this.scene.add(this.propMesh); }
+  }
+
   hitboxes() {
+    if (this.disguise) return [disguiseBox(this.disguise, this.pos)];
     const p = this.pos, c = this.headPos(_hb);
     const big = this.bigHead;
     const hw = big ? 0.42 : 0.19, lo = big ? 0.36 : 0.17, hi = big ? 0.44 : 0.21;
@@ -578,6 +592,7 @@ export class RemotePlayer {
 
   dispose() {
     this.scene.remove(this.root, this.limbs);
+    if (this.propMesh) this.scene.remove(this.propMesh);
     if (this.hatFly && this.hat) this.scene.remove(this.hat);
   }
 }

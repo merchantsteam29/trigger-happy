@@ -10,6 +10,7 @@ import { cleanModMap, randomMods } from './mods.js';
 import { roles } from './roles.js';
 import { APP_VERSION } from './version.js';
 import { moderation } from './moderation.js';
+import { HIDE_MS, DISGUISES } from './prophunt.js';
 
 // redBlue: two balanced teams. hill: uses the moving zone. loadout: forced for everyone.
 // preset: physics/rule overrides applied when the mode is picked.
@@ -35,6 +36,10 @@ export const MODES = {
   zombies: { name: 'Zombie Survival', short: 'ZOMBIES', teams: true, coop: true, score: 0, time: 0, desc: 'Co-op. Hold out against waves of zombies that get bigger, tougher and faster. Downed players come back when the wave is cleared. Every 5th wave brings a Brute.' },
   dom: { name: 'Domination', short: 'DOMINATION', teams: true, redBlue: true, dom: true, score: 200, time: 10, desc: 'Red vs Blue over three zones (A, B, C). Stand in a zone with only your team to capture it; every zone you own scores a point per second.' },
 };
+// Prop Hunt (prophunt.js): props (team 1) hide as crates, barrels and cones; hunters (team 2) are blind
+// for the first 25 s. Found props join the hunters. Props win if any are still hidden at the end.
+MODES.prophunt = { name: 'Prop Hunt', short: 'PROP HUNT', teams: true, prop: true, score: 0, time: 5,
+  desc: 'Props hide as crates, barrels, boxes, cones and tires (R to switch). Hunters wait 25 s, then search. Every miss costs a hunter health. Found props become hunters; props win if any survive.' };
 // Horror Infection: the same rules as Infection, played in the dark (game.js updateHorror).
 MODES.horror = { name: 'Lights Out', short: 'LIGHTS OUT', teams: true, infect: true, horror: true, score: 0, time: 5,
   desc: 'Horror Infection: night, thick fog, rain and lightning. Survivors carry flashlights; zombies have glowing eyes and no name tags. Survive until time runs out.' };
@@ -52,7 +57,7 @@ const BR_RARE = ['railgun', 'minigun', 'rocket', 'amr', 'gl'];
 // Single-player only (main menu → Practice Range): no timer, no score limit, target dummies.
 MODES.practice = { name: 'Practice Range', short: 'PRACTICE', teams: false, practice: true, score: 0, time: 0, desc: 'Solo target practice with every weapon.' };
 export const MODE_ORDER = ['ffa', 'tdm', 'gungame', 'koth', 'infection', 'ctf', 'dom', 'hardpoint', 'killconfirmed', 'juggernaut', 'bounty', 'lms', 'oitc',
-  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror'];
+  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt'];
 const FLAG_RETURN_MS = 20000;
 
 // Runs fn every ms. Browsers slow main-thread timers to once a second in background tabs, which
@@ -206,6 +211,8 @@ export class HostLogic {
     this.setupProps();
     this.hillHolder = null;
     this.infectAt = this.mode.infect ? Date.now() + INFECT_DELAY_MS : 0;
+    this.propHideUntil = this.mode.prop ? Date.now() + HIDE_MS : 0;
+    this.propScoreT = Date.now();
     this.infected = false;
     // Zombie Survival: wave number, zombies still to spawn this wave, and the break before the next one.
     this.zw = this.s.mode === 'zombies' ? { wave: 0, toSpawn: 0, breakUntil: Date.now() + Z_FIRST_MS, spawnT: 0 } : null;
@@ -401,6 +408,7 @@ export class HostLogic {
     if (this.jugg === id) this.jugg = null;
     if (this.bountyId === id) { this.bountyId = null; this.updateBounty(); }
     this.checkInfectionEnd();
+    this.checkPropEnd();
     this.checkLmsEnd();
     this.checkZombiesEnd();
     this.checkBrEnd();
@@ -446,6 +454,7 @@ export class HostLogic {
       return red <= blue ? 1 : 2;
     }
     if (this.mode.infect) return this.infected ? 2 : 1;
+    if (this.mode.prop) return Date.now() < this.propHideUntil ? 1 : 2; // join while props hide: you hide too; later: you hunt
     if (this.s.mode === 'zombies') return 1;
     return 0;
   }
@@ -464,6 +473,7 @@ export class HostLogic {
     }
     if (this.mode.infect && p.team === 2) return ['claws'];
     if (p.zombie) return ['claws'];
+    if (this.mode.prop && p.team === 1) return ['knife']; // props can't fight back (hits refused in hit())
     if (this.s.mode === 'juggernaut' && p.id === this.jugg) return JUGG_LOADOUT;
     if (this.s.mode === 'roulette') return SLOTS.map((opts) => opts[(Math.random() * opts.length) | 0]);
     if (this.s.mode === 'rotation') return [this.rotW, 'knife'];
@@ -532,6 +542,12 @@ export class HostLogic {
         // q is a counter: the position channel is unordered, so ignore anything older than we have.
         if (typeof m.q === 'number') { if (m.q <= (p.lastQ || 0)) break; p.lastQ = m.q; }
         if (p.alive && Array.isArray(m.p)) { this.checkMove(p, m.p); p.st = [m.p[0], m.p[1], m.p[2], m.y, m.pi, m.w, m.c ? 1 : 0, m.a | 0]; }
+        break;
+      case 'dg': // Prop Hunt: change disguise
+        if (this.mode.prop && p.team === 1 && DISGUISES.includes(m.k)) p.disguise = m.k;
+        break;
+      case 'miss': // Prop Hunt: a hunter's shot hit nothing (never takes the last bit of health)
+        if (this.mode.prop && p.team === 2 && p.alive && Date.now() >= this.propHideUntil) { p.hp = Math.max(1, p.hp - 3); p.lastDmg = Date.now(); }
         break;
       case 'shot':
         if (!this.checkRate(p, m.w)) break; // faster than the gun can fire: dropped
@@ -709,6 +725,7 @@ export class HostLogic {
     const w = WEAPONS[m.w];
     const explosive = ['gl', 'frag', 'sticky', 'rocket', 'p_hellfire', 'crossbow', 'harpoon', 'flare', 'tknife', 'vortex'].includes(m.w);
     if (!attacker.alive && !explosive) return;
+    if (this.mode.prop && attacker.team === 1 && v !== attacker) return; // props can't hurt anyone
     if (v !== attacker && !this.hostile(attacker, v) && !(this.s.friendlyFire && this.mode.redBlue)) return;
     if (this.s.headshotsOnly && w && w.type === 'gun' && !m.head && v !== attacker) return;
     const now = Date.now();
@@ -957,6 +974,15 @@ export class HostLogic {
           if (enemyKill) attacker.score += 1;
         }
         this.checkInfectionEnd();
+        break;
+      case 'prophunt':
+        if (v.team === 1) { // found: join the hunters
+          v.team = 2;
+          v.disguise = null;
+          this.broadcast({ t: 'notice', text: `${v.name} WAS FOUND` });
+          if (enemyKill) { attacker.score += 1; attacker.hp = Math.min(this.maxHp(attacker), attacker.hp + 25); }
+        }
+        this.checkPropEnd();
         break;
       case 'br': {
         v.respawnAt = 0; // one life
@@ -1300,6 +1326,54 @@ export class HostLogic {
     return hills[this.hillIdx % hills.length];
   }
 
+  // ---------- Prop Hunt ----------
+  // Match start: about a quarter of the players hunt (at least one, once there are two players).
+  assignHunters() {
+    const list = [...this.players.values()].filter((p) => !p.dummy).sort(() => Math.random() - 0.5);
+    const k = list.length >= 2 ? Math.max(1, Math.round(list.length / 4)) : 0;
+    list.forEach((p, i) => {
+      p.team = i < k ? 2 : 1;
+      p.disguise = p.team === 1 ? DISGUISES[(Math.random() * DISGUISES.length) | 0] : null;
+    });
+    this.propHideUntil = Date.now() + HIDE_MS;
+    this.propScoreT = Date.now();
+  }
+
+  tickProps(now) {
+    const all = [...this.players.values()];
+    const props = all.filter((p) => p.team === 1);
+    // Enough hunters: about a quarter while the props hide (players are still joining), and always at
+    // least one once there are two players (if the hunters leave, a prop takes over).
+    const want = all.length < 2 ? 0 : now < this.propHideUntil ? Math.max(1, Math.round(all.length / 4)) : 1;
+    let hunters = all.length - props.length;
+    while (hunters < want && props.length) {
+      const h = props.splice((Math.random() * props.length) | 0, 1)[0];
+      h.team = 2;
+      h.disguise = null;
+      hunters++;
+      if (now >= this.propHideUntil) this.broadcast({ t: 'notice', text: `${h.name} IS NOW A HUNTER` });
+      const l = this.loadoutFor(h);
+      if (h.bot) h.bot.setLoadout(l); else this.sendTo(h.id, { t: 'loadout', l });
+    }
+    for (const p of props) if (!p.disguise) p.disguise = DISGUISES[(Math.random() * DISGUISES.length) | 0];
+    // Props score a point for every 20 s they stay hidden (after the hiding time).
+    if (now >= this.propHideUntil && now - this.propScoreT >= 20000) {
+      this.propScoreT = now;
+      for (const p of props) if (p.alive) p.score += 1;
+    }
+    for (const p of props) { // bots notice props that move
+      const lp = p.propPos;
+      if (lp && Math.hypot(p.st[0] - lp[0], p.st[2] - lp[1]) > 0.08) p.movedAt = now;
+      p.propPos = [p.st[0], p.st[2]];
+    }
+  }
+
+  checkPropEnd() {
+    if (!this.mode.prop || this.phase !== 'playing') return;
+    const all = [...this.players.values()];
+    if (all.some((p) => p.team === 2) && !all.some((p) => p.team === 1)) this.endMatch(2);
+  }
+
   checkInfectionEnd() {
     if (!this.mode.infect || this.phase !== 'playing' || !this.infected) return;
     const all = [...this.players.values()];
@@ -1420,6 +1494,8 @@ export class HostLogic {
         this.endTitle = win ? `[${win}] WINS THE CLAN WAR` : 'CLAN WAR: DRAW';
         this.broadcast({ t: 'warend', a: this.s.war.a, b: this.s.war.b, winner: win, score: [r, b] });
       }
+    } else if (this.mode.prop) {
+      this.endTitle = winnerTeam === 2 ? 'HUNTERS WIN' : 'PROPS WIN';
     } else if (this.mode.infect) {
       this.endTitle = winnerTeam === 2 ? 'ZOMBIES WIN' : 'SURVIVORS WIN';
     } else if (this.tour) {
@@ -1533,6 +1609,7 @@ export class HostLogic {
       p.alive = false;
       p.respawnAt = 0;
     });
+    if (this.mode.prop) this.assignHunters();
     this.broadcast({ t: 'settings', s: this.s });
     this.broadcast({ t: 'start', map: this.s.map, mode: this.s.mode });
     if (this.tour && this.s.mode === 'tourney') {
@@ -1571,6 +1648,7 @@ export class HostLogic {
         if (p.alive && p.hp < max && now - p.lastDmg > 5000 && this.s.mode !== 'vampire' && !this.mode.noRegen) p.hp = Math.min(max, p.hp + max * 0.25 * rdt);
       }
       if (this.mode.infect && !this.infected && this.infectAt && now >= this.infectAt) this.startInfection();
+      if (this.mode.prop) this.tickProps(now);
       if (this.zw) this.tickZombies(now);
       // Auto bots: every 15 s, nudge their skill toward an even fight with the real players.
       if (now - (this.botSkillT || 0) > 15000) {
@@ -1617,6 +1695,12 @@ export class HostLogic {
     if (this.props && this.props.length) msg.pr = this.props.map((o) => [o.id, o.kind === 'barrel' ? 1 : 2, r2(o.x), r2(o.y), r2(o.z)]);
     if (this.zw) msg.zw = [this.zw.wave, this.zombiesLeft(), this.zw.breakUntil ? Math.max(0, Math.ceil((this.zw.breakUntil - now) / 1000)) : 0];
     if (this.mode.infect) msg.inf = this.infected ? 0 : Math.max(0, Math.ceil((this.infectAt - now) / 1000));
+    // Prop Hunt: seconds of hiding left, and each hidden prop's disguise
+    if (this.mode.prop) {
+      msg.ph = Math.max(0, Math.ceil((this.propHideUntil - now) / 1000));
+      msg.dg = {};
+      for (const p of this.players.values()) if (p.team === 1 && p.alive && p.disguise) msg.dg[p.id] = p.disguise;
+    }
     if (this.s.mode === 'killconfirmed') msg.tg = this.tags.map((t) => [t.id, r2(t.x), r2(t.y), r2(t.z), t.team]);
     // Pickups that are ready: [id, kind, x, y, z, power weapon]
     if (this.pickupsOn()) msg.pk = this.pickups.filter((k) => now >= k.readyAt && (k.kind !== 'power' || k.w)).map((k) => [k.id, k.kind, r2(k.x), r2(k.y), r2(k.z), k.w || 0]);

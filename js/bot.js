@@ -62,6 +62,7 @@ export class Bot {
   get skill() { return this.difficulty === 'auto' ? this.logic.botSkill ?? 0.45 : { easy: 0.1, normal: 0.5, hard: 1 }[this.difficulty]; }
 
   spawn(s, loadout) {
+    this.hide = null;
     const b = this.body;
     b.pos.x = s.x; b.pos.y = s.y; b.pos.z = s.z;
     b.vel.x = b.vel.y = b.vel.z = 0;
@@ -117,6 +118,7 @@ export class Bot {
     const p = this.p;
     if (!p.alive) return;
     const L = this.logic, d = this.d, b = this.body;
+    if (L.mode.prop && p.team === 2 && Date.now() < L.propHideUntil) return; // Prop Hunt: hunters wait blind
     const w = stats(this.weapon);
     const melee = w.type === 'melee';
     const eye = { x: b.pos.x, y: b.pos.y + EYE, z: b.pos.z };
@@ -127,6 +129,8 @@ export class Bot {
       if (e === p || !e.alive || !L.hostile(p, e)) continue;
       const dist = Math.hypot(e.st[0] - b.pos.x, e.st[2] - b.pos.z);
       if (dist >= bestD) continue;
+      // Prop Hunt: props never attack; hunters only spot a prop up close or one that just moved.
+      if (L.mode.prop && (p.team === 1 || (e.team === 1 && dist > 7 && Date.now() - (e.movedAt || 0) > 3000))) continue;
       const ang = Math.abs(angDiff(this.yaw, Math.atan2(-(e.st[0] - b.pos.x), -(e.st[2] - b.pos.z))));
       if (ang > (L.zw && !p.zombie ? 4 : d.fov) && dist > 3 && e !== this.target) continue; // Zombie Survival: survivors hear them coming
       if (!this.visible(e, eye)) continue;
@@ -175,7 +179,10 @@ export class Bot {
     const sz = L.brZone; // Battle Royale: get back inside the circle
     const brGoal = sz && Math.hypot(b.pos.x - sz.cx, b.pos.z - sz.cz) > Math.max(2, sz.r * 0.75) && (!this.target || Math.hypot(b.pos.x - sz.cx, b.pos.z - sz.cz) > sz.r)
       ? { x: sz.cx + (Math.random() - 0.5) * sz.r * 0.5, y: b.pos.y, z: sz.cz + (Math.random() - 0.5) * sz.r * 0.5 } : null;
-    if (brGoal) { if (!this.brGoal || Math.hypot(this.brGoal.x - sz.cx, this.brGoal.z - sz.cz) > sz.r * 0.7) this.brGoal = brGoal; goal = this.brGoal; }
+    if (L.mode.prop && p.team === 1) { // Prop Hunt: go to a hiding spot and stay still
+      if (!this.hide) { const n = L.nav && L.nav.random(); this.hide = n ? { x: n.x, y: n.y, z: n.z } : null; }
+      goal = this.hide && Math.hypot(this.hide.x - b.pos.x, this.hide.z - b.pos.z) > 1 ? this.hide : null;
+    } else if (brGoal) { if (!this.brGoal || Math.hypot(this.brGoal.x - sz.cx, this.brGoal.z - sz.cz) > sz.r * 0.7) this.brGoal = brGoal; goal = this.brGoal; }
     else if (this.retreat) goal = this.retreat;
     else if (hpGoal) goal = hpGoal;
     else if (flagGoal && (!this.target || L.flags[p.team === 1 ? 2 : 1].carrier === p.id)) goal = flagGoal;

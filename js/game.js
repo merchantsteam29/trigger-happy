@@ -22,6 +22,7 @@ import { applyColorblind, pal } from './access.js';
 import { SPRAY_PALETTE } from './clans.js';
 import { setVolume } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
+import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -829,7 +830,7 @@ export class Game {
         break;
       case 'loadout':
         if (this.me.alive) {
-          this.setLoadout(m.l);
+          this.setLoadout(m.l || this.nextLoadout); // null: back to your own loadout
           if (m.hp) { this.me.hp = m.hp; this.maxHp = m.hp; }
           sfx.equip(0.8);
         }
@@ -865,6 +866,9 @@ export class Game {
         this.rot = m.rot || null;
         this.flagData = m.fl || null;
         this.domData = m.dom || null;
+        this.propHide = m.ph ?? 0;
+        this.setMyDisguise((m.dg && m.dg[this.myId]) || null);
+        for (const [rid, r] of this.remotes) r.setDisguise((m.dg && m.dg[rid]) || null);
         let teamsChanged = false;
         for (const id in m.s) {
           const a = m.s[id];
@@ -1153,6 +1157,7 @@ export class Game {
     let won;
     if (MODES[mode].redBlue) won = (team === 1 && m.title === 'RED TEAM WINS') || (team === 2 && m.title === 'BLUE TEAM WINS');
     if (this.rules.war) won = (team === 1 && m.title === `[${this.rules.war.a}] WINS THE CLAN WAR`) || (team === 2 && m.title === `[${this.rules.war.b}] WINS THE CLAN WAR`);
+    else if (MODES[mode].prop) won = (team === 2 && m.title === 'HUNTERS WIN') || (team === 1 && m.title === 'PROPS WIN');
     else if (MODES[mode].infect) won = (team === 2 && m.title === 'ZOMBIES WIN') || (team === 1 && m.title === 'SURVIVORS WIN');
     else won = !!m.scores && m.scores[0] && m.scores[0].id === this.myId;
     const mine = (m.scores || []).find((s) => s.id === this.myId);
@@ -1237,7 +1242,8 @@ export class Game {
     const cam = this.camera;
     const w = this.W(this.curW);
 
-    if (me.alive && !this.matchOver && !this.frozen) this.updateMovement(dt);
+    if (me.alive && !this.matchOver && !this.frozen && !this.huntBlind()) this.updateMovement(dt);
+    this.updateProp();
     this.updateGrapple(dt);
     this.assist = null;
     if ((this.touch || this.padMode) && opts.aimAssist && me.alive && !this.matchOver) this.aimAssist(dt);
@@ -1261,6 +1267,7 @@ export class Game {
         me.pitch + this.recoil + this.flinch * 0.035 + (Math.random() - 0.5) * this.shake * 0.1,
         me.yaw + (Math.random() - 0.5) * this.shake * 0.1,
         this.roll + Math.sin(this.bobPhase) * 0.004 * bob + this.flinch * 0.02);
+      if (this.myDisguise) this.propCam(cam);
     } else if (this.spectating) {
       this.specCam(dt);
     } else if (this.killcam) {
@@ -1301,6 +1308,7 @@ export class Game {
       if (this.killcam) this.replayRemote(r);
       r.update(dt);
       if (this.killcam && r.id === this.killcam.killer) { r.root.visible = r.limbs.visible = false; r.tag.visible = false; } // we're looking through their eyes
+      if (r.disguise && !this.isAlly(r)) r.tag.visible = false; // Prop Hunt: no name tags on hidden props
       if (r.stepped && r.crouch < 0.5 && r.pos.distanceTo(cam.position) < 32) this.posSound(this.stepSound(r.pos.x, r.pos.y, r.pos.z), r.pos, r.sprint > 0.5 ? 0.6 : 0.42, this.isAlly(r) ? null : { k: 'step' + r.id, label: r.sprint > 0.5 ? 'Running' : 'Footsteps', enemy: true, pri: 1 }); // teammates' steps aren't captioned
       // Enemies reloading nearby can be heard.
       const rl = !!(r.flags & 1);
@@ -1667,6 +1675,7 @@ export class Game {
   }
 
   startReload() {
+    if (this.myDisguise) { this.cycleDisguise(); return; } // Prop Hunt: R switches disguise
     const id = this.curW, w = this.W(id);
     if ((w.type !== 'gun' && w.type !== 'proj') || this.reloadT > 0 || this.switchT > 0) return;
     if (MODES[this.rules.mode].noReload || w.power) return;
@@ -1777,6 +1786,7 @@ export class Game {
   }
 
   tryFire() {
+    if (this.myDisguise || this.huntBlind()) return; // Prop Hunt: props can't shoot; hunters wait
     const id = this.curW, w = this.W(id);
     if (this.fireCd > 0 || this.switchT > 0 || this.reloadT > 0 || this.burstLeft > 0 || this.pendingThrow) return;
     if (!w.auto && this.firedThisPress) return;
@@ -1886,6 +1896,7 @@ export class Game {
       (h.head ? sfx.head : sfx.hit)(0.8);
     }
     if (aimHit) { this.hud.hit(null); sfx.hit(0.8); }
+    if (this.rules.mode === 'prophunt' && this.myTeam === 2 && !hits.size) this.net.send({ t: 'miss' }); // misses cost hunters health
     for (const [pid, dmg] of propHits) this.net.send({ t: 'prop', id: pid, dmg: Math.round(dmg) });
     this.net.send({ t: 'shot', w: id, o: arr(muzzle), e: ends, q: w.quiet ? 1 : 0 });
   }
@@ -1899,6 +1910,56 @@ export class Game {
     track.stat({ pumpkins: 1 });
     const left = this.pumpkins.left;
     this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
+  }
+
+  // ---------- Prop Hunt ----------
+  huntBlind() { return this.rules.mode === 'prophunt' && this.propHide > 0 && this.myTeam === 2 && this.me.alive; }
+
+  // Your own disguise (from the host's snapshot): drawn in third person, no gun or crosshair.
+  setMyDisguise(kind) {
+    if (kind === (this.myDisguise || null)) return;
+    if (this.myPropMesh) { this.scene.remove(this.myPropMesh); this.myPropMesh = null; }
+    this.myDisguise = kind || null;
+    if (kind) { this.myPropMesh = buildDisguise(kind); this.scene.add(this.myPropMesh); }
+    this.vm.setVisible(!kind && this.me.alive);
+    this.hud.crosshair.classList.toggle('prop-hidden', !!kind);
+    document.getElementById('hud').classList.toggle('as-prop', !!kind); // no weapon panel either
+  }
+
+  cycleDisguise() {
+    const now = performance.now();
+    if (now - (this.dgT || 0) < 300) return;
+    this.dgT = now;
+    const next = DISGUISES[(DISGUISES.indexOf(this.myDisguise) + 1) % DISGUISES.length];
+    this.net.send({ t: 'dg', k: next });
+    this.setMyDisguise(next);
+    this.hud.say(DISGUISE_NAME[next].toUpperCase());
+    sfx.equip(0.6);
+  }
+
+  updateProp() {
+    if (this.myPropMesh) {
+      this.myPropMesh.visible = this.me.alive;
+      this.myPropMesh.position.copy(this.me.pos);
+      this.myPropMesh.rotation.y = this.me.yaw;
+    }
+    // Hunters can't see anything while the props hide.
+    const blind = this.huntBlind();
+    if (blind || this.blindEl) {
+      if (!this.blindEl) { this.blindEl = document.createElement('div'); this.blindEl.className = 'ph-blind'; document.getElementById('hud').appendChild(this.blindEl); }
+      this.blindEl.classList.toggle('hidden', !blind);
+      if (blind) this.blindEl.innerHTML = `<b>THE PROPS ARE HIDING</b><span>You're released in ${this.propHide}s</span>`;
+    }
+  }
+
+  // Third person for props: behind and above, pulled in so walls don't block the view.
+  propCam(cam) {
+    const me = this.me, cp = Math.cos(me.pitch);
+    const fx = -Math.sin(me.yaw) * cp, fy = Math.sin(me.pitch), fz = -Math.cos(me.yaw) * cp;
+    const px = me.pos.x, py = me.pos.y + 1.2, pz = me.pos.z;
+    const hit = raycast(px, py, pz, -fx, -fy, -fz, 3.4);
+    const d = hit ? Math.max(0.3, hit.t - 0.25) : 3.4;
+    cam.position.set(px - fx * d, py - fy * d, pz - fz * d);
   }
 
   // ---------- Grappling hook ----------
@@ -2809,6 +2870,11 @@ export class Game {
         bar = `ZONE ${st}<span class="lim"> · MOVES IN ${secs}s</span>`;
       }
       return bar;
+    }
+    if (mode === 'prophunt') {
+      const left = [...this.players.values()].filter((p) => p.team === 1).length;
+      if (this.propHide > 0) return this.myTeam === 2 ? `HUNTERS RELEASED IN ${this.propHide}s` : `HIDE! HUNTERS COME OUT IN ${this.propHide}s<span class="lim"> · R: change disguise</span>`;
+      return this.myTeam === 1 ? `STAY HIDDEN · ${left} PROP${left === 1 ? '' : 'S'} LEFT<span class="lim"> · R: change disguise</span>` : `FIND THE PROPS · ${left} LEFT<span class="lim"> · misses cost health</span>`;
     }
     if (mode === 'juggernaut') {
       let j = null;

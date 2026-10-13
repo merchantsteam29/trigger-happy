@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.11', name: 'Prop Hunt', banner: 'tiger', notes: [
+    'New mode: Prop Hunt. Props hide as a crate, barrel, box, traffic cone or tires (press R to switch)',
+    'Hunters are blind for the first 25 seconds, then search. Every miss costs a hunter health',
+    'Found props join the hunters. Props win if any are still hidden when time runs out',
+  ] },
   { v: '2026.10.12.10', name: 'Grappling Hook', banner: 'camo', notes: [
     'New utility: the Grappling Hook. Aim at a wall or ledge and throw it (G) to get pulled there',
     'Jump to let go early. 3 charges, and one comes back every 6 seconds',
