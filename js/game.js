@@ -871,6 +871,7 @@ export class Game {
         this.flagData = m.fl || null;
         this.domData = m.dom || null;
         this.propHide = m.ph ?? 0;
+        this.duel = m.du || null;
         this.setMyDisguise((m.dg && m.dg[this.myId]) || null);
         for (const [rid, r] of this.remotes) r.setDisguise((m.dg && m.dg[rid]) || null);
         let teamsChanged = false;
@@ -2920,6 +2921,10 @@ export class Game {
         bar = `ZONE ${st}<span class="lim"> · MOVES IN ${secs}s</span>`;
       }
       return bar;
+    }
+    if (mode === 'duel' && this.duel) {
+      const [round, gun, next] = this.duel, W = WEAPONS[gun];
+      return next > 0 ? `NEXT ROUND IN ${next}s` : `ROUND ${round} · <span class="jugg">${W ? W.name.toUpperCase() : ''}</span> · FIRST TO ${this.rules.scoreLimit}`;
     }
     if (mode === 'prophunt') {
       const left = [...this.players.values()].filter((p) => p.team === 1).length;

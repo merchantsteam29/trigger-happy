@@ -36,6 +36,15 @@ export const MODES = {
   zombies: { name: 'Zombie Survival', short: 'ZOMBIES', teams: true, coop: true, score: 0, time: 0, desc: 'Co-op. Hold out against waves of zombies that get bigger, tougher and faster. Downed players come back when the wave is cleared. Every 5th wave brings a Brute.' },
   dom: { name: 'Domination', short: 'DOMINATION', teams: true, redBlue: true, dom: true, score: 200, time: 10, desc: 'Red vs Blue over three zones (A, B, C). Stand in a zone with only your team to capture it; every zone you own scores a point per second.' },
 };
+// Duel: 1v1, first to 5. Every kill ends the round: both respawn far apart, and everyone gets the
+// same new random loadout (with more players it's a free-for-all with shared loadouts).
+MODES.duel = { name: 'Duel', short: 'DUEL', teams: false, duel: true, score: 5, time: 8,
+  desc: '1v1, first to 5. Every kill starts a new round: you both respawn far apart with the same new random loadout. With more players: everyone vs everyone, one shared loadout.' };
+const DUEL_PRIMARY = ['ar', 'carbine', 'br', 'burst', 'smg', 'pdw', 'vector', 'lmg', 'dmr', 'sniper', 'shotgun', 'autoshot', 'slug', 'doublebarrel', 'crossbow'];
+const DUEL_SECONDARY = ['pistol', 'bpistol', 'handcannon', 'revolver', 'autorev', 'mpistol', 'microsmg'];
+const DUEL_UTILITY = ['frag', 'sticky', 'smoke', 'flash', 'grapple'];
+const DUEL_ROUND_GAP = 2500;
+const pick = (a) => a[(Math.random() * a.length) | 0];
 // Prop Hunt (prophunt.js): props (team 1) hide as crates, barrels and cones; hunters (team 2) are blind
 // for the first 25 s. Found props join the hunters. Props win if any are still hidden at the end.
 MODES.prophunt = { name: 'Prop Hunt', short: 'PROP HUNT', teams: true, prop: true, score: 0, time: 5,
@@ -57,7 +66,7 @@ const BR_RARE = ['railgun', 'minigun', 'rocket', 'amr', 'gl'];
 // Single-player only (main menu → Practice Range): no timer, no score limit, target dummies.
 MODES.practice = { name: 'Practice Range', short: 'PRACTICE', teams: false, practice: true, score: 0, time: 0, desc: 'Solo target practice with every weapon.' };
 export const MODE_ORDER = ['ffa', 'tdm', 'gungame', 'koth', 'infection', 'ctf', 'dom', 'hardpoint', 'killconfirmed', 'juggernaut', 'bounty', 'lms', 'oitc',
-  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt'];
+  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt', 'duel'];
 const FLAG_RETURN_MS = 20000;
 
 // Runs fn every ms. Browsers slow main-thread timers to once a second in background tabs, which
@@ -212,6 +221,9 @@ export class HostLogic {
     this.hillHolder = null;
     this.infectAt = this.mode.infect ? Date.now() + INFECT_DELAY_MS : 0;
     this.propHideUntil = this.mode.prop ? Date.now() + HIDE_MS : 0;
+    this.duelRound = 1;
+    this.duelNextAt = 0;
+    this.duelLoadout = this.mode.duel ? this.newDuelLoadout() : null;
     this.propScoreT = Date.now();
     this.infected = false;
     // Zombie Survival: wave number, zombies still to spawn this wave, and the break before the next one.
@@ -358,7 +370,7 @@ export class HostLogic {
     const all = [...this.players.values()];
     const humans = all.filter((p) => !p.bot).length;
     const bots = all.filter((p) => p.bot && !p.zombie);
-    const want = Math.max(0, this.botFill - humans);
+    const want = Math.max(0, (this.mode.duel ? Math.min(2, this.botFill) : this.botFill) - humans); // Duel: just one opponent
     for (let i = bots.length; i < want; i++) this.addBot('auto'); // fill bots follow how the players are doing
     for (let i = want; i < bots.length; i++) this.removePlayer(bots[bots.length - 1 - (i - want)].id);
   }
@@ -474,6 +486,7 @@ export class HostLogic {
     if (this.mode.infect && p.team === 2) return ['claws'];
     if (p.zombie) return ['claws'];
     if (this.mode.prop && p.team === 1) return ['knife']; // props can't fight back (hits refused in hit())
+    if (this.mode.duel) return this.duelLoadout || (this.duelLoadout = this.newDuelLoadout());
     if (this.s.mode === 'juggernaut' && p.id === this.jugg) return JUGG_LOADOUT;
     if (this.s.mode === 'roulette') return SLOTS.map((opts) => opts[(Math.random() * opts.length) | 0]);
     if (this.s.mode === 'rotation') return [this.rotW, 'knife'];
@@ -1003,6 +1016,13 @@ export class HostLogic {
         break;
       case 'practice':
         break;
+      case 'duel':
+        if (enemyKill) attacker.score = attacker.kills;
+        if (enemyKill && attacker.kills >= this.s.scoreLimit) { this.endMatch(); break; }
+        // 1v1: the round ends and both respawn together. With more players it's a free-for-all
+        // with one shared loadout and normal respawns.
+        if (this.players.size <= 2) { v.respawnAt = 0; if (!this.duelNextAt) this.duelNextAt = Date.now() + DUEL_ROUND_GAP; }
+        break;
       default: // ffa and the kill-count variants
         if (this.s.mode === 'vampire' && enemyKill && attacker.alive) attacker.hp = Math.min(this.maxHp(attacker), attacker.hp + 30);
         attacker.score = attacker.kills;
@@ -1324,6 +1344,19 @@ export class HostLogic {
     if (!this.mode.hill) return null;
     const hills = MAPS[this.s.map].hills;
     return hills[this.hillIdx % hills.length];
+  }
+
+  // ---------- Duel ----------
+  newDuelLoadout() { return [pick(DUEL_PRIMARY), pick(DUEL_SECONDARY), 'knife', pick(DUEL_UTILITY)]; }
+
+  // A kill ended the round: a new shared loadout, and everyone respawns (far apart: pickSpawn).
+  nextDuelRound() {
+    this.duelNextAt = 0;
+    this.duelRound++;
+    this.duelLoadout = this.newDuelLoadout();
+    this.broadcast({ t: 'notice', text: `ROUND ${this.duelRound} · ${(WEAPONS[this.duelLoadout[0]] || {}).name || ''}`.toUpperCase() });
+    for (const p of this.players.values()) { p.alive = false; p.respawnAt = 0; }
+    for (const p of this.players.values()) this.spawn(p);
   }
 
   // ---------- Prop Hunt ----------
@@ -1649,6 +1682,7 @@ export class HostLogic {
       }
       if (this.mode.infect && !this.infected && this.infectAt && now >= this.infectAt) this.startInfection();
       if (this.mode.prop) this.tickProps(now);
+      if (this.mode.duel && this.duelNextAt && now >= this.duelNextAt) this.nextDuelRound();
       if (this.zw) this.tickZombies(now);
       // Auto bots: every 15 s, nudge their skill toward an even fight with the real players.
       if (now - (this.botSkillT || 0) > 15000) {
@@ -1695,6 +1729,7 @@ export class HostLogic {
     if (this.props && this.props.length) msg.pr = this.props.map((o) => [o.id, o.kind === 'barrel' ? 1 : 2, r2(o.x), r2(o.y), r2(o.z)]);
     if (this.zw) msg.zw = [this.zw.wave, this.zombiesLeft(), this.zw.breakUntil ? Math.max(0, Math.ceil((this.zw.breakUntil - now) / 1000)) : 0];
     if (this.mode.infect) msg.inf = this.infected ? 0 : Math.max(0, Math.ceil((this.infectAt - now) / 1000));
+    if (this.mode.duel) msg.du = [this.duelRound, this.duelLoadout ? this.duelLoadout[0] : 0, this.duelNextAt ? Math.max(0, Math.ceil((this.duelNextAt - now) / 1000)) : 0];
     // Prop Hunt: seconds of hiding left, and each hidden prop's disguise
     if (this.mode.prop) {
       msg.ph = Math.max(0, Math.ceil((this.propHideUntil - now) / 1000));

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.13",
+  "version": "2026.10.12.14",
   "notes": [
-    "Emotes: press B in a match, then 1 to 4 to wave, dance, salute or laugh"
+    "New mode: Duel. 1v1, first to 5, and every round you both get the same new random loadout"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.14', name: 'Duel', banner: 'blood', notes: [
+    'New mode: Duel. 1v1, first to 5',
+    'Every kill starts a new round: you both respawn far apart with the same new random loadout',
+    'Fill with bots gives you exactly one opponent',
+  ] },
   { v: '2026.10.12.13', name: 'Emotes', banner: 'rainbow', notes: [
     'Press B in a match, then 1 to 4: wave, dance, salute or laugh',
     'Everyone else sees your character do it, with the emoji over your head',
