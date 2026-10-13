@@ -656,3 +656,16 @@ body.mobile .shop-wallet { width: 100%; }
 .hs-motw { border-color: rgba(176,107,255,0.5); background: linear-gradient(100deg, rgba(176,107,255,0.16), rgba(176,107,255,0.02)); }
 .hs-motw .hs-ic { font-size: 22px; }
 .hs-motw button { margin-left: auto; }
+
+/* Share button (top bar) and its QR popup */
+.topbar .share-btn { height: 36px; padding: 0 14px; border-radius: 999px; font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+  letter-spacing: 1px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); }
+.topbar .share-btn:hover { background: rgba(255,255,255,0.09); }
+body.mobile:not(.tablet) .topbar .share-btn span { display: none; }
+.share-panel { border-top: 4px solid var(--accent); }
+.share-panel h2 { font-size: 20px; letter-spacing: 3px; }
+.share-qr { width: min(240px, 70vw, 38vh); margin: 12px auto 4px; border-radius: 10px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.45); }
+.share-qr svg { display: block; width: 100%; height: auto; }
+.share-panel .inv-row { margin-bottom: 10px; }
+.share-panel .rp-btns { justify-content: flex-end; }
+.share-panel .rp-btns button:not(.hidden) { flex: 1; }

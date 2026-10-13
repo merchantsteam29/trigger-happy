@@ -91,6 +91,7 @@
 <link rel="modulepreload" href="js/gifts.js">
 <link rel="modulepreload" href="js/shop.js">
 <link rel="modulepreload" href="js/modeweek.js">
+<link rel="modulepreload" href="js/qr.js">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -224,6 +225,7 @@
     <header class="topbar">
       <div class="brand"><span class="logo-mark"><img src="icons/icon.svg" alt=""></span><h1>TRIGGER <span>HAPPY</span></h1></div>
       <div class="topbar-right">
+        <button id="btn-share" class="share-btn" title="Share the game with a link or QR code">📤 <span>Share</span></button>
         <button id="player-chip" class="player-chip" title="Edit your character"><i id="chip-dot"></i><span id="chip-name"></span><em id="chip-tokens"></em></button>
       </div>
     </header>
@@ -450,6 +452,15 @@
     </div>
     <p id="spray-msg" class="note"></p>
     <div class="rp-btns"><button id="spray-save" class="primary">Save spray</button><button id="spray-remove" class="ghost">Remove spray</button><button id="spray-cancel" class="ghost">Cancel</button></div>
+  </div>
+</div>
+<div id="share-pop" class="overlay hidden">
+  <div class="panel mod-pop share-panel">
+    <h2>SHARE TRIGGER HAPPY</h2>
+    <p id="share-note" class="note"></p>
+    <div id="share-qr" class="share-qr"></div>
+    <div class="inv-row"><input id="share-link" readonly><button id="share-copy" class="primary">Copy link</button></div>
+    <div class="rp-btns"><button id="share-native" class="hidden">Share…</button><button id="share-close" class="ghost">Close</button></div>
   </div>
 </div>
 <div id="bug-pop" class="overlay hidden">

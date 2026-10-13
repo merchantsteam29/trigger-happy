@@ -331,6 +331,7 @@ ranked divisions. Each is a badge (bronze, silver, gold or legend); tap an unloc
 ## Invite friends
 
 **Friends → Invite friends** gives you a link with your gamertag (the pause menu's **Copy invite** includes it too).
+The **📤 Share** button at the top of the menu shows the same link as a QR code: a friend scans it with their phone camera.
 When a new player opens it and finishes their first match, you both get 🪙 200, for up to 10 friends.
 
 ## Season pass

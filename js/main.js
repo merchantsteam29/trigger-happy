@@ -47,6 +47,7 @@ import { highlights } from './highlights.js';
 import { addTokens, grantItem, track } from './missions.js';
 import { addXp } from './progress.js';
 import { leaderboard, BOARDS, MODE_BOARDS, weekEnds, CHAMP_TOKENS } from './leaderboard.js';
+import { qrSvg } from './qr.js';
 import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanModMap, statsFor } from './mods.js';
 
 const $ = (id) => document.getElementById(id);
@@ -820,6 +821,26 @@ function renderInvite() {
   const share = $('inv-share');
   if (share) share.onclick = () => navigator.share({ title: 'Trigger Happy', text: `Play Trigger Happy with me! We both get ${INVITE_TOKENS} tokens.`, url: $('inv-link').value }).catch(() => {});
 }
+// Share button (top bar): the game link as a QR code. With a gamertag it's your invite link.
+function openShare() {
+  const n = invites.count(), url = invites.link(location.origin + location.pathname);
+  $('share-note').innerHTML = social.tag && n < MAX_INVITES
+    ? `Scan with a phone camera, or send the link. New players who join through it and finish a match get you <b>both</b> 🪙 ${INVITE_TOKENS} (${n} / ${MAX_INVITES} so far).`
+    : 'Scan with a phone camera, or send the link to a friend.';
+  $('share-qr').innerHTML = qrSvg(url);
+  $('share-link').value = url;
+  $('share-copy').textContent = 'Copy link';
+  $('share-native').classList.toggle('hidden', !navigator.share);
+  $('share-pop').classList.remove('hidden');
+}
+$('btn-share').onclick = openShare;
+$('share-close').onclick = () => $('share-pop').classList.add('hidden');
+$('share-pop').onclick = (e) => { if (e.target.id === 'share-pop') $('share-pop').classList.add('hidden'); };
+$('share-link').onfocus = (e) => e.target.select();
+$('share-copy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('share-link').value); $('share-copy').textContent = 'Copied!'; } catch { $('share-link').select(); }
+};
+$('share-native').onclick = () => navigator.share({ title: 'Trigger Happy', text: 'Play Trigger Happy with me!', url: $('share-link').value }).catch(() => {});
 // ---------- Clans ----------
 let clanForm = 'create';
 function renderClan() {
@@ -2121,10 +2142,11 @@ document.addEventListener('keydown', (e) => {
 });
 touch.onChat = () => { game.keys.clear(); game.mouse.left = false; chat.open(); };
 
-// Esc backs out of Settings and the Host panel.
+// Esc backs out of Share, Settings and the Host panel.
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (!$('settings').classList.contains('hidden')) { e.preventDefault(); settingsUI.close(); }
+  if (!$('share-pop').classList.contains('hidden')) { e.preventDefault(); $('share-pop').classList.add('hidden'); }
+  else if (!$('settings').classList.contains('hidden')) { e.preventDefault(); settingsUI.close(); }
   else if (!$('host-panel').classList.contains('hidden')) { e.preventDefault(); hostPanel.close(); }
 });
 $('btn-settings-pause').onclick = () => {
