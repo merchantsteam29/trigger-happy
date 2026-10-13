@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.12', name: 'Match Report', banner: 'carbon', notes: [
+    'The results screen now shows Your match: kills, damage dealt, accuracy and headshot kills',
+    'Plus your top guns, with kills, damage and hit rate for each',
+  ] },
   { v: '2026.10.12.11', name: 'Prop Hunt', banner: 'tiger', notes: [
     'New mode: Prop Hunt. Props hide as a crate, barrel, box, traffic cone or tires (press R to switch)',
     'Hunters are blind for the first 25 seconds, then search. Every miss costs a hunter health',

@@ -18,6 +18,8 @@ The creator's browser is the host: if they leave, the server closes.
 
 **End of match:** first the **MVP card** shows the best player of the match: kills, deaths, K/D, score, headshots and
 best streak, on their banner. Then (with map rotation on) everyone **votes for the next map** out of 3 random ones.
+Above the vote, **Your match** sums up your game: kills, damage dealt, accuracy (shots that hit someone) and headshot
+kills, plus your top guns with kills, damage and hit rate for each.
 - **Voting:** click a card, press 1 / 2 / 3, or use X / Y / B on a controller. One vote each, and it's final.
 - **Counts:** they update live for everyone.
 - **Winner:** most votes wins, and ties are settled at random.

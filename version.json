@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.11",
+  "version": "2026.10.12.12",
   "notes": [
-    "New mode: Prop Hunt. Hide as a crate, barrel, box, cone or tires, or hunt them down. Misses cost hunters health"
+    "Match report on the results screen: your kills, damage, accuracy, headshot kills and best guns"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

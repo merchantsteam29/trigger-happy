@@ -702,6 +702,7 @@ export class Game {
   onNet(m) {
     switch (m.t) {
       case 'welcome':
+        this.resetReport();
         this.myId = m.id;
         this.active = true;
         this.spectating = !!m.spec; // staff watching invisibly (no player of our own)
@@ -941,6 +942,7 @@ export class Game {
         this.streaks.clear();
         if (this.onMatchStart) this.onMatchStart();
         this.matchXp = 0;
+        this.resetReport();
         this.rankRes = null;
         // The mouse was freed for the map vote: offer "Resume" to get back in.
         if (!this.locked && !this.touch && !this.padMode && this.onUnlock && this.endInfo) setTimeout(() => this.onUnlock && !this.locked && this.onUnlock(), 0);
@@ -1028,6 +1030,7 @@ export class Game {
   }
 
   onKill(m) {
+    if (m.k === this.myId && m.v !== this.myId) { const g = this.rep(m.w); g.kills++; if (m.head) g.heads++; }
     const pk = this.players.get(m.k), pv = this.players.get(m.v);
     const k = pk && { ...pk, color: this.colorFor(pk) }, v = pv && { ...pv, color: this.colorFor(pv) };
     if (v) this.hud.feed(k, v, m.w, m.head, m.k === this.myId || m.v === this.myId);
@@ -1801,6 +1804,7 @@ export class Game {
   }
 
   fireRound(id, w) {
+    this.rep(id).shots++;
     if (!this.rules.infiniteAmmo) this.ammo[id]--;
     this.recoil += w.recoil * (this.ads ? 0.6 : 1);
     this.me.yaw += (Math.random() - 0.5) * w.recoil * 0.4;
@@ -1889,8 +1893,10 @@ export class Game {
       if (w.flame) this.fx.flame(muzzle, end); else this.fx.tracer(muzzle, end, w.tracer);
       ends.push(arr(end));
     }
+    if (hits.size) this.rep(id).hits++;
     for (const [vid, h] of hits) {
       this.net.send({ t: 'hit', v: vid, dmg: Math.round(h.dmg), w: id, head: h.head });
+      this.rep(id).dmg += h.dmg;
       this.showHit(vid, Math.round(h.dmg), h.head);
       this.hud.hit(h.head ? 'head' : null, !!h.head, h.dmg);
       (h.head ? sfx.head : sfx.hit)(0.8);
@@ -1910,6 +1916,14 @@ export class Game {
     track.stat({ pumpkins: 1 });
     const left = this.pumpkins.left;
     this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
+  }
+
+  // ---------- Match report (results screen) ----------
+  resetReport() { this.report = { guns: {} }; }
+  // Per-gun tallies for this match: shots fired, shots that hit someone, damage dealt, kills.
+  rep(id) {
+    if (!this.report) this.resetReport();
+    return (this.report.guns[id] ||= { shots: 0, hits: 0, dmg: 0, kills: 0, heads: 0 });
   }
 
   // ---------- Prop Hunt ----------
@@ -2082,6 +2096,7 @@ export class Game {
       imp = [r2(_f.x * k), r2(Math.max(0.3, _f.y) * k * 0.4 + 4), r2(_f.z * k)];
     }
     this.net.send({ t: 'hit', v: best.id, dmg: back ? w.backstab : w.dmg, w: w.id, head: back, imp });
+    this.rep(w.id).dmg += back ? w.backstab : w.dmg;
     this.showHit(best.id, back ? w.backstab : w.dmg, false);
     this.fx.blood(best.center(_c));
     this.hud.hit(back ? 'head' : null);
@@ -2189,6 +2204,8 @@ export class Game {
           if (victim) {
             const dmg = Math.round(W.directDmg * (head && W.head ? W.head : 1));
             this.net.send({ t: 'hit', v: victim.id, dmg, w: p.kind, head });
+            this.rep(p.kind).dmg += dmg;
+            if (!p.counted) { p.counted = true; this.rep(p.kind).hits++; }
             this.showHit(victim.id, dmg, head);
             this.hud.hit(head || dmg >= 100 ? 'head' : null);
             (head ? sfx.head : sfx.hit)(0.8);
@@ -2319,6 +2336,8 @@ export class Game {
       const push = W.pull ? -11 * (0.4 + k) : 9 * k;
       const imp = [r2(dir.x * push), r2(dir.y * push * 0.3 + 3 * k), r2(dir.z * push)];
       this.net.send({ t: 'hit', v: rp.id, dmg: Math.round(W.splash * k), w: p.kind, imp });
+      this.rep(p.kind).dmg += Math.round(W.splash * k);
+      if (!p.counted) { p.counted = true; this.rep(p.kind).hits++; }
       this.showHit(rp.id, Math.round(W.splash * k), false);
       any = true;
     }
@@ -3089,6 +3108,7 @@ export class Game {
         showMvp: !!mvp && now - e.at < 4500,
         vote: e.vote, onVote: (i) => this.voteMap(i),
         xp: this.spectating ? null : { gained: this.matchXp, lv: myLevel() },
+        report: this.spectating ? null : this.report,
         ranked: this.rankRes,
         highlight: this.highlight || null,
       });

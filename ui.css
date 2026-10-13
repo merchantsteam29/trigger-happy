@@ -700,3 +700,17 @@ body.mobile:not(.tablet) .topbar .share-btn span { display: none; }
 .ph-blind span { font-size: 18px; opacity: 0.85; }
 #crosshair.prop-hidden { display: none; }
 #hud.as-prop #weapon-info { display: none; }
+
+/* Results screen: your match report */
+#end-report:empty { display: none; }
+#end-report { margin: 8px auto 4px; width: min(620px, 100%); padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--line); }
+.rep-head { font-size: 11px; font-weight: 800; letter-spacing: 3px; color: var(--accent); margin-bottom: 6px; text-align: left; }
+.rep-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+.rep-stats b { display: block; font-family: var(--font-display); font-size: 22px; line-height: 1.1; }
+.rep-stats small { font-size: 10px; letter-spacing: 1.5px; opacity: 0.7; }
+.rep-guns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rep-gun { flex: 1 1 140px; display: flex; flex-direction: column; text-align: left; padding: 5px 9px; border-radius: 8px; background: rgba(0,0,0,0.25); }
+.rep-gun b { font-size: 13px; }
+.rep-gun span { font-size: 11px; opacity: 0.75; }
+#endscreen.mvp-phase #end-report { display: none; }
+body.mobile:not(.tablet) .rep-guns { display: none; }

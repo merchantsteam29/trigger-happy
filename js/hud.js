@@ -36,6 +36,20 @@ export function styleCrosshair(el, o) {
   el.classList.toggle('nooutline', o.crossOutline === false);
 }
 
+// Results screen: your match in numbers (kills, damage, accuracy, headshot kills) and your top guns.
+function reportHtml(rp) {
+  const guns = Object.entries(rp.guns || {});
+  let shots = 0, hits = 0, dmg = 0, kills = 0, heads = 0;
+  for (const [, g] of guns) { shots += g.shots; hits += g.hits; dmg += g.dmg; kills += g.kills; heads += g.heads; }
+  if (!shots && !dmg && !kills) return '';
+  const pct = (h, s) => (s ? `${Math.round((h / s) * 100)}%` : '–');
+  const top = guns.filter(([, g]) => g.kills || g.dmg).sort((a, b) => b[1].kills - a[1].kills || b[1].dmg - a[1].dmg).slice(0, 4);
+  const stats = [['KILLS', kills], ['DAMAGE', Math.round(dmg).toLocaleString()], ['ACCURACY', pct(hits, shots)], ['HEADSHOT KILLS', heads]];
+  return `<div class="rep-head">YOUR MATCH</div>
+    <div class="rep-stats">${stats.map(([n, v]) => `<div><b>${v}</b><small>${n}</small></div>`).join('')}</div>
+    ${top.length ? `<div class="rep-guns">${top.map(([id, g]) => `<div class="rep-gun"><b>${esc(WEAPONS[id] ? WEAPONS[id].name : id)}</b><span>${g.kills} kill${g.kills === 1 ? '' : 's'} · ${Math.round(g.dmg)} dmg${g.shots ? ` · ${pct(g.hits, g.shots)} hit` : ''}</span></div>`).join('')}</div>` : ''}`;
+}
+
 export class Hud {
   constructor() {
     this.el = $('hud');
@@ -452,7 +466,7 @@ export class Hud {
   // info: { scores, myId, mode, title, now, secs, nextMap, mvp, showMvp, vote, onVote }
   end(show, info = {}) {
     $('endscreen').classList.toggle('hidden', !show);
-    if (!show) { this.lastEnd = this.lastVote = this.lastMvp = this.lastXp = this.lastSr = this.lastHl = ''; $('end-hl').innerHTML = ''; return; }
+    if (!show) { this.lastEnd = this.lastVote = this.lastMvp = this.lastXp = this.lastSr = this.lastHl = this.lastRep = ''; $('end-hl').innerHTML = ''; $('end-report').innerHTML = ''; return; }
     const { scores = [], myId, mode, title, now, secs, nextMap, mvp, showMvp, vote } = info;
     $('end-title').textContent = title || 'MATCH OVER';
     // Your best moment (highlights.js): the clip with download / share
@@ -484,6 +498,12 @@ export class Hud {
       this.lastXp = xk;
       const x = info.xp;
       $('end-xp').innerHTML = x ? `${levelBadge(x.lv.level)}<span class="ex-txt"><b>+${x.gained.toLocaleString()} XP</b> · ${esc(x.lv.rank.name)} · level ${x.lv.level}</span><span class="ex-bar"><i style="width:${x.lv.pct * 100}%"></i></span><small>${x.lv.need ? `${x.lv.into.toLocaleString()} / ${x.lv.need.toLocaleString()}` : 'MAX'}</small>` : '';
+    }
+    // Your match: totals and your best guns (game.js rep())
+    const rp = info.report, rpk = rp ? JSON.stringify(rp) : '';
+    if (rpk !== this.lastRep) {
+      this.lastRep = rpk;
+      $('end-report').innerHTML = rp ? reportHtml(rp) : '';
     }
     const label = { gungame: 'LVL', koth: 'PTS', infection: 'INF', horror: 'INF', lms: 'LIVES' }[mode] || 'PTS';
     const voting = !!vote && !showMvp;
