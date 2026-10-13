@@ -87,9 +87,11 @@ team sees it, with the distance. One ping every 2.5 s (at most 4 in 15 s).
 
 In Free For All, Team Deathmatch, King of the Hill, Capture the Flag, Domination, Hardpoint, Kill Confirmed, Bounty
 Hunter, Last Man Standing and Zombie Survival, every map has **health packs** (+50 health, back after 20 s), **ammo crates** (full mags
-and grenades, back after 25 s) and a **power weapon** in the middle (Railgun, Minigun, Rocket Launcher or Heavy
-Sniper Rifle) that appears 30 s into the match and 90 s after someone takes it; everyone is told who has it. The
-host can turn pickups off in the host panel.
+and grenades, back after 25 s) and a **power weapon** in the middle that appears 30 s into the match and 90 s after
+someone takes it; everyone is told who has it. Power weapons are gold, pickup-only and far stronger than any loadout
+gun: the **Gatling Cannon**, **Rail Cannon** (one shot kills), **Hellfire Launcher** (fast, big rockets) and
+**Thunder Shotgun** (full-auto). They can't be reloaded or refilled: when the ammo runs out you get your own gun back,
+and you lose them when you die. The host can turn pickups off in the host panel.
 
 **Barrels and crates:** every match (not the Practice Range) has 5 red **explosive barrels** and 5 wooden **crates** on
 open ground. Shoot or blast a crate and it breaks. A barrel explodes: up to 110 damage within 5 m with knockback, and it

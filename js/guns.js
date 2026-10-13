@@ -973,3 +973,23 @@ export const GUNS = {
     };
   },
 };
+
+// Power weapons (map pickups): an existing body refinished in gold, with glowing furniture.
+function powerGun(base, glow, allGold = false) {
+  return (g) => {
+    const spec = GUNS[base](g);
+    const GOLD = [M.dark, M.mid, M.gunmetal, M.steel, ...(allGold ? [M.black] : [])], GLOW = [M.poly, M.olive, M.tan, M.fde, M.rubber, M.tape, M.woodDark, M.wood];
+    g.traverse((o) => {
+      if (!o.isMesh) return;
+      if (GOLD.includes(o.material)) o.material = M.gold;
+      else if (GLOW.includes(o.material)) o.material = glow;
+    });
+    return spec;
+  };
+}
+Object.assign(GUNS, {
+  p_gatling: powerGun('minigun', M.cyan),
+  p_railcannon: powerGun('railgun', M.cyan, true), // mostly black otherwise
+  p_hellfire: powerGun('rocket', M.purple),
+  p_thunder: powerGun('autoshot', M.purple),
+});

@@ -130,7 +130,10 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Mode:** `MODES` and `MODE_ORDER` in `host.js`, the objective text in `game.js` `modeBar()`, the score
   label in `hud.js`, and kill handling in `HostLogic.kill` if it scores differently.
 - **Setting:** default in `settings.js`, a row in `TABS` in `settingsui.js` (types: check, range, swatch, choice, special).
-- **Weapon:** `weapons.js` (`WEAPONS` and `SLOTS`), a model in `guns.js`, a sound in `audio.js`.
+- **Weapon:** `weapons.js` (`WEAPONS` and `SLOTS`), a model in `guns.js`, a sound in `audio.js`. Power weapons (map pickups)
+  are `power: true`, kept out of `SLOTS` and listed in `POWER_WEAPONS` (`host.js`); the host only takes their hits from
+  the player it gave the pickup to (`p.powerW`), and they can't be reloaded (`game.js` `dropPower`). Their models are
+  existing bodies refinished by `powerGun()` in `guns.js`.
 - **Map:** `maps.js` (`MAPS`, `MAP_ORDER`, `MAP_BLURB`).
 - **Cosmetic or banner:** `COSMETICS` in `missions.js` (`price`, or `reward` with `how`), with its look in `cosmetics.js` /
   `banners.js`. Earn-only items use `grantItem` / `grantWrap`.

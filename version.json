@@ -1,8 +1,8 @@
 {
-  "version": "2026.10.12.5",
+  "version": "2026.10.12.6",
   "notes": [
-    "New: play your account on more than one device. Friends → Your devices → Link a device, then scan the code",
-    "Level, tokens, items and stats stay in sync between linked devices"
+    "Power weapons are now real power weapons: gold, pickup-only and much stronger than any loadout gun",
+    "New: Gatling Cannon, Rail Cannon, Hellfire Launcher and Thunder Shotgun. No reloading: when they run dry you get your gun back"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

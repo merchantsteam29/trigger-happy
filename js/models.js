@@ -267,7 +267,7 @@ export function buildProjectile(kind) {
   } else if (kind === 'nailgun') {
     cyl(g, M.steel, 0.004, 0.07, 0, 0, 0, 6);
     cyl(g, M.steel, 0.009, 0.004, 0, 0, 0.035, 8);
-  } else if (kind === 'rocket') {
+  } else if (kind === 'rocket' || kind === 'p_hellfire') {
     cyl(g, M.olive, 0.05, 0.4, 0, 0, 0, 12);
     cyl(g, M.tape, 0.052, 0.03, 0, 0, -0.1, 12);
     const war = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.14, 12), M.olive);

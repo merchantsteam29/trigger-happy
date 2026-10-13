@@ -15,7 +15,7 @@ const HIP = {
   sawedoff: [0.15, -0.15, -0.36], katana: [0.2, -0.24, -0.36], bat: [0.2, -0.25, -0.34],
   flash: [0.17, -0.18, -0.34], tknife: [0.17, -0.18, -0.34],
   br: [0.17, -0.17, -0.42], pdw: [0.16, -0.16, -0.38], autoshot: [0.17, -0.18, -0.42], amr: [0.19, -0.2, -0.44],
-  railgun: [0.18, -0.19, -0.42], bpistol: [0.15, -0.15, -0.38], flare: [0.15, -0.15, -0.38],
+  railgun: [0.18, -0.19, -0.42], p_railcannon: [0.18, -0.19, -0.42], p_gatling: [0.2, -0.25, -0.45], p_hellfire: [0.2, -0.21, -0.36], p_thunder: [0.17, -0.18, -0.42], bpistol: [0.15, -0.15, -0.38], flare: [0.15, -0.15, -0.38],
   machete: [0.2, -0.21, -0.36], sledge: [0.2, -0.26, -0.34], impact: [0.17, -0.18, -0.34],
   carbine: [0.17, -0.17, -0.41], vector: [0.16, -0.16, -0.38], slug: [0.17, -0.17, -0.42], laser: [0.17, -0.18, -0.42],
   harpoon: [0.18, -0.18, -0.42], microsmg: [0.15, -0.15, -0.37], autorev: [0.15, -0.15, -0.38],
@@ -65,8 +65,8 @@ const RECOIL = {
 function recoilClass(w) {
   if (w.type === 'proj') return 'launcher';
   if (w.pellets > 1) return 'shotgun';
-  if (['sniper', 'amr', 'railgun', 'dmr', 'crossbow', 'harpoon'].includes(w.id)) return 'sniper';
-  if (['lmg', 'minigun'].includes(w.id)) return 'lmg';
+  if (['sniper', 'amr', 'railgun', 'p_railcannon', 'dmr', 'crossbow', 'harpoon'].includes(w.id)) return 'sniper';
+  if (['lmg', 'minigun', 'p_gatling'].includes(w.id)) return 'lmg';
   if (['smg', 'pdw', 'vector', 'microsmg', 'mpistol'].includes(w.id)) return 'smg';
   if (['pistol', 'bpistol', 'handcannon', 'revolver', 'autorev', 'flare', 'nailgun'].includes(w.id)) return 'pistol';
   return 'rifle';
@@ -225,7 +225,7 @@ export class Viewmodel {
 
   fire(w) {
     this.inspectT = -1;
-    const big = w.type === 'proj' || ['shotgun', 'sniper', 'revolver', 'sawedoff', 'handcannon', 'dmr', 'doublebarrel', 'railgun', 'amr', 'autoshot', 'slug', 'autorev'].includes(w.id);
+    const big = w.type === 'proj' || ['shotgun', 'sniper', 'revolver', 'sawedoff', 'handcannon', 'dmr', 'doublebarrel', 'railgun', 'amr', 'autoshot', 'slug', 'autorev', 'p_railcannon', 'p_thunder'].includes(w.id);
     this.kick = Math.min(1.4, this.kick + (big ? 1 : 0.45));
     this.kickYaw = (Math.random() - 0.5) * (big ? 0.12 : 0.05);
     const R = RECOIL[recoilClass(w)], ads = 1 - this.adsT * 0.45, r = () => Math.random() - 0.5;

@@ -138,7 +138,7 @@ export function defaultSettings(mode = 'ffa', map = 'warehouse') {
 const PROP_HP = { barrel: 35, crate: 25 };
 const BARREL_R = 5, BARREL_DMG = 110;
 const PICKUP_MODES = ['br', 'zombies', 'ffa', 'tdm', 'koth', 'ctf', 'dom', 'hardpoint', 'killconfirmed', 'bounty', 'lms'];
-export const POWER_WEAPONS = ['railgun', 'minigun', 'rocket', 'amr'];
+export const POWER_WEAPONS = ['p_gatling', 'p_railcannon', 'p_hellfire', 'p_thunder']; // pickup-only (weapons.js)
 const PICKUP = {
   hp: { respawn: 20000, first: 0 },
   ammo: { respawn: 25000, first: 0 },
@@ -510,6 +510,7 @@ export class HostLogic {
     p.protectUntil = Date.now() + PROTECT_MS;
     p.spawnedAt = Date.now(); // anti-cheat: the jump to the spawn point isn't a teleport
     p.acPos = null;
+    p.powerW = null; // a power weapon is lost on death
     const l = this.loadoutFor(p);
     const start = this.mode.ammoStart; // One in the Chamber: a single bullet per life
     if (p.bot) { p.bot.spawn(s, l); if (start) p.bot.ammo = start; }
@@ -706,7 +707,7 @@ export class HostLogic {
     const v = this.players.get(m.v);
     if (!v || !v.alive) return;
     const w = WEAPONS[m.w];
-    const explosive = ['gl', 'frag', 'sticky', 'rocket', 'crossbow', 'harpoon', 'flare', 'tknife', 'vortex'].includes(m.w);
+    const explosive = ['gl', 'frag', 'sticky', 'rocket', 'p_hellfire', 'crossbow', 'harpoon', 'flare', 'tknife', 'vortex'].includes(m.w);
     if (!attacker.alive && !explosive) return;
     if (v !== attacker && !this.hostile(attacker, v) && !(this.s.friendlyFire && this.mode.redBlue)) return;
     if (this.s.headshotsOnly && w && w.type === 'gun' && !m.head && v !== attacker) return;
@@ -832,6 +833,7 @@ export class HostLogic {
     if (a.bot || a === v || this.s.mode === 'practice') return true;
     if (now < (a.acBlockUntil || 0)) return false;
     if (!w) return true;
+    if (w.power && a.powerW !== w.id) return false; // never picked one up
     const d = Math.hypot(a.st[0] - v.st[0], a.st[1] - v.st[1], a.st[2] - v.st[2]);
     if (w.type === 'melee' && d > (w.range || 2.5) + AC.meleeExtra) { this.strike(a, `melee hit from ${d.toFixed(1)} m`); return false; }
     if (w.type === 'gun' && !explosive) {
@@ -1019,6 +1021,8 @@ export class HostLogic {
           if (p.hp >= max) continue; // full health: leave it for someone who needs it
           p.hp = Math.min(max, p.hp + PICKUP_HEAL);
         }
+        if (k.kind === 'power') p.powerW = k.w; // its hits only count from whoever picked it up
+        if (k.kind === 'power' && p.bot && !k.loot && !(WEAPONS[(p.bot.loadout || [])[0]] || {}).power) p.bot.powerPrev = p.bot.loadout || [p.bot.weapon];
         if (k.kind === 'power' && p.bot) p.bot.setLoadout(k.loot ? [k.w, ...(p.bot.loadout || [])].slice(0, 3) : [k.w, ...((p.bot.loadout || []).slice(1))]);
         if (!p.bot) this.sendTo(p.id, { t: 'pickup', k: k.kind, w: k.w });
         if (k.kind === 'power' && !k.loot) this.broadcast({ t: 'notice', text: `${p.name} has the ${(WEAPONS[k.w] || {}).name || k.w}` }, p.id);

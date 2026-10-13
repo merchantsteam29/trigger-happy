@@ -745,7 +745,7 @@ export class Game {
         if (!this.me.alive) break;
         if (m.k === 'hp') { this.hud.say('+50 HEALTH'); sfx.pad(0.5); }
         else if (m.k === 'ammo') {
-          for (const id of this.loadout) this.ammo[id] = this.W(id).mag || 0;
+          for (const id of this.loadout) if (!this.W(id).power) this.ammo[id] = this.W(id).mag || 0; // power weapons don't refill
           if (this.utilId) this.util = WEAPONS[this.utilId].count;
           this.hud.say('AMMO REFILLED');
           sfx.equip(0.8);
@@ -753,13 +753,14 @@ export class Game {
           if (SLOTS[1].includes(this.loadout[0])) this.loadout.unshift(m.w); else this.loadout[0] = m.w;
           this.loadout = this.loadout.slice(0, 3);
           this.ammo[m.w] = this.W(m.w).mag || 0;
-          this.switchSlot(0, true);
+          this.equipPrimary();
           this.hud.say(`PICKED UP: ${WEAPONS[m.w].name.toUpperCase()}`);
           sfx.equip(1);
         } else if (m.k === 'power' && WEAPONS[m.w]) {
+          if (!this.W(this.loadout[0]).power) this.powerPrev = this.loadout[0]; // back to it when the ammo runs out
           this.loadout[0] = m.w;
           this.ammo[m.w] = this.W(m.w).mag || 0;
-          this.switchSlot(0, true);
+          this.equipPrimary();
           this.hud.say(`POWER WEAPON: ${WEAPONS[m.w].name.toUpperCase()}`);
           sfx.equip(1);
         }
@@ -1035,7 +1036,7 @@ export class Game {
         const W = WEAPONS[m.w];
         const revenge = m.v === this.lastKiller;
         const dist = this.remotes.get(m.v) ? this.remotes.get(m.v).pos.distanceTo(this.me.pos) : 0;
-        const explosive = ['gl', 'rocket', 'flare', 'frag', 'sticky', 'vortex'].includes(m.w);
+        const explosive = ['gl', 'rocket', 'p_hellfire', 'flare', 'frag', 'sticky', 'vortex'].includes(m.w);
         const medalIds = medalsFor({
           head: !!m.head, melee: !!W && W.type === 'melee', explosive, dist, revenge,
           multi: this.multi, streak: this.lifeKills, firstBlood: !!m.fb, victimStreak,
@@ -1076,7 +1077,7 @@ export class Game {
       if (r) {
         if (m.head) { r.headPos(_c); this.fx.blood(_c); this.fx.blood(_c); } else this.fx.blood(r.center(_c));
         const DW = WEAPONS[m.w] || {};
-        const force = ['gl', 'rocket', 'flare', 'frag', 'sticky', 'vortex'].includes(m.w) ? 8 : DW.pellets > 1 ? 4.5 : ['sniper', 'amr', 'railgun', 'dmr', 'handcannon', 'revolver'].includes(m.w) ? 4 : DW.type === 'melee' ? 2.6 : 2;
+        const force = ['gl', 'rocket', 'p_hellfire', 'flare', 'frag', 'sticky', 'vortex'].includes(m.w) ? 8 : DW.pellets > 1 ? 4.5 : ['sniper', 'amr', 'railgun', 'p_railcannon', 'dmr', 'handcannon', 'revolver'].includes(m.w) ? 4 : DW.type === 'melee' ? 2.6 : 2;
         r.die(killerPos && killerPos !== r.pos ? killerPos : null, !!m.head, force);
         if (m.head) r.popHat(); // in case a snapshot already started the death
       }
@@ -1623,10 +1624,28 @@ export class Game {
     this.switchSlot(this.slot === 0 ? 1 : 0);
   }
 
+  // The primary itself changed (pickups): show the new gun even if slot 1 was already out.
+  equipPrimary() {
+    if (this.slot !== 0) { this.switchSlot(0, true); return; }
+    this.reloadT = 0; this.burstLeft = 0; this.spin = 0; this.switchT = 0;
+    this.vm.equip(this.curW, { drop: 0, raise: 0.2 });
+  }
+
+  // A power weapon ran dry: your own primary comes back, full.
+  dropPower() {
+    const back = this.powerPrev && !this.W(this.powerPrev).power ? this.powerPrev : (this.nextLoadout || [])[0];
+    this.powerPrev = null;
+    if (!back || !WEAPONS[back]) { const ms = this.meleeSlot(); if (ms >= 0) this.switchSlot(ms); return; }
+    this.loadout[0] = back;
+    this.ammo[back] = this.W(back).mag || 0;
+    this.equipPrimary();
+    this.hud.say('POWER WEAPON EMPTY');
+  }
+
   startReload() {
     const id = this.curW, w = this.W(id);
     if ((w.type !== 'gun' && w.type !== 'proj') || this.reloadT > 0 || this.switchT > 0) return;
-    if (MODES[this.rules.mode].noReload) return;
+    if (MODES[this.rules.mode].noReload || w.power) return;
     if (this.ammo[id] >= w.mag) return;
     this.reloadT = w.reload;
     this.burstLeft = 0;
@@ -1725,8 +1744,10 @@ export class Game {
     if (this.mouse.left && (!w.spinup || this.spin >= w.spinup)) this.tryFire();
 
     if ((w.type === 'gun' || w.type === 'proj') && this.ammo[id] === 0 && this.reloadT <= 0 && this.fireCd <= 0 && this.switchT <= 0 && this.burstLeft === 0) {
-      // No reloading in One in the Chamber: out of bullets means knife.
-      if (MODES[this.rules.mode].noReload) { const ms = this.meleeSlot(); if (ms >= 0) this.switchSlot(ms); }
+      // Power weapons can't be reloaded: back to your own gun. No reloading in One in the Chamber:
+      // out of bullets means knife.
+      if (w.power) this.dropPower();
+      else if (MODES[this.rules.mode].noReload) { const ms = this.meleeSlot(); if (ms >= 0) this.switchSlot(ms); }
       else this.startReload();
     }
   }

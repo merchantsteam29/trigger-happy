@@ -218,7 +218,7 @@ export class Bot {
       if (this.strafeT <= 0) { this.strafe = Math.random() < 0.5 ? -1 : 1; this.strafeT = 0.6 + Math.random() * 1.4; }
       const tx = this.target.st[0] - b.pos.x, tz = this.target.st[2] - b.pos.z;
       const dist = Math.hypot(tx, tz) || 1;
-      const pref = ['shotgun', 'autoshot', 'doublebarrel', 'sawedoff'].includes(this.weapon) ? 5 : ['sniper', 'dmr', 'amr', 'railgun'].includes(this.weapon) ? 30 : 14;
+      const pref = ['shotgun', 'autoshot', 'doublebarrel', 'sawedoff', 'p_thunder'].includes(this.weapon) ? 5 : ['sniper', 'dmr', 'amr', 'railgun', 'p_railcannon'].includes(this.weapon) ? 30 : 14;
       const fwd = dist > pref + 4 ? 1 : dist < pref - 4 ? -0.7 : 0;
       mx = (tx / dist) * fwd + (-tz / dist) * this.strafe * 0.8;
       mz = (tz / dist) * fwd + (tx / dist) * this.strafe * 0.8;
@@ -315,10 +315,12 @@ export class Bot {
         if (bestD < (w.range || 2.4)) this.melee(w);
       } else if (bestD < (w.range || 100)) this.shoot(w, eye);
     }
-    if (!melee && !this.target && this.lastSeenT < 0 && this.reloadT <= 0 && w.mag && this.ammo < w.mag * 0.35 && !L.mode.noReload) this.reloadT = w.reload || 2; // top up between fights
+    if (!melee && !w.power && !this.target && this.lastSeenT < 0 && this.reloadT <= 0 && w.mag && this.ammo < w.mag * 0.35 && !L.mode.noReload) this.reloadT = w.reload || 2; // top up between fights
     if (!melee && this.ammo <= 0 && this.reloadT <= 0) {
-      // No reloading in One in the Chamber: fall back to the knife until the next kill.
-      if (L.mode.noReload && this.loadout && this.loadout[1]) this.weapon = this.loadout[1];
+      // Power weapon empty: back to the bot's own gun. No reloading in One in the Chamber: fall
+      // back to the knife until the next kill.
+      if (w.power) { this.setLoadout(this.powerPrev || null); this.powerPrev = null; }
+      else if (L.mode.noReload && this.loadout && this.loadout[1]) this.weapon = this.loadout[1];
       else this.reloadT = w.reload || 2;
     }
 

@@ -266,6 +266,36 @@ export const WEAPONS = {
     spread: 0.03, moveSpread: 0.02, adsMul: 0, range: 400, adsFov: 38, falloff: [80, 200, 0.85],
     recoil: 0.07, speedMul: 0.9, switch: 0.55, reloadStyle: 'mag',
   },
+  // ---------- Power weapons (map pickups only, not in SLOTS) ----------
+  // Far stronger than anything in a loadout, but no reloading: when the ammo runs out you go back
+  // to your own gun, and they're gone when you die. The host only accepts their hits from whoever
+  // it handed the pickup to.
+  p_gatling: {
+    id: 'p_gatling', name: 'Gatling Cannon', type: 'gun', auto: true, power: true, spinup: 0.3,
+    rate: 0.055, dmg: 28, head: 1.5, pellets: 1, mag: 150, reload: 3,
+    spread: 0.016, moveSpread: 0.02, adsMul: 0.55, range: 220, falloff: [50, 120, 0.8],
+    recoil: 0.005, speedMul: 0.92, switch: 0.45, reloadStyle: 'box',
+  },
+  p_railcannon: {
+    id: 'p_railcannon', name: 'Rail Cannon', type: 'gun', auto: false, power: true, tracer: '#3fe8ff',
+    rate: 0.85, dmg: 250, head: 1, pellets: 1, mag: 6, reload: 3,
+    spread: 0.002, moveSpread: 0.004, adsMul: 0, range: 500, adsFov: 34,
+    recoil: 0.06, speedMul: 0.96, switch: 0.45, reloadStyle: 'mag',
+  },
+  p_hellfire: {
+    id: 'p_hellfire', name: 'Hellfire Launcher', type: 'proj', auto: false, power: true,
+    rate: 0.35, mag: 8, reload: 3,
+    projSpeed: 60, projGravity: 0, trail: true,
+    directDmg: 200, splash: 150, radius: 6.5,
+    spread: 0, moveSpread: 0, adsMul: 1,
+    recoil: 0.07, speedMul: 0.95, switch: 0.45, reloadStyle: 'drum',
+  },
+  p_thunder: {
+    id: 'p_thunder', name: 'Thunder Shotgun', type: 'gun', auto: true, power: true,
+    rate: 0.25, dmg: 20, head: 1.2, pellets: 10, mag: 16, reload: 3,
+    spread: 0.055, moveSpread: 0.015, adsMul: 0.75, range: 70, falloff: [15, 45, 0.5],
+    recoil: 0.04, speedMul: 1.05, switch: 0.35, reloadStyle: 'mag',
+  },
   // ---------- Fun / experimental ----------
   flamethrower: {
     // Short range, continuous: many tiny hits that fall off fast. No headshot bonus.
@@ -322,6 +352,7 @@ export const SHORT = {
   pistol: 'Pistol', revolver: 'Revolver', mpistol: 'M-Pistol', knife: 'Knife', axe: 'Axe',
   frag: 'Frag', sticky: 'Sticky', smoke: 'Smoke', claws: 'Claws',
   dmr: 'DMR', minigun: 'Minigun', rocket: 'Rocket', br: 'Battle', vector: 'Vector', doublebarrel: 'Dbl Barrel',
+  p_gatling: 'Gatling', p_railcannon: 'Rail Cannon', p_hellfire: 'Hellfire', p_thunder: 'Thunder SG',
   railgun: 'Railgun', sledge: 'Sledge', vortex: 'Vortex', carbine: 'Carbine', pdw: 'PDW', laser: 'Laser', amr: 'H-Sniper',
   autoshot: 'Auto-SG', slug: 'Slug SG', crossbow: 'Crossbow', harpoon: 'Harpoon', bpistol: 'B-Pistol', autorev: 'Auto-Rev',
   microsmg: 'Micro SMG', flare: 'Flare', flamethrower: 'Flamer', nailgun: 'Nailgun', pan: 'Pan',

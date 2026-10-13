@@ -135,6 +135,11 @@ export const sfx = {
   vortex: play((o) => { tone(o, { dur: 0.6, f0: 900, f1: 60, type: 'sawtooth', gain: 0.3 }); nz(o, { dur: 0.5, f0: 3000, f1: 200, type: 'bandpass', q: 3, gain: 0.6 }); }),
   cycle: play((o) => { nz(o, { dur: 0.05, f0: 2500, type: 'highpass', gain: 0.4 }); nz(o, { dur: 0.05, f0: 1800, type: 'highpass', gain: 0.4 }); }),
 };
+// Power weapons: heavier versions of their base guns.
+sfx.p_gatling = play((o) => { nz(o, { dur: 0.09, f0: 3000, f1: 500, gain: 0.8 }); tone(o, { dur: 0.06, f0: 120, f1: 50, gain: 0.55 }); });
+sfx.p_railcannon = play((o) => { tone(o, { dur: 0.6, f0: 3200, f1: 90, type: 'sawtooth', gain: 0.45 }); nz(o, { dur: 0.35, f0: 7000, f1: 900, type: 'highpass', gain: 0.8 }); tone(o, { dur: 0.3, f0: 60, f1: 25, gain: 0.9 }); });
+sfx.p_hellfire = play((o) => { nz(o, { dur: 0.5, f0: 700, f1: 3400, type: 'bandpass', gain: 1.1, attack: 0.01 }); tone(o, { dur: 0.25, f0: 90, f1: 35, gain: 0.9 }); });
+sfx.p_thunder = play((o) => { nz(o, { dur: 0.3, f0: 2200, f1: 160, gain: 1.4 }); tone(o, { dur: 0.18, f0: 80, f1: 28, gain: 1.1 }); });
 // Low health heartbeat: two soft thumps.
 sfx.heartbeat = play((o) => { tone(o, { dur: 0.12, f0: 70, f1: 45, gain: 0.7 }); tone(o, { dur: 0.12, f0: 60, f1: 40, gain: 0.5, delay: 0.22 }); });
 // Footsteps by surface (game.js picks one from the material underfoot).
