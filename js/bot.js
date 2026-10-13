@@ -179,7 +179,19 @@ export class Bot {
     const sz = L.brZone; // Battle Royale: get back inside the circle
     const brGoal = sz && Math.hypot(b.pos.x - sz.cx, b.pos.z - sz.cz) > Math.max(2, sz.r * 0.75) && (!this.target || Math.hypot(b.pos.x - sz.cx, b.pos.z - sz.cz) > sz.r)
       ? { x: sz.cx + (Math.random() - 0.5) * sz.r * 0.5, y: b.pos.y, z: sz.cz + (Math.random() - 0.5) * sz.r * 0.5 } : null;
-    if (L.mode.prop && p.team === 1) { // Prop Hunt: go to a hiding spot and stay still
+    const sd = L.sd && !L.sd.waiting && !L.sd.postUntil ? L.sd : null; // Search & Destroy
+    if (sd && sd.bomb.carrier === p.id) { // carry the bomb to a site (picked once per round)
+      if (this.sdRound !== sd.round || !this.sdSite) { this.sdRound = sd.round; this.sdSite = sd.sites[(Math.random() * sd.sites.length) | 0]; }
+      const s = this.sdSite;
+      goal = s && Math.hypot(s.x - b.pos.x, s.z - b.pos.z) > s.r * 0.5 ? { x: s.x, y: s.y, z: s.z } : null;
+      this.target = this.target && Math.hypot(this.target.st[0] - b.pos.x, this.target.st[2] - b.pos.z) < 12 ? this.target : null;
+    } else if (sd && sd.bomb.state === 2 && p.team !== sd.att && !this.target) goal = { x: sd.bomb.x, y: sd.bomb.y, z: sd.bomb.z }; // defuse it
+    else if (sd && sd.bomb.state === 1 && p.team === sd.att && !this.target) goal = { x: sd.bomb.x, y: sd.bomb.y, z: sd.bomb.z }; // pick it up
+    else if (sd && !this.target && sd.sites.length) { // everyone else heads for (or guards) a site
+      if (this.sdRound !== sd.round || !this.sdSite) { this.sdRound = sd.round; this.sdSite = sd.sites[(Math.random() * sd.sites.length) | 0]; }
+      const s = this.sdSite;
+      goal = Math.hypot(s.x - b.pos.x, s.z - b.pos.z) > s.r ? { x: s.x + (Math.random() - 0.5) * s.r, y: s.y, z: s.z + (Math.random() - 0.5) * s.r } : null;
+    } else if (L.mode.prop && p.team === 1) { // Prop Hunt: go to a hiding spot and stay still
       if (!this.hide) { const n = L.nav && L.nav.random(); this.hide = n ? { x: n.x, y: n.y, z: n.z } : null; }
       goal = this.hide && Math.hypot(this.hide.x - b.pos.x, this.hide.z - b.pos.z) > 1 ? this.hide : null;
     } else if (brGoal) { if (!this.brGoal || Math.hypot(this.brGoal.x - sz.cx, this.brGoal.z - sz.cz) > sz.r * 0.7) this.brGoal = brGoal; goal = this.brGoal; }

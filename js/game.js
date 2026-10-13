@@ -873,6 +873,11 @@ export class Game {
         this.domData = m.dom || null;
         this.propHide = m.ph ?? 0;
         this.duel = m.du || null;
+        this.sdData = m.sd || null;
+        if (this.sdData) { // Search & Destroy sites drawn like Domination zones (A / B letters); the planted site turns red
+          const [, att, sites, bomb, prog] = this.sdData;
+          this.domData = sites.map(([n, x, y, z, r], i) => [n, x, y, z, r, bomb[3] === 2 && bomb[5] === i ? att : 0, prog && prog[0] === 1 && bomb[3] === 0 && i === this.sdPlantSite ? -prog[2] : 0, 0]);
+        }
         this.setMyDisguise((m.dg && m.dg[this.myId]) || null);
         for (const [rid, r] of this.remotes) r.setDisguise((m.dg && m.dg[rid]) || null);
         let teamsChanged = false;
@@ -1253,6 +1258,7 @@ export class Game {
     if (me.alive && !this.matchOver && !this.frozen && !this.huntBlind()) this.updateMovement(dt);
     this.updateProp();
     this.updateGrapple(dt);
+    this.updateSnd(now);
     if (this.emoteOpen && performance.now() > this.emoteOpen) this.toggleEmotes(false);
     this.assist = null;
     if ((this.touch || this.padMode) && opts.aimAssist && me.alive && !this.matchOver) this.aimAssist(dt);
@@ -1922,6 +1928,38 @@ export class Game {
     track.stat({ pumpkins: 1 });
     const left = this.pumpkins.left;
     this.hud.say(left ? `🎃 SMASHED · ${left} LEFT` : '🎃 ALL PUMPKINS SMASHED');
+  }
+
+  // ---------- Search & Destroy ----------
+  // Tell the host while Use (E) is held; draw the bomb when it's on the ground.
+  updateSnd(now) {
+    const on = this.rules.mode === 'snd' && this.sdData;
+    const want = !!(on && this.me.alive && this.down('use'));
+    if (want !== !!this.usingNow) { this.usingNow = want; this.net.send({ t: 'use', on: want ? 1 : 0 }); }
+    if (on) { // which site the carrier is standing in (for the progress arc)
+      const sites = this.sdData[2];
+      this.sdPlantSite = sites.findIndex(([, x, , z, r]) => Math.hypot(this.me.pos.x - x, this.me.pos.z - z) < r);
+    }
+    const bomb = on && this.sdData[3], show = !!(bomb && bomb[3] > 0);
+    if (show && !this.bombMesh) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.3), new THREE.MeshStandardMaterial({ color: '#2b2f36', roughness: 0.6 }));
+      body.position.y = 0.11;
+      const led = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: '#ff2a2a' }));
+      led.position.set(0.12, 0.25, 0);
+      g.add(body, led);
+      g.userData.led = led;
+      this.scene.add(g);
+      this.bombMesh = g;
+    }
+    if (this.bombMesh) {
+      this.bombMesh.visible = show;
+      if (show) {
+        this.bombMesh.position.set(bomb[0], bomb[1], bomb[2]);
+        const fast = bomb[3] === 2 && this.sdData[5] <= 10;
+        this.bombMesh.userData.led.visible = bomb[3] !== 2 || Math.sin(now * (fast ? 0.03 : 0.012)) > 0;
+      }
+    }
   }
 
   // ---------- Emotes ----------
@@ -2905,6 +2943,16 @@ export class Game {
       return `🎯 AIM TRAINER · ${Math.max(0, Math.ceil((a.end - now) / 1000))}s · ${a.hits} HITS · ${a.shots ? Math.round((a.hits / a.shots) * 100) : 0}%`;
     }
     if (mode === 'practice') return `PRACTICE RANGE<span class="lim"> · Esc to pick any weapon · targets respawn</span>`;
+    if (mode === 'snd' && this.sdData) {
+      const [round, att, sites, bomb, prog, secs, post] = this.sdData, mine = this.myTeam === att;
+      const clock = secs >= 0 ? ` · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}` : '';
+      if (secs < 0) return 'WAITING FOR BOTH TEAMS';
+      if (post) return `ROUND ${round} OVER`;
+      if (prog) return `${prog[0] === 1 ? 'PLANTING' : 'DEFUSING'} ${prog[2]}%<span class="lim"> · ${prog[1] === this.myId ? 'keep holding E' : 'stop them!'}</span>`;
+      if (bomb[3] === 2) return `<span class="jugg">BOMB PLANTED AT ${sites[bomb[5]] ? sites[bomb[5]][0] : '?'}</span>${clock}<span class="lim"> · ${mine ? 'defend it' : 'defuse it: hold E at the bomb'}</span>`;
+      if (bomb[4] === this.myId) return `<span class="jugg">YOU HAVE THE BOMB</span>${clock}<span class="lim"> · hold E at A or B</span>`;
+      return `ROUND ${round} · ${mine ? 'ATTACK: plant at A or B' : 'DEFEND A and B'}${clock}${bomb[3] === 1 ? '<span class="lim"> · bomb dropped</span>' : ''}`;
+    }
     if (MODES[mode].redBlue && this.teamScore) {
       // The team scores themselves are in the score strip above; this line only adds objective info.
       let bar = `<span class="lim">${MODES[mode].short} · FIRST TO ${this.rules.scoreLimit}</span>`;

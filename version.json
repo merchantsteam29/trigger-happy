@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.17",
+  "version": "2026.10.12.18",
   "notes": [
-    "New map: Haunted Manor. A dark manor at night with a roof terrace, graveyards and a crypt"
+    "New mode: Search & Destroy. Plant or defuse the bomb (hold E), one life per round, first to 4"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

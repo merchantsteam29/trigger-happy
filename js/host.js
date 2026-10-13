@@ -36,6 +36,13 @@ export const MODES = {
   zombies: { name: 'Zombie Survival', short: 'ZOMBIES', teams: true, coop: true, score: 0, time: 0, desc: 'Co-op. Hold out against waves of zombies that get bigger, tougher and faster. Downed players come back when the wave is cleared. Every 5th wave brings a Brute.' },
   dom: { name: 'Domination', short: 'DOMINATION', teams: true, redBlue: true, dom: true, score: 200, time: 10, desc: 'Red vs Blue over three zones (A, B, C). Stand in a zone with only your team to capture it; every zone you own scores a point per second.' },
 };
+// Search & Destroy: Red vs Blue rounds, one life each, sides swap every round. The attackers plant
+// the bomb at A (the middle) or B (deep in the defenders' half) by holding Use for 3 s; once it's
+// planted the defenders have 35 s to defuse it (hold Use for 5 s). Win a round by wiping out the
+// other team, the bomb going off, a defuse, or (defenders) running out the attackers' clock.
+MODES.snd = { name: 'Search & Destroy', short: 'S&D', teams: true, redBlue: true, snd: true, score: 4, time: 15,
+  desc: 'Red vs Blue rounds with one life. Attackers plant the bomb at A or B (hold E), defenders stop them or defuse it. Sides swap every round. First to 4 rounds.' };
+const SND = { roundMs: 90000, fuseMs: 35000, plantMs: 3000, defuseMs: 5000, postMs: 4500, defuseR: 2.2, pickR: 1.6 };
 // Duel: 1v1, first to 5. Every kill ends the round: both respawn far apart, and everyone gets the
 // same new random loadout (with more players it's a free-for-all with shared loadouts).
 MODES.duel = { name: 'Duel', short: 'DUEL', teams: false, duel: true, score: 5, time: 8,
@@ -66,7 +73,7 @@ const BR_RARE = ['railgun', 'minigun', 'rocket', 'amr', 'gl'];
 // Single-player only (main menu → Practice Range): no timer, no score limit, target dummies.
 MODES.practice = { name: 'Practice Range', short: 'PRACTICE', teams: false, practice: true, score: 0, time: 0, desc: 'Solo target practice with every weapon.' };
 export const MODE_ORDER = ['ffa', 'tdm', 'gungame', 'koth', 'infection', 'ctf', 'dom', 'hardpoint', 'killconfirmed', 'juggernaut', 'bounty', 'lms', 'oitc',
-  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt', 'duel'];
+  'instagib', 'rotation', 'blades', 'boom', 'roulette', 'vampire', 'zombies', 'horror', 'prophunt', 'duel', 'snd'];
 const FLAG_RETURN_MS = 20000;
 
 // Runs fn every ms. Browsers slow main-thread timers to once a second in background tabs, which
@@ -222,6 +229,7 @@ export class HostLogic {
     this.infectAt = this.mode.infect ? Date.now() + INFECT_DELAY_MS : 0;
     this.propHideUntil = this.mode.prop ? Date.now() + HIDE_MS : 0;
     this.duelRound = 1;
+    this.sd = this.mode.snd ? { round: 0, att: 2, sites: [], bomb: { state: 0, carrier: null }, prog: null, waiting: true } : null;
     this.duelNextAt = 0;
     this.duelLoadout = this.mode.duel ? this.newDuelLoadout() : null;
     this.propScoreT = Date.now();
@@ -555,6 +563,9 @@ export class HostLogic {
         // q is a counter: the position channel is unordered, so ignore anything older than we have.
         if (typeof m.q === 'number') { if (m.q <= (p.lastQ || 0)) break; p.lastQ = m.q; }
         if (p.alive && Array.isArray(m.p)) { this.checkMove(p, m.p); p.st = [m.p[0], m.p[1], m.p[2], m.y, m.pi, m.w, m.c ? 1 : 0, m.a | 0]; }
+        break;
+      case 'use': // Search & Destroy: holding Use (plant / defuse)
+        p.using = !!m.on;
         break;
       case 'dg': // Prop Hunt: change disguise
         if (this.mode.prop && p.team === 1 && DISGUISES.includes(m.k)) p.disguise = m.k;
@@ -1016,6 +1027,11 @@ export class HostLogic {
         break;
       case 'practice':
         break;
+      case 'snd':
+        v.respawnAt = 0; // one life per round
+        attacker.score = attacker.kills;
+        if (this.sd && this.sd.bomb.carrier === v.id) this.dropBomb(v);
+        break;
       case 'duel':
         if (enemyKill) attacker.score = attacker.kills;
         if (enemyKill && attacker.kills >= this.s.scoreLimit) { this.endMatch(); break; }
@@ -1344,6 +1360,110 @@ export class HostLogic {
     if (!this.mode.hill) return null;
     const hills = MAPS[this.s.map].hills;
     return hills[this.hillIdx % hills.length];
+  }
+
+  // ---------- Search & Destroy ----------
+  sndTeams() {
+    const all = [...this.players.values()];
+    return { att: all.filter((p) => p.team === this.sd.att), def: all.filter((p) => p.team && p.team !== this.sd.att) };
+  }
+
+  startSndRound() {
+    const d = this.sd, now = Date.now();
+    d.round++;
+    d.att = d.round % 2 ? 2 : 1; // sides swap every round
+    d.postUntil = 0;
+    d.prog = null;
+    d.roundEnds = now + SND.roundMs;
+    // A: the map's middle objective. B: the objective deepest in the defenders' half (pickSpawn puts
+    // team 1 on the -x side and team 2 on +x).
+    const hills = MAPS[this.s.map].hills || [];
+    const defSide = d.att === 1 ? 1 : -1;
+    const a = hills[0] || { 0: 0, 1: 0, 2: 0, 3: 3 };
+    const b = hills.slice(1).sort((p, q) => q[0] * defSide - p[0] * defSide)[0] || a;
+    d.sites = [{ name: 'A', x: a[0], y: a[1], z: a[2], r: Math.max(2.5, a[3]) }, { name: 'B', x: b[0], y: b[1], z: b[2], r: Math.max(2.5, b[3]) }];
+    for (const p of this.players.values()) { p.alive = false; p.respawnAt = 0; p.using = false; }
+    for (const p of this.players.values()) this.spawn(p);
+    const atk = this.sndTeams().att;
+    const carrier = atk[(Math.random() * atk.length) | 0];
+    d.bomb = { state: 0, carrier: carrier ? carrier.id : null };
+    this.broadcast({ t: 'notice', text: `ROUND ${d.round} · ${d.att === 1 ? 'RED' : 'BLUE'} ATTACKS` });
+    if (carrier) this.sendTo(carrier.id, { t: 'notice', text: 'YOU HAVE THE BOMB · PLANT IT AT A OR B' });
+  }
+
+  dropBomb(p) {
+    const b = this.sd.bomb;
+    if (b.state !== 0 || b.carrier !== p.id) return;
+    this.sd.bomb = { state: 1, carrier: null, x: p.st[0], y: p.st[1], z: p.st[2] };
+    if (this.sd.prog && this.sd.prog.id === p.id) this.sd.prog = null;
+  }
+
+  sndRoundWon(team, why) {
+    const d = this.sd;
+    if (d.postUntil) return;
+    this.teamScore[team]++;
+    d.prog = null;
+    d.postUntil = Date.now() + SND.postMs;
+    this.broadcast({ t: 'notice', text: `${team === 1 ? 'RED' : 'BLUE'} WINS THE ROUND · ${why}` });
+    if (this.teamScore[team] >= this.s.scoreLimit) this.endMatch();
+  }
+
+  tickSnd(now) {
+    const d = this.sd;
+    if (d.postUntil) { if (now >= d.postUntil) this.startSndRound(); return; }
+    const { att, def } = this.sndTeams();
+    // Wait for both teams to have someone, then start.
+    if (d.waiting || !d.round) {
+      if (att.length && def.length) { d.waiting = false; this.startSndRound(); }
+      return;
+    }
+    const b = d.bomb;
+    const attAlive = att.filter((p) => p.alive), defAlive = def.filter((p) => p.alive);
+    // The carrier left: pass the bomb on. Dropped: any attacker can pick it up.
+    if (b.state === 0 && !att.some((p) => p.id === b.carrier && p.alive)) {
+      const c = att.find((p) => p.id === b.carrier);
+      if (c) this.dropBomb(c); else if (attAlive.length) b.carrier = attAlive[0].id;
+    }
+    if (b.state === 1) {
+      for (const p of attAlive) if (Math.hypot(p.st[0] - b.x, p.st[2] - b.z) < SND.pickR && Math.abs(p.st[1] - b.y) < 2) {
+        d.bomb = { state: 0, carrier: p.id };
+        this.sendTo(p.id, { t: 'notice', text: 'YOU HAVE THE BOMB' });
+        break;
+      }
+    }
+    // Plant (carrier in a site, holding Use) and defuse (a defender at the bomb, holding Use).
+    const using = (p) => p.alive && (p.using || p.bot);
+    let doer = null, kind = 0;
+    if (d.bomb.state === 0) {
+      const c = att.find((p) => p.id === d.bomb.carrier);
+      const site = c && d.sites.findIndex((s) => Math.hypot(c.st[0] - s.x, c.st[2] - s.z) < s.r && Math.abs(c.st[1] - s.y) < 2.5);
+      if (c && site >= 0 && using(c)) { doer = c; kind = 1; d.plantSite = site; }
+    } else if (d.bomb.state === 2) {
+      doer = defAlive.find((p) => using(p) && Math.hypot(p.st[0] - d.bomb.x, p.st[2] - d.bomb.z) < SND.defuseR && Math.abs(p.st[1] - d.bomb.y) < 2);
+      kind = doer ? 2 : 0;
+    }
+    if (!doer) d.prog = null;
+    else if (!d.prog || d.prog.id !== doer.id || d.prog.kind !== kind) d.prog = { id: doer.id, kind, start: now };
+    else if (now - d.prog.start >= (kind === 1 ? SND.plantMs : SND.defuseMs)) {
+      d.prog = null;
+      if (kind === 1) {
+        const s = d.sites[d.plantSite];
+        d.bomb = { state: 2, carrier: null, x: doer.st[0], y: doer.st[1], z: doer.st[2], site: d.plantSite, explodeAt: now + SND.fuseMs, by: doer.id };
+        doer.score += 1;
+        this.broadcast({ t: 'notice', text: `BOMB PLANTED AT ${s.name} · ${Math.round(SND.fuseMs / 1000)}s` });
+      } else {
+        doer.score += 1;
+        this.sndRoundWon(doer.team, 'BOMB DEFUSED');
+        return;
+      }
+    }
+    // How the round ends
+    if (d.bomb.state === 2 && now >= d.bomb.explodeAt) {
+      this.broadcast({ t: 'boom', p: [d.bomb.x, d.bomb.y + 0.5, d.bomb.z], k: 'rocket' });
+      this.sndRoundWon(d.att, 'THE BOMB WENT OFF');
+    } else if (!defAlive.length && def.length) this.sndRoundWon(d.att, 'DEFENDERS ELIMINATED');
+    else if (!attAlive.length && att.length && d.bomb.state !== 2) this.sndRoundWon(d.att === 1 ? 2 : 1, 'ATTACKERS ELIMINATED');
+    else if (d.bomb.state !== 2 && now >= d.roundEnds) this.sndRoundWon(d.att === 1 ? 2 : 1, 'TIME RAN OUT');
   }
 
   // ---------- Duel ----------
@@ -1683,6 +1803,7 @@ export class HostLogic {
       if (this.mode.infect && !this.infected && this.infectAt && now >= this.infectAt) this.startInfection();
       if (this.mode.prop) this.tickProps(now);
       if (this.mode.duel && this.duelNextAt && now >= this.duelNextAt) this.nextDuelRound();
+      if (this.mode.snd) this.tickSnd(now, dt);
       if (this.zw) this.tickZombies(now);
       // Auto bots: every 15 s, nudge their skill toward an even fight with the real players.
       if (now - (this.botSkillT || 0) > 15000) {
@@ -1729,6 +1850,15 @@ export class HostLogic {
     if (this.props && this.props.length) msg.pr = this.props.map((o) => [o.id, o.kind === 'barrel' ? 1 : 2, r2(o.x), r2(o.y), r2(o.z)]);
     if (this.zw) msg.zw = [this.zw.wave, this.zombiesLeft(), this.zw.breakUntil ? Math.max(0, Math.ceil((this.zw.breakUntil - now) / 1000)) : 0];
     if (this.mode.infect) msg.inf = this.infected ? 0 : Math.max(0, Math.ceil((this.infectAt - now) / 1000));
+    // Search & Destroy: [round, attacking team, sites [[name,x,y,z,r]], bomb [x,y,z,state 0 carried / 1 dropped / 2 planted, carrier, site],
+    //   progress [kind 1 plant / 2 defuse, player, 0..100] or 0, seconds left (round clock, or the fuse once planted)]
+    if (this.sd) {
+      const d = this.sd, b = d.bomb, pr = d.prog;
+      msg.sd = [d.round, d.att, d.sites.map((s) => [s.name, r2(s.x), r2(s.y), r2(s.z), s.r]),
+        [r2(b.x || 0), r2(b.y || 0), r2(b.z || 0), b.state, b.carrier || 0, b.site ?? -1],
+        pr ? [pr.kind, pr.id, Math.min(100, Math.round(((now - pr.start) / (pr.kind === 1 ? SND.plantMs : SND.defuseMs)) * 100))] : 0,
+        d.waiting ? -1 : Math.max(0, Math.ceil(((b.state === 2 ? b.explodeAt : d.roundEnds) - now) / 1000)), d.postUntil ? 1 : 0];
+    }
     if (this.mode.duel) msg.du = [this.duelRound, this.duelLoadout ? this.duelLoadout[0] : 0, this.duelNextAt ? Math.max(0, Math.ceil((this.duelNextAt - now) / 1000)) : 0];
     // Prop Hunt: seconds of hiding left, and each hidden prop's disguise
     if (this.mode.prop) {

@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.18', name: 'Search & Destroy', banner: 'flames', notes: [
+    'New mode: Search & Destroy. Red vs Blue rounds with one life, and the sides swap every round',
+    'Attackers plant the bomb at A or B (hold E). Defenders stop them or defuse it in 35 seconds',
+    'First team to win 4 rounds takes the match',
+  ] },
   { v: '2026.10.12.17', name: 'Haunted Manor', banner: 'galaxy', notes: [
     'New map: Haunted Manor. A dark manor at night with three rooms and a roof terrace up the outside stairs',
     'Graveyards with a walk-in crypt on both sides, hedges, a pumpkin patch and dead trees',

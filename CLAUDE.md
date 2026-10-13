@@ -78,7 +78,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 - Bots (`bot.js`) run inside the host (`p.bot`), with A* paths over `nav.js` and "Auto" skill that
   follows how real players are doing (`HostLogic.botSkill`).
 - Modes are entries in `MODES` (`host.js`) with flags: `teams`, `redBlue`, `infect` (Infection
-  rules), `prop` (Prop Hunt, `prophunt.js`), `horror`, `br`, `event` (Game Night only, hidden from pickers), `coop`, `loadout`, `practice`.
+  rules), `prop` (Prop Hunt, `prophunt.js`), `duel`, `snd` (Search & Destroy: rounds, bomb, sites from the map's hills), `horror`, `br`, `event` (Game Night only, hidden from pickers), `coop`, `loadout`, `practice`.
 
 ### Public relays: everything that persists
 - `relay.js` connects to free public MQTT brokers. Topics live under `whffa/v1/`, mostly **retained**.
@@ -181,6 +181,7 @@ Built and committed but **not yet tested with real people**:
 - linked devices on real phones / PCs over the public relays (tested with two browser identities and a local relay stand-in)
 
 Built on 2026-10-12 at the owner's request ("do the max amount of updates"), not yet played by real people: crosshair editor,
-Halloween event, grappling hook, Prop Hunt.
+Halloween event, grappling hook, Prop Hunt, match report, emotes, Duel, hit / kill sounds, loadout codes, Haunted Manor
+map, Search & Destroy.
 
 Ideas the owner hasn't picked yet: a map editor.
