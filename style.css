@@ -298,13 +298,26 @@ button.big { padding: 14px 18px; font-size: 16px; letter-spacing: 2px; }
 /* ---------- HUD ---------- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
 #crosshair { position: absolute; left: 50%; top: 50%; --gap: 8px; --cross: #fff; transform: scale(var(--cross-scale, 1)); }
-#crosshair i { position: absolute; background: var(--cross); box-shadow: 0 0 0 1px rgba(0,0,0,0.45); transition: opacity 0.1s; }
-#crosshair.nodot b { display: none; }
-#crosshair .t, #crosshair .b { width: 2px; height: 8px; left: -1px; }
-#crosshair .l, #crosshair .r { height: 2px; width: 8px; top: -1px; }
+#crosshair, .xh { --len: 8px; --thick: 2px; }
+#crosshair i, .xh i { position: absolute; background: var(--cross); box-shadow: 0 0 0 1px rgba(0,0,0,0.45); transition: opacity 0.1s; }
+#crosshair.nodot b, .xh.nodot b { display: none; }
+#crosshair .t, #crosshair .b, .xh .t, .xh .b { width: var(--thick); height: var(--len); left: calc(var(--thick) / -2); }
+#crosshair .l, #crosshair .r, .xh .l, .xh .r { height: var(--thick); width: var(--len); top: calc(var(--thick) / -2); }
+.xh .t { bottom: var(--gap); } .xh .b { top: var(--gap); } .xh .l { right: var(--gap); } .xh .r { left: var(--gap); }
+#crosshair s, .xh s { display: none; position: absolute; box-sizing: border-box; border-radius: 50%; border: var(--thick) solid var(--cross);
+  width: calc(var(--gap) * 2 + var(--len)); height: calc(var(--gap) * 2 + var(--len)); left: calc(var(--gap) * -1 - var(--len) / 2); top: calc(var(--gap) * -1 - var(--len) / 2);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.45); transition: opacity 0.1s; }
+#crosshair[data-style="circle"] i, .xh[data-style="circle"] i, #crosshair[data-style="dot"] i, .xh[data-style="dot"] i { display: none; }
+#crosshair[data-style="circle"] s, .xh[data-style="circle"] s { display: block; }
+#crosshair[data-style="tee"] .t, .xh[data-style="tee"] .t { display: none; }
+#crosshair.nooutline i, #crosshair.nooutline b, #crosshair.nooutline s, .xh.nooutline i, .xh.nooutline b, .xh.nooutline s { box-shadow: none; }
+#crosshair.ads s { opacity: 0; }
 #crosshair .t { bottom: var(--gap); } #crosshair .b { top: var(--gap); }
 #crosshair .l { right: var(--gap); } #crosshair .r { left: var(--gap); }
-#crosshair b { position: absolute; width: 2px; height: 2px; left: -1px; top: -1px; background: var(--cross); box-shadow: 0 0 0 1px rgba(0,0,0,0.45); }
+#crosshair b, .xh b { position: absolute; width: var(--thick); height: var(--thick); left: calc(var(--thick) / -2); top: calc(var(--thick) / -2); background: var(--cross); box-shadow: 0 0 0 1px rgba(0,0,0,0.45); }
+.cross-prev { position: relative; width: 120px; height: 80px; border-radius: 10px; overflow: hidden; flex: none;
+  background: linear-gradient(180deg, #8fb4d8 0 45%, #6d6658 45% 100%); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
+.cross-prev .xh { position: absolute; left: 50%; top: 50%; transform: scale(var(--cross-scale, 1)); }
 #mission-toast { position: absolute; left: 50%; top: 20%; transform: translate(-50%, -12px); text-align: center; padding: 10px 22px;
   background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius); opacity: 0; transition: opacity 0.4s, transform 0.4s;
   box-shadow: 0 0 30px rgba(255,45,117,0.25); }

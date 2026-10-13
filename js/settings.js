@@ -16,6 +16,12 @@ const DEFAULTS = {
   crossColor: '#ffffff',
   crossSize: 1,
   crossDot: true,
+  crossStyle: 'cross', // cross | tee | circle | dot
+  crossLen: 8,         // arm length (px)
+  crossThick: 2,       // line thickness (px)
+  crossGap: 4,         // gap from the center (px), before spread
+  crossOutline: true,  // thin dark outline
+  crossDynamic: true,  // opens up as your shots spread (moving, jumping)
   showFps: false,
   blood: true,
   killcam: true,

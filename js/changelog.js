@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.12.8', name: 'Crosshair Editor', banner: 'neon', notes: [
+    'Make your own crosshair in Settings > HUD & Audio, with a live preview',
+    'Pick a shape (cross, T, circle or dot only), then line length, thickness, gap, outline and color',
+    'Choose whether it spreads while you move and jump, or stays put',
+  ] },
   { v: '2026.10.12.7', name: 'Update History', banner: 'galaxy', notes: [
     'New in Settings: 📜 Updates shows every update so far, each with its own banner and everything that was new',
   ] },

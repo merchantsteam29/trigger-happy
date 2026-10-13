@@ -1,4 +1,5 @@
-import { opts, setOpt, resetOpts } from './settings.js';
+import { opts, setOpt, resetOpts, onOpts } from './settings.js';
+import { styleCrosshair } from './hud.js';
 import { openUpdates, closeUpdates } from './changelog.js';
 import { ACTIONS, binds, setBind, resetBinds, keyName, mouseCode } from './binds.js';
 import { store, esc } from './util.js';
@@ -19,6 +20,8 @@ const mul = (v) => Number(v).toFixed(2) + '×';
 const deg = (v) => v + '°';
 
 const CROSS_COLORS = ['#ffffff', '#4dff9a', '#36e0ff', '#ffe14d', '#ff4d4d', '#ff4dff'];
+const CROSS_STYLES = [{ id: 'cross', name: 'Cross' }, { id: 'tee', name: 'T' }, { id: 'circle', name: 'Circle' }, { id: 'dot', name: 'Dot only' }];
+const px = (v) => `${v} px`;
 
 // Tabs of controls. `only` hides a row on the other kind of device.
 const TABS = [
@@ -65,9 +68,16 @@ const TABS = [
     { key: 'streamer', label: 'Streamer mode', hint: 'For streaming or recording: hides server codes (also in the address bar) and shows other players as Player 1, Player 2… Bots keep their names. Names change from your next match', type: 'check' },
     { key: 'minimap', label: 'Minimap', hint: 'Shows the map, teammates, objectives and enemies who fire unsuppressed', type: 'check' },
     { key: 'hudScale', label: 'HUD size', type: 'range', min: 0.75, max: 1.3, step: 0.05, fmt: mul },
+    { special: 'crosshair' },
+    { key: 'crossStyle', label: 'Crosshair shape', type: 'choice', options: CROSS_STYLES },
     { key: 'crossColor', label: 'Crosshair color', type: 'swatch', options: CROSS_COLORS },
     { key: 'crossSize', label: 'Crosshair size', type: 'range', min: 0.6, max: 2, step: 0.05, fmt: mul },
+    { key: 'crossLen', label: 'Line length', type: 'range', min: 2, max: 16, step: 1, fmt: px },
+    { key: 'crossThick', label: 'Line thickness', type: 'range', min: 1, max: 5, step: 1, fmt: px },
+    { key: 'crossGap', label: 'Gap', hint: 'Space between the center and the lines', type: 'range', min: 0, max: 14, step: 1, fmt: px },
     { key: 'crossDot', label: 'Crosshair center dot', type: 'check' },
+    { key: 'crossOutline', label: 'Crosshair outline', hint: 'A thin dark edge so it shows on bright walls', type: 'check' },
+    { key: 'crossDynamic', label: 'Crosshair spreads', hint: 'Opens up while moving and jumping to show your real accuracy', type: 'check' },
   ] },
   { name: 'Accessibility', rows: [
     { key: 'colorblind', label: 'Colorblind mode', hint: 'Changes team, zombie and health bar colors so they are easier to tell apart', type: 'choice', options: CB_MODES },
@@ -103,6 +113,10 @@ export class SettingsUI {
     this.tab = 0;
     this.onClose = null;
     $('set-close').onclick = () => this.close();
+    onOpts((o) => { // keep the crosshair preview live while sliders move
+      const xh = document.querySelector('#set-body .cross-prev .xh');
+      if (xh) { styleCrosshair(xh, o); xh.style.setProperty('--gap', (o.crossGap ?? 4) + 'px'); }
+    });
     $('set-updates').onclick = () => openUpdates();
     $('chl-close').onclick = () => closeUpdates();
     $('set-reset').onclick = () => {
@@ -427,6 +441,13 @@ export class SettingsUI {
           finish(mc);
         }, true);
       }
+    } else if (kind === 'crosshair') {
+      // Live preview: updates as the crosshair settings below change.
+      el.innerHTML = `<div class="set-label">Crosshair<small>Preview of how it looks in a match</small></div>
+        <div class="cross-prev"><div class="xh"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><s></s><b></b></div></div>`;
+      const xh = el.querySelector('.xh');
+      styleCrosshair(xh, opts);
+      xh.style.setProperty('--gap', (opts.crossGap ?? 4) + 'px');
     } else if (kind === 'timezone') {
       // Times in the game (Game Night, resets, events, holidays) follow the device's own time zone.
       let tz = 'your device', off = '';

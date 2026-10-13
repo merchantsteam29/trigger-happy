@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.12.7",
+  "version": "2026.10.12.8",
   "notes": [
-    "New in Settings: 📜 Updates shows every update so far, each with its own banner and everything that was new"
+    "Crosshair editor in Settings > HUD & Audio: shape, length, thickness, gap, outline and color, with a live preview"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

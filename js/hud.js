@@ -23,6 +23,19 @@ const W_LABEL = { ...SHORT, fall: 'Fell', storm: 'The storm', barrel: 'Barrel' }
 // Last week's #1 on the leaderboard
 const TROPHY = '<span class="trophy" title="Weekly champion">🏆</span>';
 
+// Crosshair look from the settings (shape, color, size, length, thickness, outline). Used by the HUD
+// and by the live preview in Settings, so they always match.
+export function styleCrosshair(el, o) {
+  el.style.setProperty('--cross', o.rgbCross ? '#ff3b3b' : o.crossColor);
+  el.classList.toggle('rgb', !!o.rgbCross);
+  el.style.setProperty('--cross-scale', o.crossSize);
+  el.style.setProperty('--len', (o.crossLen ?? 8) + 'px');
+  el.style.setProperty('--thick', (o.crossThick ?? 2) + 'px');
+  el.dataset.style = o.crossStyle || 'cross';
+  el.classList.toggle('nodot', !o.crossDot);
+  el.classList.toggle('nooutline', o.crossOutline === false);
+}
+
 export class Hud {
   constructor() {
     this.el = $('hud');
@@ -42,10 +55,9 @@ export class Hud {
 
   applyOpts(o) {
     document.documentElement.style.setProperty('--cap-scale', String(o.captionSize || 1));
-    this.crosshair.style.setProperty('--cross', o.rgbCross ? '#ff3b3b' : o.crossColor);
-    this.crosshair.classList.toggle('rgb', !!o.rgbCross);
-    this.crosshair.style.setProperty('--cross-scale', o.crossSize);
-    this.crosshair.classList.toggle('nodot', !o.crossDot);
+    styleCrosshair(this.crosshair, o);
+    this.crossGap = o.crossGap ?? 4;
+    this.crossDynamic = o.crossDynamic !== false;
     $('fps').classList.toggle('hidden', !o.showFps);
     this.el.style.setProperty('--hs', o.hudScale || 1);
     this.minimap(o.minimap);
@@ -241,7 +253,7 @@ export class Hud {
   }
 
   spread(px, ads) {
-    this.crosshair.style.setProperty('--gap', Math.round(4 + px) + 'px');
+    this.crosshair.style.setProperty('--gap', Math.round((this.crossGap ?? 4) + (this.crossDynamic === false ? 0 : px)) + 'px');
     this.crosshair.classList.toggle('ads', ads);
   }
 
