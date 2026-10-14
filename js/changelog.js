@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.9', name: 'Player Cards', banner: 'galaxy', notes: [
+    'Profiles are now player cards: your character in your outfit, a title, your stats, favorite gun and ranked division',
+    'Set yours up in Character → Player card: pick a title from your achievements and the four stats to show',
+    'Save image downloads your card as a picture to share',
+  ] },
   { v: '2026.10.13.8', name: 'Victory Poses', banner: 'gold', notes: [
     'The match MVP now steps onto a stage at the end and does their victory pose for everyone',
     'Everyone has Cheer. Eight more in the Shop: Flex, Finger Guns, Dab, Heart Hands, Take a Bow, Floss, Spin Jump and Levitate',

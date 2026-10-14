@@ -3,6 +3,8 @@
 // (Friends, Leaderboard, your chip…) to read it. Numbers are reported by each player's game.
 
 import { ACH } from './achievements.js';
+import { sanitizeCos } from './missions.js';
+import { cleanTitle, cleanCardStats } from './playercard.js';
 
 const V = 'whffa/v1/prof/';
 const low = (s) => String(s || '').toLowerCase();
@@ -18,6 +20,8 @@ export function cleanProfile(b) {
     banner: str(b.banner, 20), wrap: str(b.wrap, 20), seasons: Array.isArray(b.seasons) ? b.seasons.map((x) => num(x, 999)).slice(0, 50) : [],
     since: Number(b.since) || 0, ts: Number(b.ts) || 0, sr: num(b.sr, 5000), srPlayed: num(b.srPlayed, 1e6),
     ach: Array.isArray(b.ach) ? b.ach.filter((x) => typeof x === 'string' && ACH[x]).slice(0, 3) : [], achN: num(b.achN, 100),
+    // Player card (playercard.js): outfit, title (an achievement id), the 4 stats shown, kills on real players
+    cos: b.cos ? sanitizeCos(b.cos) : null, title: cleanTitle(b.title), stats: cleanCardStats(b.stats), pk: num(b.pk, 1e7),
   };
 }
 

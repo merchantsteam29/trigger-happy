@@ -1,3 +1,5 @@
+import { cardHtml, paintCard, myCard, setMyCard, CARD_STATS } from './playercard.js';
+import { ACHIEVEMENTS, achievements } from './achievements.js';
 import { opts, setOpt, resetOpts, onOpts } from './settings.js';
 import { styleCrosshair } from './hud.js';
 import { HIT_SOUNDS, KILL_SOUNDS, hitSound, killSound, setFeedbackSounds, initAudio } from './audio.js';
@@ -344,7 +346,7 @@ export class SettingsUI {
       const cos = getCos();
       const t = this.tryOn;
       const shown = t ? { ...cos, [t.slot]: t.id } : cos;
-      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['wraps', 'Weapon wraps']];
+      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['card', 'Player card'], ['wraps', 'Weapon wraps']];
       if (!TABS.some(([k]) => k === this.czTab)) this.czTab = t ? t.slot : 'hat';
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
@@ -381,6 +383,27 @@ export class SettingsUI {
       };
       if (tab === 'wraps') {
         panel.appendChild(this.wrapsView(rerender));
+      } else if (tab === 'card') {
+        // Player card: the title (one of your achievements) and the 4 stats on it.
+        const mc = myCard(), p = { ...ctx.card(), title: mc.title, stats: mc.stats }, extra = ctx.cardExtra();
+        const titles = ACHIEVEMENTS.filter((a) => achievements.unlocked[a.id]);
+        panel.innerHTML = `<div class="cz-hint">What everyone sees when they click your gamertag. Save it as a picture to share.</div>
+          <div class="pc-edit"><div class="pc-preview">${cardHtml(p, extra)}</div>
+          <div class="pc-form">
+            <label class="ed-l">Title<select data-title><option value="">No title</option>${titles.map((a) => `<option value="${a.id}" ${a.id === mc.title ? 'selected' : ''}>${a.icon} ${esc(a.name)}</option>`).join('')}</select>
+              <small class="muted">${titles.length ? 'Pick from your achievements.' : 'Unlock achievements to get titles.'}</small></label>
+            ${[0, 1, 2, 3].map((i) => `<label class="ed-l">Stat ${i + 1}<select data-stat="${i}">${Object.entries(CARD_STATS).map(([k, s]) => `<option value="${k}" ${mc.stats[i] === k ? 'selected' : ''}>${s.name}</option>`).join('')}</select></label>`).join('')}
+            <button class="primary" data-save>⬇ Save image</button>
+          </div></div>`;
+        paintCard(panel, p, drawAvatar);
+        const upd = () => {
+          const stats = [...panel.querySelectorAll('[data-stat]')].map((s) => s.value);
+          setMyCard({ title: panel.querySelector('[data-title]').value, stats: new Set(stats).size === 4 ? stats : mc.stats });
+          if (ctx.onCard) ctx.onCard();
+          rerender();
+        };
+        panel.querySelectorAll('select').forEach((s) => { s.onchange = upd; });
+        panel.querySelector('[data-save]').onclick = () => ctx.saveCard && ctx.saveCard(p, extra);
       } else if (ICON_SLOTS.includes(tab)) {
         const hint = { killfx: 'Plays where your victim stood when you get a kill. Everyone in the match sees it.', pose: 'When you\'re the match MVP, everyone sees you do this on the end screen.' }[tab] || '';
         panel.innerHTML = `<div class="cz-hint">${hint}</div>

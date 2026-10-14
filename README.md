@@ -348,12 +348,15 @@ matches), and the **Clans** tab on the weekly leaderboard ranks clans by their m
 - **Clan sprays:** the leader draws a 16×16 pixel spray (**🎨 Make clan spray**). Members press **X** in a match to
   spray it on a wall within 5 m, once every 8 seconds. Everyone in the match sees it.
 
-## Player profiles
+## Player profiles and player cards
 
-Click a gamertag (your own in **Friends**, a friend, or anyone on the **Leaderboard**) to see their profile: banner,
-level and rank, kills, K/D, wins, win rate, matches, headshots, best streak, favorite gun (with its wrap) and season
-badges, up to 3 achievements they picked to show, with an **Add friend** button. Players with a gamertag post their
-profile automatically.
+Click a gamertag (your own in **Friends**, a friend, or anyone on the **Leaderboard**) to see their **player card**: their
+character in their outfit, a title, four stats they picked, favorite gun, ranked division, season badges and up to 3
+achievements they picked to show, with an **Add friend** button. Players with a gamertag post their profile automatically.
+
+Set up yours in **Character → Player card**: pick a title (any achievement you've unlocked) and the four stats to show
+(kills, K/D, wins, win rate, matches, headshots, headshot %, best streak, player kills or level). **⬇ Save image**
+downloads the card as a picture to share.
 
 ## Achievements
 

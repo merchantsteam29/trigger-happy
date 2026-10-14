@@ -9,7 +9,8 @@ import { COLORS, randCode, store } from './util.js';
 import { MODES, MODE_ORDER, BR_MAPS } from './host.js';
 import { HostPanel } from './hostpanel.js';
 import { modelQuality } from './models.js';
-import { SettingsUI } from './settingsui.js';
+import { SettingsUI, drawAvatar } from './settingsui.js';
+import { cardHtml, paintCard, cardImage, myCard } from './playercard.js';
 import { getCos, ownsWrap, MISSIONS, missionDone, getTokens } from './missions.js';
 import { opts, onOpts } from './settings.js';
 import { ServerBrowser, ServerAnnouncer, REGIONS, guessRegion } from './servers.js';
@@ -141,7 +142,9 @@ function renderCharacter() {
   if (!settingsUI) return;
   const el = $('menu-customize');
   const side = document.querySelector('[data-pane="character"] .field.two') || document.querySelector('.cz-side .field.two');
-  el.replaceChildren(settingsUI.special('customize', { side, rerender: () => { renderCharacter(); renderChip(); } }));
+  el.replaceChildren(settingsUI.special('customize', { side, rerender: () => { renderCharacter(); renderChip(); },
+    card: () => ({ ...myProfile(), tag: social.tag || settings.name || 'Player' }), cardExtra: () => ({ rankName: rankOfLevel(myLevel().level).name }),
+    onCard: () => { if (profiles.social) profiles.publish(myProfile()); }, saveCard }));
 }
 // Missions screen: three tabs (daily rewards + challenges, season pass + level, missions).
 let msTab = null;
@@ -800,8 +803,11 @@ function myProfile() {
     banner: getCos().banner, wrap: (m && m.camo) || '', seasons: seasons.badges(), since: store.get('firstPlayed', 0),
     sr: myRanked().sr, srPlayed: myRanked().played,
     ach: achievements.showcase(), achN: achievements.count(),
+    cos: lookOnly(getCos()), title: myCard().title, stats: myCard().stats, pk: st.playerKills || 0,
   };
 }
+// The outfit part of your cosmetics (for the player card).
+const lookOnly = (c) => ({ hat: c.hat, hair: c.hair, hairColor: c.hairColor, face: c.face, back: c.back, banner: c.banner });
 async function openProfile(tag) {
   if (!tag) return;
   const pop = $('profile-pop'), body = $('pf-body');
@@ -813,25 +819,28 @@ async function openProfile(tag) {
   if (pop.classList.contains('hidden')) return;
   if (!p) { body.innerHTML = `<div class="pf-loading"><b>${esc(tag)}</b><br>No profile yet. It shows up after they play with a recent version of the game.</div>`; return; }
   const lv = { level: p.level || 1, rank: rankOfLevel(p.level || 1) };
-  const kd = (p.kills / Math.max(1, p.deaths)).toFixed(2), wr = p.matches ? Math.round((p.wins / p.matches) * 100) + '%' : '–';
   const role = roles.roleOfTag(p.tag), champ = leaderboard.isChamp(p.tag);
-  const W = WEAPONS[p.fav], camo = p.wrap && camoOf(p.wrap);
   const isFriend = [...social.friends.values()].some((f) => f.tag.toLowerCase() === p.tag.toLowerCase());
-  body.innerHTML = `
-    ${bannerHtml(p.banner || 'standard', p.name || p.tag, p.color, `${esc(lv.rank.name.toUpperCase())} · LEVEL ${lv.level}`, `${badge(role)}${champ ? '<span class="chip">🏆 Weekly champion</span>' : ''}<span class="chip">@${esc(p.tag)}</span>`)}
-    <div class="pf-stats">
-      ${[['Kills', p.kills.toLocaleString()], ['K/D', kd], ['Wins', p.wins.toLocaleString()], ['Win rate', wr], ['Matches', p.matches.toLocaleString()], ['Headshots', p.heads.toLocaleString()], ['Best streak', p.streak]].map(([n, v]) => `<div><b>${v}</b><small>${n}</small></div>`).join('')}
-    </div>
-    ${p.srPlayed ? `<div class="pf-fav pf-sr"><i style="background:${divisionOf(p.sr).color}"></i><span><small>Ranked</small><b>${divisionOf(p.sr).icon} ${esc(divisionOf(p.sr).name)}</b></span><em>${p.srPlayed >= PLACEMENTS ? p.sr + ' SR' : 'Placements'}</em></div>` : ''}
-    ${W ? `<div class="pf-fav">${camo && camo.id !== 'default' ? `<i style="background:${camoSwatch(camo)}" title="${esc(camo.name)} wrap"></i>` : '<i></i>'}<span><small>Favorite gun</small><b>${esc(W.name)}</b></span><em>${p.favKills.toLocaleString()} kills</em></div>` : ''}
-    ${p.ach && p.ach.length ? `<div class="pf-ach"><small>Achievements · ${p.achN}/${ACHIEVEMENTS.length}</small>${p.ach.map((id) => `<span class="pf-achip" style="--tier:${TIER_COLOR[ACH[id].tier]}" title="${esc(ACH[id].desc)}">${ACH[id].icon} ${esc(ACH[id].name)}</span>`).join('')}</div>` : ''}
-    ${p.seasons.length ? `<div class="pf-badges"><small>Season badges</small>${p.seasons.map((n) => `<span class="pf-sb">S${n}</span>`).join('')}</div>` : ''}
+  const extra = { rankName: lv.rank.name, badges: `${badge(role)}${champ ? '<span class="chip">🏆 Weekly champion</span>' : ''}` };
+  body.innerHTML = `${cardHtml(p, extra)}
     <div class="pf-foot"><small>${p.since ? 'Playing since ' + new Date(p.since).toLocaleDateString([], { month: 'short', year: 'numeric' }) : ''}</small>
+      <button id="pf-save" title="Save this card as a picture">⬇ Save image</button>${mine ? '<button id="pf-edit">Edit card</button>' : ''}
       ${!mine && social.tag && !isFriend ? '<button class="primary" id="pf-add">Add friend</button>' : ''}</div>`;
+  paintCard(body, p, drawAvatar);
+  $('pf-save').onclick = () => saveCard(p, extra);
+  if ($('pf-edit')) $('pf-edit').onclick = () => { $('profile-pop').classList.add('hidden'); settingsUI.czTab = 'card'; showPane('character'); };
   const add = $('pf-add');
   if (add) add.onclick = async () => { try { const r = await social.addFriend(p.tag); add.textContent = r === 'accepted' ? 'Friends!' : 'Request sent'; add.disabled = true; } catch (e) { toast(e.message || 'Could not send the request'); } };
 }
 $('pf-close').onclick = () => $('profile-pop').classList.add('hidden');
+async function saveCard(p, extra) {
+  const blob = await cardImage(p, drawAvatar, extra);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `trigger-happy-${String(p.tag || p.name || 'player').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
 $('profile-pop').addEventListener('click', (e) => { if (e.target.id === 'profile-pop') $('profile-pop').classList.add('hidden'); });
 // Any gamertag marked data-profile opens its profile.
 document.addEventListener('click', (e) => {
