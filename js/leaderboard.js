@@ -2,6 +2,7 @@ import { store } from './util.js';
 import { onStats, addTokens, grantWrap, allStats } from './missions.js';
 import { onProgress, myLevel } from './progress.js';
 import { moderation } from './moderation.js';
+import { COURSES, COURSE_IDS, cleanScore, trainBests } from './training.js';
 
 // Weekly leaderboard: kills, wins and headshots (XP is still counted but not shown or ranked) from Monday 00:00 UTC to the next Monday.
 // Every player with a gamertag posts their own week's totals, signed, as a retained message at
@@ -55,7 +56,7 @@ class Leaderboard {
     this.mine = this.loadMine();
     this.entries = { cur: new Map(), prev: new Map(), all: new Map() }; // lower tag -> { tag, xp, kills, wins, heads, m: { mode: {...} } }
     this.modesAll = store.get('lbModesAll', {}); // your all-time per-mode counts
-    this.aim = new Map(); // lower tag -> { tag, value } best aim trainer score (all time)
+    this.aim = new Map(); // lower tag -> { tag, sc: { course: best } } training courses (all time)
     this.champs = new Set(); // lower tags of last week's #1s
     this.hidden = new Set(); // lower tags staff took off the board
     this.hideRaw = null;
@@ -163,13 +164,14 @@ class Leaderboard {
     return { xp: myLevel().total || 0, kills: st.kills || 0, wins: st.wins || 0, heads: st.headshots || 0, m: this.modesAll };
   }
 
-  // ---------- Aim trainer (all time) ----------
-  // Your best: posted signed at whffa/v1/lb/aim/<tag> when it improves. 60 s can't really go past ~150.
-  async postAim(score) {
+  // ---------- Training courses (all time) ----------
+  // Your bests (training.js), posted signed at whffa/v1/lb/aim/<tag> when one improves:
+  // { aim: Gridshot hits, tr: { flick, track, speed, move } } (`aim` alone from older versions).
+  async postTraining() {
     const s = this.social;
-    store.set('aimBest', Math.max(store.get('aimBest', 0), score));
     if (!s || !s.tag) return;
-    const signed = await s.sign({ aim: Math.min(250, Math.round(score)) });
+    const b = trainBests();
+    const signed = await s.sign({ aim: b.grid, tr: { flick: b.flick, track: b.track, speed: b.speed, move: b.move } });
     s.relay.publish(V + 'aim/' + low(s.tag), signed, { retain: true });
     this.receiveAim(low(s.tag), signed);
   }
@@ -177,13 +179,17 @@ class Leaderboard {
     if (!text) { this.aim.delete(tag); if (this.onChange) this.onChange(); return; }
     const b = await this.social.verify(text);
     if (!b || low(b.from) !== tag) return;
-    this.aim.set(tag, { tag: b.from, value: Math.max(0, Math.min(250, Math.round(Number(b.aim) || 0))) });
+    const tr = b.tr && typeof b.tr === 'object' ? b.tr : {};
+    const sc = { grid: cleanScore('grid', b.aim) };
+    for (const id of COURSE_IDS) if (id !== 'grid') sc[id] = cleanScore(id, tr[id]);
+    this.aim.set(tag, { tag: b.from, sc });
     if (this.onChange) this.onChange();
   }
-  aimRows() {
-    const me = this.social && low(this.social.tag);
-    return [...this.aim.values()].filter((e) => e.value > 0 && !this.hidden.has(low(e.tag)) && !moderation.isGone(e.tag))
-      .sort((a, b) => b.value - a.value || a.tag.localeCompare(b.tag)).map((e, i) => ({ ...e, rank: i + 1, me: low(e.tag) === me }));
+  // One course's board, best first.
+  aimRows(course = 'grid') {
+    const me = this.social && low(this.social.tag), up = COURSES[course].higher;
+    return [...this.aim.values()].map((e) => ({ tag: e.tag, value: e.sc[course] || 0 })).filter((e) => e.value > 0 && !this.hidden.has(low(e.tag)) && !moderation.isGone(e.tag))
+      .sort((a, b) => (up ? b.value - a.value : a.value - b.value) || a.tag.localeCompare(b.tag)).map((e, i) => ({ ...e, rank: i + 1, me: low(e.tag) === me }));
   }
 
   // Sorted rows for a board: [{ tag, value, rank, me }]. which: 'cur' | 'prev' | 'all'; mode: one game mode, or all of them.

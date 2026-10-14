@@ -52,6 +52,7 @@ import { leaderboard, BOARDS, MODE_BOARDS, weekEnds, CHAMP_TOKENS } from './lead
 import { qrSvg } from './qr.js';
 import { MapEditor, registerCustomMap } from './editor.js';
 import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanModMap, statsFor } from './mods.js';
+import { COURSES, COURSE_IDS, fmtScore, trainBests, saveBest } from './training.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -431,6 +432,7 @@ function holidayRow() {
 
 // ---------- Weekly leaderboard ----------
 let lbBoard = ['kills', 'wins', 'heads', 'clans', 'aim'].includes(store.get('lbBoard', 'kills')) ? store.get('lbBoard', 'kills') : 'kills', lbWhich = 'cur', lbMode = '', lbT = 0;
+let lbCourse = COURSES[store.get('lbCourse', 'grid')] ? store.get('lbCourse', 'grid') : 'grid'; // Training board: which course
 function updateLbNav() {
   const r = leaderboard.rows('kills').find((x) => x.me);
   $('nav-lb-rank').textContent = r ? '#' + r.rank : '';
@@ -449,7 +451,7 @@ function renderLeaderboard() {
   if (lbMode && (lbBoard === 'clans' || lbBoard === 'aim')) lbBoard = 'kills';
   if (lbWhich === 'all' && lbBoard === 'clans') lbBoard = 'kills';
   if (lbBoard === 'clans') clans.loadAll();
-  const rows = lbBoard === 'aim' ? leaderboard.aimRows() : lbBoard === 'clans' ? clanRows(lbWhich) : leaderboard.rows(lbBoard, lbWhich, lbMode || null), b = lbBoard === 'aim' ? { name: 'hits' } : lbBoard === 'clans' ? { name: 'Kills' } : BOARDS.find((x) => x.id === lbBoard) || BOARDS[0];
+  const rows = lbBoard === 'aim' ? leaderboard.aimRows(lbCourse) : lbBoard === 'clans' ? clanRows(lbWhich) : leaderboard.rows(lbBoard, lbWhich, lbMode || null), b = lbBoard === 'aim' ? { name: '' } : lbBoard === 'clans' ? { name: 'Kills' } : BOARDS.find((x) => x.id === lbBoard) || BOARDS[0];
   const me = rows.find((r) => r.me), top = rows.slice(0, 50);
   const all = lbWhich === 'all', life = leaderboard.lifetime();
   const mineSrc = all ? life : leaderboard.mine;
@@ -457,7 +459,7 @@ function renderLeaderboard() {
   const shownBoards = lbMode ? BOARDS.filter((x) => MODE_BOARDS.includes(x.id)) : BOARDS;
   const modeName = lbMode && MODES[lbMode] ? MODES[lbMode].name : '';
   const champs = BOARDS.map((x) => ({ b: x, top: leaderboard.rows(x.id, 'prev')[0] })).filter((c) => c.top);
-  const fmt = (n) => Number(n).toLocaleString();
+  const fmt = (n) => (lbBoard === 'aim' ? fmtScore(lbCourse, n) : Number(n).toLocaleString());
   el.innerHTML = `<div class="lb">
     <div class="card lb-main">
       <div class="lb-head">
@@ -465,9 +467,10 @@ function renderLeaderboard() {
         <select id="lb-mode" class="lb-mode" title="Show one game mode"><option value="">All modes</option>${MODE_ORDER.filter((id) => MODES[id] && id !== 'practice').map((id) => `<option value="${id}" ${id === lbMode ? 'selected' : ''}>${esc(MODES[id].name)}</option>`).join('')}</select>
         <small>${all ? 'Lifetime totals' : lbWhich === 'cur' ? `Resets in ${fmtDuration(weekEnds() - Date.now())} (${new Date(weekEnds()).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' })} your time)` : 'Final results'}</small>
       </div>
-      <div class="lb-tabs">${shownBoards.map((x) => `<button data-board="${x.id}" class="${x.id === lbBoard ? 'sel' : ''}">${x.icon} ${x.name}</button>`).join('')}${lbMode || all ? '' : `<button data-board="clans" class="${lbBoard === 'clans' ? 'sel' : ''}">🛡 Clans</button>`}${lbMode ? '' : `<button data-board="aim" class="${lbBoard === 'aim' ? 'sel' : ''}" title="Best Aim trainer score (Practice Range), all time">🎯 Aim trainer</button>`}</div>
+      <div class="lb-tabs">${shownBoards.map((x) => `<button data-board="${x.id}" class="${x.id === lbBoard ? 'sel' : ''}">${x.icon} ${x.name}</button>`).join('')}${lbMode || all ? '' : `<button data-board="clans" class="${lbBoard === 'clans' ? 'sel' : ''}">🛡 Clans</button>`}${lbMode ? '' : `<button data-board="aim" class="${lbBoard === 'aim' ? 'sel' : ''}" title="Best training course scores (Practice Range), all time">🎯 Training</button>`}</div>
+      ${lbBoard === 'aim' ? `<div class="seg lb-courses">${COURSE_IDS.map((id) => `<button data-course="${id}" class="${id === lbCourse ? 'sel' : ''}">${COURSES[id].icon} ${COURSES[id].name}</button>`).join('')}</div>` : ''}
       <table class="lb-table"><tbody>${top.length ? top.map((r) => `<tr class="${r.me ? 'me' : ''} ${r.rank <= 3 ? 'top' + r.rank : ''}"><td class="rk">${r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</td><td ${r.clan ? '' : `class="pf-link" data-profile="${esc(r.tag)}"`}>${esc(r.tag)}${leaderboard.isChamp(r.tag) ? ' <span class="trophy" title="#1 last week">🏆</span>' : ''}</td><td class="sc">${fmt(r.value)} <small>${esc(b.name)}</small></td></tr>`).join('')
-        : `<tr><td class="lb-empty">${lbBoard === 'aim' ? 'No Aim trainer scores yet. Try it in the Practice Range (pause menu → 🎯 Aim trainer)!' : lbMode ? `Nobody on the ${esc(modeName)} board yet. Play some ${esc(modeName)} to be first!` : all ? 'Nobody on the all-time board yet.' : lbWhich === 'cur' ? 'Nobody on the board yet this week. Play a match to be first!' : 'No results from last week.'}</td></tr>`}</tbody></table>
+        : `<tr><td class="lb-empty">${lbBoard === 'aim' ? `No ${esc(COURSES[lbCourse].name)} scores yet. Try it in the Practice Range (pause menu → 🎯 Practice)!` : lbMode ? `Nobody on the ${esc(modeName)} board yet. Play some ${esc(modeName)} to be first!` : all ? 'Nobody on the all-time board yet.' : lbWhich === 'cur' ? 'Nobody on the board yet this week. Play a match to be first!' : 'No results from last week.'}</td></tr>`}</tbody></table>
       ${me && me.rank > 50 ? `<div class="lb-you">You: #${me.rank} · ${fmt(me.value)} ${esc(b.name)}</div>` : ''}
     </div>
     <div class="lb-side">
@@ -480,6 +483,7 @@ function renderLeaderboard() {
   </div>`;
   el.querySelectorAll('[data-board]').forEach((x) => { x.onclick = () => { lbBoard = x.dataset.board; store.set('lbBoard', lbBoard); renderLeaderboard(); }; });
   el.querySelectorAll('[data-which]').forEach((x) => { x.onclick = () => { lbWhich = x.dataset.which; renderLeaderboard(); }; });
+  el.querySelectorAll('[data-course]').forEach((x) => { x.onclick = () => { lbCourse = x.dataset.course; store.set('lbCourse', lbCourse); renderLeaderboard(); }; });
   $('lb-mode').onchange = (e) => { lbMode = e.target.value; renderLeaderboard(); };
 }
 
@@ -2001,12 +2005,14 @@ tutorial.onDone = (first) => {
 };
 tutorial.onPlay = () => { leave(); quickPlay(); };
 
-// Aim trainer results (Practice Range): best score goes on the Aim trainer leaderboard.
-game.onAimDone = (hits, acc) => {
-  const best = store.get('aimBest', 0), isBest = hits > best;
-  game.hud.mission(`🎯 Aim trainer: ${hits} hits`, `${acc}% accuracy${isBest ? ' · NEW BEST!' : ` · best ${best}`}`, 'PRACTICE');
-  chat.system(`🎯 Aim trainer: ${hits} hits, ${acc}% accuracy.${isBest ? ' New best!' : ''}${!social.tag ? ' Get a gamertag to show up on the Aim trainer leaderboard.' : ''}`);
-  if (isBest) leaderboard.postAim(hits);
+// Training course results (Practice Range): bests go on the Training leaderboard.
+game.onCourseDone = (id, score, acc) => {
+  const c = COURSES[id], prev = trainBests()[id], isBest = saveBest(id, score);
+  const res = score ? fmtScore(id, score) : 'out of time';
+  const sub = [acc != null ? `${acc}% accuracy` : '', isBest ? 'NEW BEST!' : prev ? `best ${fmtScore(id, prev)}` : ''].filter(Boolean).join(' · ');
+  game.hud.mission(`${c.icon} ${c.name}: ${res}`, sub, 'PRACTICE');
+  chat.system(`${c.icon} ${c.name}: ${res}${acc != null ? `, ${acc}% accuracy` : ''}.${isBest ? ' New best!' : ''}${isBest && !social.tag ? ' Get a gamertag to show up on the Training leaderboard.' : ''}`);
+  if (isBest) leaderboard.postTraining();
   renderPractice();
 };
 // Pause menu in practice: every weapon, equipped (and refilled) as soon as you pick it.
@@ -2014,8 +2020,9 @@ function renderPractice() {
   const on = !!(net && net.practice);
   $('pause-practice').classList.toggle('hidden', !on);
   if (!on) return;
-  $('aim-best').textContent = store.get('aimBest', 0) ? `Your best: ${store.get('aimBest', 0)} hits` : 'Hit as many targets as you can';
-  $('btn-aim').onclick = () => { game.startAim(); $('btn-resume').click(); };
+  const tb = trainBests();
+  $('pr-courses').innerHTML = COURSE_IDS.map((id) => `<button data-course="${id}"><b>${COURSES[id].icon} ${COURSES[id].name}</b><small>${COURSES[id].desc}</small>${tb[id] ? `<em>Best: ${fmtScore(id, tb[id])}</em>` : ''}</button>`).join('');
+  $('pr-courses').querySelectorAll('[data-course]').forEach((b) => { b.onclick = () => { game.train.start(b.dataset.course); $('btn-resume').click(); }; });
   $('pr-inf').checked = !!net.logic.s.infiniteAmmo;
   $('pr-inf').onchange = () => { store.set('practiceInf', $('pr-inf').checked); net.logic.applySettings({ infiniteAmmo: $('pr-inf').checked }); };
   $('pr-weapons').innerHTML = SLOTS.map((ids, slot) => `<div class="pr-slot"><h4>${slot + 1} · ${SLOT_NAMES[slot]}</h4><div class="pr-grid">${ids.map((id) =>

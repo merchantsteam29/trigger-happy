@@ -1752,8 +1752,10 @@ body.in-storm #storm-fx { opacity: 1; animation: storm-pulse 1.6s ease-in-out in
 .tz-now b { color: var(--text, #fff); }
 
 /* Aim trainer button (practice pause menu) */
-.pr-aim { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; flex-wrap: wrap; }
-.pr-aim small { color: var(--muted); font-size: 12px; }
+.pr-courses { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin: 6px 0 10px; }
+.pr-courses button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 8px 10px; }
+.pr-courses button small { color: var(--muted); font-size: 11px; font-weight: 500; }
+.pr-courses button em { color: #ffd23a; font-style: normal; font-size: 12px; font-weight: 700; }
 
 /* Spectating: markers through walls + live scoreboard */
 #spec-marks { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }

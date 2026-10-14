@@ -98,7 +98,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `role/…` | moderator appointments (owner-signed) | roles.js |
 | `modrec/<tag>`, `report/<id>`, `appeal/<tag>`, `announce`, `chatfilter`, `staffchat/…`, `permabans`, `pres/…` | moderation | moderation.js |
 | `bug/<id>` | bug reports (only the owner reads them) | moderation.js |
-| `lb/<week>/<tag>`, `lb/all/<tag>`, `lb/aim/<tag>`, `lb/hide` | weekly / all-time / aim-trainer leaderboards | leaderboard.js |
+| `lb/<week>/<tag>`, `lb/all/<tag>`, `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |
 | `clan/<TAG>`, `clanreq/…`, `clanleave/…`, `clanchat/…`, `clanwar/…`, `clanwarok/…`, `clanwargo/<TAG>` | clans, clan wars | clans.js |
 | `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver) | gifts.js |
@@ -128,7 +128,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every
   screen's look). Classes and ids are shared with the JS, so restyle in `ui.css` and keep them. Icons: `icons/icon.svg` is the
   source; the PNGs (favicon, 192/512, maskable, apple-touch) are rendered from it. `icons/mark.svg` is the logo without its tile.
-- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `playercard.js` (player cards: the profile popup's card, `cardHtml` / `cardImage`; the title and stats you pick are saved as `card` and posted with your profile), `poses.js` (victory poses: cosmetic slot `pose`, shown on the end-of-match stage by `game.js` `startStage` with `RemotePlayer.setPose`), `killfx.js` (kill effects: cosmetic slot `killfx`, played in `game.js` `onKill` from the killer's cosmetics; `ICON_SLOTS` in missions.js are slots shown as icon cards), `devices.js` (linked devices: one account on several devices, progress sync), `changelog.js` (`UPDATES`: the update history in Settings → 📜 Updates), `weather.js` (rain / fog / thunderstorm: the host's `weather` rule, rolled per match into settings `wx`), `editor.js` (map editor; a hosted custom map
+- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `playercard.js` (player cards: the profile popup's card, `cardHtml` / `cardImage`; the title and stats you pick are saved as `card` and posted with your profile), `poses.js` (victory poses: cosmetic slot `pose`, shown on the end-of-match stage by `game.js` `startStage` with `RemotePlayer.setPose`), `killfx.js` (kill effects: cosmetic slot `killfx`, played in `game.js` `onKill` from the killer's cosmetics; `ICON_SLOTS` in missions.js are slots shown as icon cards), `devices.js` (linked devices: one account on several devices, progress sync), `changelog.js` (`UPDATES`: the update history in Settings → 📜 Updates), `training.js` (Practice Range training courses: `Training` on `game.train`, bests in `trainBest`), `weather.js` (rain / fog / thunderstorm: the host's `weather` rule, rolled per match into settings `wx`), `editor.js` (map editor; a hosted custom map
   travels in the settings as `customMap` and is registered as map `custom` by `registerCustomMap`)
 
 ### Where to add things

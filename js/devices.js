@@ -19,7 +19,7 @@ import { qrSvg } from './qr.js';
 
 const P = 'whffa/v1/';
 const LINK_MS = 5 * 60e3;
-const COUNTERS = ['xp', 'tokens', 'stats', 'season', 'aimBest'];
+const COUNTERS = ['xp', 'tokens', 'stats', 'season', 'aimBest', 'trainBest'];
 const SETS = ['owned', 'claimed', 'modesPlayed', 'mapsPlayed', 'seasonBadges', 'holDone', 'giftsClaimed', 'invitesPaid'];
 const MAPS = ['ach'];
 const LWW = ['name', 'color', 'cos', 'loadout', 'mods', 'presets', 'rulePresets', 'myClan', 'friends', 'friendReqOut', 'login',
@@ -34,6 +34,7 @@ const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart
 const randHex = (n) => hex(crypto.getRandomValues(new Uint8Array(n)));
 const num = (x) => (Number.isFinite(Number(x)) ? Number(x) : 0);
 const isObj = (o) => !!o && typeof o === 'object' && !Array.isArray(o);
+const TIMED = new Set(['speed', 'move']); // training courses where a lower time is better
 
 // Storage without the sync hook (store.set would count merged values as this device's progress).
 const KEY = (k) => 'whffa.' + k;
@@ -45,6 +46,7 @@ function flat(k, v) {
   const sum = {}, max = {};
   if (k === 'xp' || k === 'tokens') { if (v != null) sum[k] = num(v); }
   else if (k === 'aimBest') { if (v != null) max[k] = num(v); }
+  else if (k === 'trainBest' && isObj(v)) { for (const [c, n] of Object.entries(v)) if (num(n) > 0) max['trainBest.' + c] = TIMED.has(c) ? -num(n) : num(n); }
   else if (k === 'stats' && isObj(v)) {
     for (const [s, n] of Object.entries(v)) (s.startsWith('best') ? max : sum)['stats.' + s] = num(n);
   } else if (k === 'season' && isObj(v) && v.n) {
@@ -90,6 +92,9 @@ export function mergeDocs(mine, others, get = rawGet) {
   if ('xp' in sum) out.xp = Math.max(0, Math.round(sum.xp));
   if ('tokens' in sum) out.tokens = Math.max(0, Math.round(sum.tokens));
   if ('aimBest' in max) out.aimBest = max.aimBest;
+  const tb = {};
+  for (const [p, n] of Object.entries(max)) if (p.startsWith('trainBest.')) { const c = p.slice(10); tb[c] = TIMED.has(c) ? -n : n; }
+  if (Object.keys(tb).length) out.trainBest = tb;
   const stats = { ...(get('stats') || {}) };
   let anyStat = false;
   for (const [p, n] of Object.entries(sum)) if (p.startsWith('stats.')) { stats[p.slice(6)] = Math.max(0, Math.round(n)); anyStat = true; }

@@ -34,8 +34,13 @@ With rotation off, the same map comes back.
 - **Damage numbers:** they pop up on every hit, gold for headshots.
 - **Weapons:** the pause menu (Esc) lists every weapon, and picking one equips it straight away.
 - **Rules:** an infinite-ammo toggle, no timer and no score limit. Practice kills don't count for missions.
-- **🎯 Aim trainer** (pause menu): 3, 2, 1, then 60 seconds of orange targets popping up around where you face, 4 at
-  a time. Your score is how many you hit, with your accuracy. Your best goes on the **Aim trainer** leaderboard.
+- **Training courses** (pause menu): each starts on the firing line after 3, 2, 1. Your best in each goes on the
+  **Training** leaderboard.
+  - **🎯 Gridshot:** 60 seconds of orange targets, 4 at a time. Score: hits (with your accuracy).
+  - **⚡ Flick:** 30 seconds, one small target at a time, always away from your crosshair, gone after 1.6 s. Score: hits.
+  - **🔴 Tracking:** 30 seconds keeping your crosshair on a weaving target (it turns green). Score: % of the time on it.
+  - **⏱ Speed run:** 20 targets downrange; clear them all as fast as you can (90 s limit). Score: your time.
+  - **🏃 Movement:** run, jump and slide through 10 rings in order (the gold one is next; four are up on crates). Score: your time.
 
 The server list uses a free public relay (no account needed), so public server names are visible to anyone.
 If the relay is down you can still create servers and join with codes.
@@ -427,8 +432,8 @@ playing it, or starts one. Featured servers have a ⭐ in the list.
 
 **Leaderboard** in the menu ranks everyone with a gamertag by **kills, wins and headshots**: **this week** (Monday
 00:00 UTC to the next Monday), **last week** or **all time**, in every mode or just one (the mode picker). The
-**Clans** board ranks clans by their members' kills this week, and **Aim trainer** shows the best scores from the
-Practice Range. Last week's #1 on each board gets a 🏆 next to their name all week (on the
+**Clans** board ranks clans by their members' kills this week, and **Training** shows the best scores from the
+Practice Range's training courses (pick a course). Last week's #1 on each board gets a 🏆 next to their name all week (on the
 scoreboard and results), plus 500 tokens and the **Weekly Champion** wrap. Each player's game posts its own signed
 totals, capped to what's possible in a week; staff can take a player off the board from the Mod Panel
 (**Hide from leaderboard**).

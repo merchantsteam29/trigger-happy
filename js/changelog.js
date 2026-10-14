@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.2', name: 'Training Courses', banner: 'neon', notes: [
+    'The Practice Range has 5 training courses: Gridshot, Flick, Tracking, Speed run and a Movement course',
+    'Speed run and Movement are timed: clear 20 targets, or run and jump through 10 rings, as fast as you can',
+    'The leaderboard\'s Training board ranks the best score in each course (the old Aim trainer is Gridshot)',
+  ] },
   { v: '2026.10.14.1', name: 'Spectator Camera', banner: 'matrix', notes: [
     'Watch any server that allows it: 👁 Watch in Find Servers, or type a code and press 👁. Viewers take no player slot',
     'Free camera (F): fly anywhere, mouse wheel sets the speed. R watches through a player\'s eyes, H hides the HUD',

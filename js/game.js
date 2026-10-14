@@ -28,6 +28,7 @@ import { POSE_IDS } from './poses.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 import { registerCustomMap } from './editor.js';
+import { Training } from './training.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -180,6 +181,7 @@ export class Game {
     this.util = 0;
     this.fireCd = 0; this.switchT = 0; this.reloadT = 0; this.autoSwitchT = 0;
     this.lastSlot = 1; this.returnSlot = -1; this.returnT = 0; this.wheelCd = 0;
+    this.train = this.train || new Training(this); // training courses (Practice Range)
     this.burstLeft = 0; this.burstT = 0; this.spin = 0;
     this.pendingMelee = null; this.pendingThrow = null; this.cycleSfxT = 0;
     this.recoil = 0; this.shake = 0; this.flinch = 0; this.landDip = 0;
@@ -699,7 +701,7 @@ export class Game {
     this.endStage();
     this.horrorOff();
     this.clearSprays();
-    this.stopAim(true);
+    this.train.stop(true);
     this.hist = null;
     this.active = false;
     this.setWeather(); // back to a clear sky behind the menu
@@ -1422,7 +1424,7 @@ export class Game {
     this.updateStorm();
     this.updateHorror(dt, now);
     this.updateProps();
-    this.updateAim(now);
+    this.train.update(now, dt);
     this.updateTags(now);
     this.updatePickups(now);
     this.updateFlags(now);
@@ -1943,9 +1945,9 @@ export class Game {
     const hits = new Map();
     const propHits = new Map(); // barrels / crates hit by this shot
     const ends = [];
-    const aiming = this.aim && this.aim.go;
+    const aiming = this.train.shooting;
     let aimHit = false;
-    if (aiming) this.aim.shots++;
+    this.train.shot();
     for (let i = 0; i < w.pellets; i++) {
       const a = Math.random() * Math.PI * 2, r = this.spread * Math.sqrt(Math.random());
       const dir = _d.copy(_f).addScaledVector(_r, Math.cos(a) * r).addScaledVector(_u, Math.sin(a) * r).normalize();
@@ -1959,20 +1961,9 @@ export class Game {
           if (t >= 0 && t < maxT) { maxT = t; best = { rp, head: hb.head }; }
         }
       }
-      if (aiming) {
-        for (let k = 0; k < this.aim.targets.length; k++) {
-          const tp = this.aim.targets[k].mesh.position, r = 0.34;
-          const t = rayAABB(o.x, o.y, o.z, dir.x, dir.y, dir.z, tp.x - r, tp.y - r, tp.z - r, tp.x + r, tp.y + r, tp.z + r, maxT);
-          if (t >= 0 && t < maxT && !aimHit) {
-            aimHit = true;
-            this.aim.hits++;
-            this.scene.remove(this.aim.targets[k].mesh);
-            this.fx.burst(tp.clone(), null, '#ff9a3a', 10, 4, 0.06, 0.4);
-            this.aim.targets.splice(k, 1);
-            maxT = t;
-            break;
-          }
-        }
+      if (aiming && !aimHit) { // training course targets (one per shot)
+        const t = this.train.hit(o, dir, maxT);
+        if (t >= 0) { aimHit = true; maxT = t; best = null; }
       }
       let prop = null;
       for (const x of this.propData || []) {
@@ -2790,55 +2781,6 @@ export class Game {
     document.body.classList.toggle('in-storm', !this.matchOver && Math.hypot(p.x - cx, p.z - cz) > r);
   }
 
-  // ---------- Aim trainer (Practice Range) ----------
-  // 60 seconds: targets pop up around where you're looking; hit as many as you can. Score = hits,
-  // accuracy shown too. Starts after a 3-second countdown.
-  startAim() {
-    this.stopAim(true);
-    const now = performance.now();
-    this.aim = { start: now + 3000, end: now + 63000, hits: 0, shots: 0, targets: [], yaw: this.me.yaw, count: 4 };
-    if (!this.aimGeo) {
-      this.aimGeo = new THREE.SphereGeometry(0.32, 18, 12);
-      this.aimMat = new THREE.MeshStandardMaterial({ color: '#ff7a1a', emissive: '#ff5a00', emissiveIntensity: 0.6, roughness: 0.4 });
-    }
-  }
-  stopAim(quiet = false) {
-    const a = this.aim;
-    if (!a) return;
-    for (const t of a.targets) this.scene.remove(t.mesh);
-    this.aim = null;
-    if (!quiet && this.onAimDone) this.onAimDone(a.hits, a.shots ? Math.round((a.hits / a.shots) * 100) : 0);
-  }
-  spawnAimTarget() {
-    const a = this.aim, me = this.me, eye = new THREE.Vector3(me.pos.x, me.pos.y + me.eye, me.pos.z);
-    for (let i = 0; i < 20; i++) {
-      const yaw = a.yaw + (Math.random() - 0.5) * 1.6, d = 7 + Math.random() * 15, h = 0.8 + Math.random() * 2.6;
-      const p = new THREE.Vector3(me.pos.x - Math.sin(yaw) * d, me.pos.y + h, me.pos.z - Math.cos(yaw) * d);
-      const v = p.clone().sub(eye), dl = v.length();
-      if (raycast(eye.x, eye.y, eye.z, v.x / dl, v.y / dl, v.z / dl, dl - 0.4)) continue; // must be in plain sight
-      if (a.targets.some((t) => t.mesh.position.distanceTo(p) < 1.5)) continue;
-      const mesh = new THREE.Mesh(this.aimGeo, this.aimMat);
-      mesh.position.copy(p);
-      mesh.scale.setScalar(0.01);
-      this.scene.add(mesh);
-      a.targets.push({ mesh, born: performance.now() });
-      return;
-    }
-  }
-  updateAim(now) {
-    const a = this.aim;
-    if (!a) return;
-    if (now < a.start) {
-      const n = Math.ceil((a.start - now) / 1000);
-      if (n !== a.cd) { a.cd = n; this.hud.say(String(n)); sfx.beep(0.4); }
-      return;
-    }
-    if (!a.go) { a.go = true; this.hud.say('GO!'); sfx.beep(0.7); }
-    if (now >= a.end || this.rules.mode !== 'practice') { this.stopAim(this.rules.mode !== 'practice'); return; }
-    while (a.targets.length < a.count) this.spawnAimTarget();
-    for (const t of a.targets) { const k = Math.min(1, (now - t.born) / 120); t.mesh.scale.setScalar(k); }
-  }
-
   // Barrels (red, explode) and crates (wood, break) from the host's snapshot.
   updateProps() {
     if (!this.propMeshes) this.propMeshes = new Map();
@@ -3047,11 +2989,7 @@ export class Game {
 
   modeBar() {
     const mode = this.rules.mode, me = this.players.get(this.myId);
-    if (mode === 'practice' && this.aim) {
-      const a = this.aim, now = performance.now();
-      if (now < a.start) return `🎯 AIM TRAINER · STARTING IN ${Math.ceil((a.start - now) / 1000)}`;
-      return `🎯 AIM TRAINER · ${Math.max(0, Math.ceil((a.end - now) / 1000))}s · ${a.hits} HITS · ${a.shots ? Math.round((a.hits / a.shots) * 100) : 0}%`;
-    }
+    if (mode === 'practice' && this.train.run) return this.train.bar(performance.now());
     if (mode === 'practice') return `PRACTICE RANGE<span class="lim"> · Esc to pick any weapon · targets respawn</span>`;
     if (mode === 'snd' && this.sdData) {
       const [round, att, sites, bomb, prog, secs, post] = this.sdData, mine = this.myTeam === att;
