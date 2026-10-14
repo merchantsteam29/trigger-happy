@@ -367,9 +367,12 @@ banner for that division and every one below it (Contender, Veteran, Elite, Mast
 In **Friends → Clan**, create a clan (a 2–5 letter **[TAG]**, a name and a color) or ask to join one by its tag; the
 leader accepts requests, can remove members and can disband it. Members get their **[TAG]** before their name on the
 scoreboard and results (only once the clan's signed member list includes them), a clan chat (which also shows in
-matches), and the **Clans** tab on the weekly leaderboard ranks clans by their members' kills. Up to 30 members.
+matches), and the **Clans** tab on the weekly leaderboard ranks clans by their **clan season** points. Up to 30 members.
 
-- **Top clan:** every member of last week's #1 clan gets 🪙 300 and the **Top Clan** banner.
+- **Clan seasons:** every week (Monday 00:00 UTC) clans score points from their members: 1 per kill, 10 per win and
+  50 per clan war won. The clan card shows your clan's rank, points and what each member added; the Clans board shows
+  last week's top 3. When the week ends, every member of the #1 clan gets 🪙 300 and the **Top Clan** banner, #2 gets
+  🪙 150 and #3 🪙 75.
 - **Clan wars:** a leader types another clan's tag and presses **⚔ Challenge**; their leader accepts or declines.
   Then the challenger's leader presses **Start the war**: a private Team Deathmatch with your clan in red and theirs in
   blue (nobody else can join). Both clans get a **Join the war** button. Each clan's record shows its wins and losses.
@@ -451,7 +454,7 @@ playing it, or starts one. Featured servers have a ⭐ in the list.
 
 **Leaderboard** in the menu ranks everyone with a gamertag by **kills, wins and headshots**: **this week** (Monday
 00:00 UTC to the next Monday), **last week** or **all time**, in every mode or just one (the mode picker). The
-**Clans** board ranks clans by their members' kills this week, and **Training** shows the best scores from the
+**Clans** board ranks clans by clan season points this week, and **Training** shows the best scores from the
 Practice Range's training courses (pick a course). Last week's #1 on each board gets a 🏆 next to their name all week (on the
 scoreboard and results), plus 500 tokens and the **Weekly Champion** wrap. Each player's game posts its own signed
 totals, capped to what's possible in a week; staff can take a player off the board from the Mod Panel

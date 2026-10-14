@@ -47,7 +47,7 @@ export function weekId(t = Date.now()) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dow)).toISOString().slice(0, 10);
 }
 export const weekEnds = (id = weekId()) => Date.parse(id + 'T00:00:00Z') + 7 * DAY;
-const prevWeek = (id = weekId()) => weekId(Date.parse(id + 'T00:00:00Z') - DAY);
+export const prevWeek = (id = weekId()) => weekId(Date.parse(id + 'T00:00:00Z') - DAY);
 const low = (s) => String(s || '').toLowerCase();
 
 class Leaderboard {

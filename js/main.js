@@ -54,6 +54,7 @@ import { MapEditor, registerCustomMap } from './editor.js';
 import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanModMap, statsFor } from './mods.js';
 import { COURSES, COURSE_IDS, fmtScore, trainBests, saveBest } from './training.js';
 import { community, openCommunity } from './community.js';
+import { clanPoints, clanStandings, CLAN_POINTS, CLAN_REWARDS } from './clanseason.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -438,13 +439,8 @@ function updateLbNav() {
   const r = leaderboard.rows('kills').find((x) => x.me);
   $('nav-lb-rank').textContent = r ? '#' + r.rank : '';
 }
-// Clans ranked by their members' kills this week.
-function clanRows(which) {
-  const xp = new Map(leaderboard.rows('kills', which).map((r) => [r.tag.toLowerCase(), r.value]));
-  const mine = clans.myClan();
-  return clans.list().map((c) => ({ tag: `[${c.tag}] ${c.name}`, clan: c.tag, value: c.members.reduce((n, m) => n + (xp.get(m.toLowerCase()) || 0), 0), me: !!mine && mine.tag === c.tag }))
-    .filter((r) => r.value > 0).sort((a, b2) => b2.value - a.value).map((r, i) => ({ ...r, rank: i + 1 }));
-}
+// Clans ranked by clan season points this week (clanseason.js).
+const clanRows = (which) => clanStandings(which);
 function renderLeaderboard() {
   const el = $('menu-lb');
   if (!el) return;
@@ -452,7 +448,7 @@ function renderLeaderboard() {
   if (lbMode && (lbBoard === 'clans' || lbBoard === 'aim')) lbBoard = 'kills';
   if (lbWhich === 'all' && lbBoard === 'clans') lbBoard = 'kills';
   if (lbBoard === 'clans') clans.loadAll();
-  const rows = lbBoard === 'aim' ? leaderboard.aimRows(lbCourse) : lbBoard === 'clans' ? clanRows(lbWhich) : leaderboard.rows(lbBoard, lbWhich, lbMode || null), b = lbBoard === 'aim' ? { name: '' } : lbBoard === 'clans' ? { name: 'Kills' } : BOARDS.find((x) => x.id === lbBoard) || BOARDS[0];
+  const rows = lbBoard === 'aim' ? leaderboard.aimRows(lbCourse) : lbBoard === 'clans' ? clanRows(lbWhich) : leaderboard.rows(lbBoard, lbWhich, lbMode || null), b = lbBoard === 'aim' ? { name: '' } : lbBoard === 'clans' ? { name: 'pts' } : BOARDS.find((x) => x.id === lbBoard) || BOARDS[0];
   const me = rows.find((r) => r.me), top = rows.slice(0, 50);
   const all = lbWhich === 'all', life = leaderboard.lifetime();
   const mineSrc = all ? life : leaderboard.mine;
@@ -470,6 +466,7 @@ function renderLeaderboard() {
       </div>
       <div class="lb-tabs">${shownBoards.map((x) => `<button data-board="${x.id}" class="${x.id === lbBoard ? 'sel' : ''}">${x.icon} ${x.name}</button>`).join('')}${lbMode || all ? '' : `<button data-board="clans" class="${lbBoard === 'clans' ? 'sel' : ''}">🛡 Clans</button>`}${lbMode ? '' : `<button data-board="aim" class="${lbBoard === 'aim' ? 'sel' : ''}" title="Best training course scores (Practice Range), all time">🎯 Training</button>`}</div>
       ${lbBoard === 'aim' ? `<div class="seg lb-courses">${COURSE_IDS.map((id) => `<button data-course="${id}" class="${id === lbCourse ? 'sel' : ''}">${COURSES[id].icon} ${COURSES[id].name}</button>`).join('')}</div>` : ''}
+      ${lbBoard === 'clans' ? clanSeasonHtml() : ''}
       <table class="lb-table"><tbody>${top.length ? top.map((r) => `<tr class="${r.me ? 'me' : ''} ${r.rank <= 3 ? 'top' + r.rank : ''}"><td class="rk">${r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</td><td ${r.clan ? '' : `class="pf-link" data-profile="${esc(r.tag)}"`}>${esc(r.tag)}${leaderboard.isChamp(r.tag) ? ' <span class="trophy" title="#1 last week">🏆</span>' : ''}</td><td class="sc">${fmt(r.value)} <small>${esc(b.name)}</small></td></tr>`).join('')
         : `<tr><td class="lb-empty">${lbBoard === 'aim' ? `No ${esc(COURSES[lbCourse].name)} scores yet. Try it in the Practice Range (pause menu → 🎯 Practice)!` : lbMode ? `Nobody on the ${esc(modeName)} board yet. Play some ${esc(modeName)} to be first!` : all ? 'Nobody on the all-time board yet.' : lbWhich === 'cur' ? 'Nobody on the board yet this week. Play a match to be first!' : 'No results from last week.'}</td></tr>`}</tbody></table>
       ${me && me.rank > 50 ? `<div class="lb-you">You: #${me.rank} · ${fmt(me.value)} ${esc(b.name)}</div>` : ''}
@@ -925,9 +922,10 @@ function renderClan() {
   el.innerHTML = `<div class="cl-head"><b class="cl-name" style="color:${c.color}">[${esc(c.tag)}] ${esc(c.name)}</b><small>${c.members.length}/${MAX_MEMBERS} members${c.warW || c.warL ? ` · ⚔ ${c.warW || 0}W ${c.warL || 0}L` : ''}</small>
       ${lead ? '<button class="danger" id="cl-disband">Disband</button>' : '<button id="cl-leave">Leave</button>'}</div>
     ${lead && reqs.length ? `<div class="cl-reqs">${reqs.map((r) => `<div class="fr-row"><span class="fr-name pf-link" data-profile="${esc(r.tag)}">${esc(r.tag)}</span><small>wants to join</small><button class="primary" data-cacc="${esc(r.tag)}">Accept</button><button data-cdeny="${esc(r.tag)}">Deny</button></div>`).join('')}</div>` : ''}
+    ${clanSeasonCard(c)}
     ${warHtml(c, lead)}
     <div class="cl-spray">${c.spray ? `<canvas class="cl-spray-img" width="16" height="16" data-spray="${c.spray}"></canvas><small>Clan spray · press <kbd>${esc(keysLabel('spray'))}</kbd> in a match to spray it</small>` : `<small class="muted">${lead ? 'No clan spray yet.' : 'Your leader hasn\'t made a clan spray yet.'}</small>`}${lead ? `<button id="cl-spray">🎨 ${c.spray ? 'Edit' : 'Make'} clan spray</button>` : ''}</div>
-    <div class="cl-members">${c.members.map((m) => `<span class="cl-m"><span class="pf-link" data-profile="${esc(m)}">${m.toLowerCase() === c.leader.toLowerCase() ? '👑 ' : ''}${esc(m)}</span>${lead && m.toLowerCase() !== c.leader.toLowerCase() ? `<button class="ghost" data-ckick="${esc(m)}" title="Remove from clan">✕</button>` : ''}</span>`).join('')}</div>
+    <div class="cl-members">${c.members.map((m) => `<span class="cl-m"><span class="pf-link" data-profile="${esc(m)}">${m.toLowerCase() === c.leader.toLowerCase() ? '👑 ' : ''}${esc(m)}</span><small class="cl-pts" title="Clan points this week">${(clanPoints(c, 'cur').members.find((x) => x.tag === m) || { pts: 0 }).pts}</small>${lead && m.toLowerCase() !== c.leader.toLowerCase() ? `<button class="ghost" data-ckick="${esc(m)}" title="Remove from clan">✕</button>` : ''}</span>`).join('')}</div>
     <div class="cl-chat" id="cl-chat">${clans.chat.length ? clans.chat.map((x) => `<div><b>${esc(x.from)}</b> ${esc(x.text)}</div>`).join('') : '<small class="muted">Clan chat: messages show for members who are online.</small>'}</div>
     <form id="cl-chat-form" class="fr-add" autocomplete="off"><input id="cl-say" maxlength="200" placeholder="Message your clan" value="${esc(draft.say)}"><button class="primary" type="submit">Send</button></form>`;
   const log = $('cl-chat'); log.scrollTop = log.scrollHeight;
@@ -1041,19 +1039,29 @@ function onWarEnd(m) {
   clans.recordWar(m.winner === c.tag);
 }
 
-// ---------- Weekly top clan ----------
-// The #1 clan on last week's Clans board (members' kills): every member gets tokens and the Top Clan banner, once.
-const CLAN_TOP_TOKENS = 300;
+// ---------- Clan seasons (clanseason.js) ----------
+// Last week's top 3 clans: every member gets tokens (and #1 the Top Clan banner), once.
 function claimTopClan() {
   const c = clans.myClan();
-  if (!c || !social.tag) return;
-  const top = clanRows('prev')[0];
-  if (!top || top.clan !== c.tag || store.get('clanTopClaimed', '') === leaderboard.week) return;
+  if (!c || !social.tag || store.get('clanTopClaimed', '') === leaderboard.week) return;
+  const r = clanRows('prev').find((x) => x.clan === c.tag);
+  if (!r || r.rank > CLAN_REWARDS.length) return;
   store.set('clanTopClaimed', leaderboard.week);
-  addTokens(CLAN_TOP_TOKENS);
-  grantItem('banner', 'clantop');
-  toast(`🏆 [${c.tag}] was the top clan last week! +${CLAN_TOP_TOKENS} tokens and the Top Clan banner.`);
+  addTokens(CLAN_REWARDS[r.rank - 1]);
+  if (r.rank === 1) grantItem('banner', 'clantop');
+  toast(r.rank === 1 ? `🏆 [${c.tag}] was the top clan last week! +${CLAN_REWARDS[0]} tokens and the Top Clan banner.` : `${r.rank === 2 ? '🥈' : '🥉'} [${c.tag}] finished #${r.rank} in last week's clan season! +${CLAN_REWARDS[r.rank - 1]} tokens.`);
   renderChip();
+}
+// The Clans board's header: how points work, and last week's podium.
+function clanSeasonHtml() {
+  const prev = clanRows('prev').slice(0, 3);
+  return `<div class="cs-head"><small>Clan season: points this week from members' kills (${CLAN_POINTS.kill}), wins (${CLAN_POINTS.win}) and clan wars won (${CLAN_POINTS.war}). The top 3 clans' members get 🪙 ${CLAN_REWARDS.join(' / ')}; #1 also gets the Top Clan banner.</small>
+    ${prev.length ? `<div class="cs-podium">${prev.map((r) => `<span><b>${['🥇', '🥈', '🥉'][r.rank - 1]} [${esc(r.clan)}]</b> ${Number(r.value).toLocaleString()}</span>`).join('')}<small>last week</small></div>` : ''}</div>`;
+}
+// The clan card's season line: rank, points and who earned them.
+function clanSeasonCard(c) {
+  const p = clanPoints(c, 'cur'), r = clanRows('cur').find((x) => x.clan === c.tag);
+  return `<div class="cl-season"><b>🏆 Clan season${r ? ` · #${r.rank}` : ''} · ${p.total.toLocaleString()} pts</b><small>${p.kills} kills · ${p.wins} wins × ${CLAN_POINTS.win} · ${p.wars} war wins × ${CLAN_POINTS.war} · ends in ${fmtDuration(weekEnds() - Date.now())}</small></div>`;
 }
 setTimeout(() => { clans.loadAll(); }, 4000);
 setInterval(claimTopClan, 60000);

@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.7', name: 'Clan Seasons', banner: 'gold', notes: [
+    'Clan seasons: every week clans score points from their members (1 per kill, 10 per win, 50 per clan war won)',
+    'The top 3 clans each week get tokens (300 / 150 / 75 each), and #1 the Top Clan banner',
+    'Your clan card shows your rank, points and what each member added',
+  ] },
   { v: '2026.10.14.6', name: 'Community Maps', banner: 'rainbow', notes: [
     'Publish your editor maps for everyone (Map editor → 🌍 Publish)',
     'Community maps lists every player\'s maps by likes or newest: play one, copy it to edit, or ♥ like it',

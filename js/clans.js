@@ -1,5 +1,6 @@
 import { store } from './util.js';
 import { moderation } from './moderation.js';
+import { weekId } from './leaderboard.js';
 
 // Clans: a name and a short [TAG] shown before members' names. All on the public relay:
 //   clan/<tag>             retained, signed by the leader: { tag, name, color, leader, members, since }
@@ -22,6 +23,13 @@ export const MAX_MEMBERS = 30;
 export const SPRAY_RE = /^[0-9a-f]{256}$/;
 export const SPRAY_PALETTE = [null, '#ffffff', '#111111', '#7f8c8d', '#e74c3c', '#ff8a1a', '#ffd23f', '#2ecc71', '#16a085', '#3498db', '#1f3a8a', '#9b59b6', '#ff6fb5', '#8b5a2b', '#f5cba7', '#00e5ff'];
 export const CLAN_COLORS = ['#ffb020', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#1abc9c', '#ff6fb5', '#ecf0f1'];
+// { "YYYY-MM-DD" week: war wins } for the two latest weeks, at most 50 a week.
+function cleanWarWk(o) {
+  const out = {};
+  if (!o || typeof o !== 'object') return out;
+  for (const k of Object.keys(o).filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().slice(-2)) out[k] = Math.max(0, Math.min(50, Math.round(Number(o[k]) || 0)));
+  return out;
+}
 const low = (s) => String(s || '').toLowerCase();
 const clip = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, n);
 
@@ -86,6 +94,7 @@ class Clans {
           since: Number(b.since) || 0, ts: Number(b.ts) || 0, disbanded: !!b.disbanded,
           spray: typeof b.spray === 'string' && SPRAY_RE.test(b.spray) ? b.spray : null,
           warW: Math.max(0, Math.min(1e5, Number(b.warW) || 0)), warL: Math.max(0, Math.min(1e5, Number(b.warL) || 0)),
+          warWk: cleanWarWk(b.warWk), // war wins per week (clan seasons, clanseason.js)
         };
         if (!clan.members.some((m) => low(m) === low(clan.leader))) clan.members.unshift(clan.leader);
         const old = this.records.get(k);
@@ -151,6 +160,7 @@ class Clans {
     if (c.spray && SPRAY_RE.test(c.spray)) body.spray = c.spray;
     if (c.warW) body.warW = c.warW;
     if (c.warL) body.warL = c.warL;
+    if (c.warWk && Object.keys(c.warWk).length) body.warWk = cleanWarWk(c.warWk);
     if (c.disbanded) body.disbanded = true;
     const signed = await this.social.sign(body);
     this.social.relay.publish(CLAN + low(c.tag), signed, { retain: true });
@@ -309,7 +319,9 @@ class Clans {
     const c = this.myClan();
     if (!c || !this.isLeader()) return;
     const full = this.records.get(low(c.tag));
-    await this.publishClan({ ...full, warW: (full.warW || 0) + (won ? 1 : 0), warL: (full.warL || 0) + (won ? 0 : 1) });
+    const wk = weekId(), warWk = cleanWarWk(full.warWk);
+    if (won) warWk[wk] = (warWk[wk] || 0) + 1;
+    await this.publishClan({ ...full, warW: (full.warW || 0) + (won ? 1 : 0), warL: (full.warL || 0) + (won ? 0 : 1), warWk });
   }
 
   deny(who) { const c = this.myClan(); if (c) this.clearReq(low(c.tag), low(who)); this.changed(); }
