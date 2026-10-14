@@ -1,8 +1,8 @@
 {
-  "version": "2026.10.14.3",
+  "version": "2026.10.14.4",
   "notes": [
-    "Breakable walls: boarded-up windows and doorways you can shoot or blow open",
-    "Bots barge through boards; hosts can turn them off"
+    "Map editor: ramps, jump pads, pickups and red / blue team spawns",
+    "Play your maps in Capture the Flag"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

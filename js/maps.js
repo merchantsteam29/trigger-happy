@@ -42,7 +42,7 @@ function makeApi() {
       a = [-a[3], a[0], -a[1], a[2]];
     }
   };
-  const spawn = (x, y, z) => spawns.push({ x, y, z, yaw: Math.atan2(x, z) });
+  const spawn = (x, y, z, team = 0) => spawns.push(team ? { x, y, z, yaw: Math.atan2(x, z), team } : { x, y, z, yaw: Math.atan2(x, z) }); // team: 1 red / 2 blue only (editor maps)
   const spawn2 = (x, y, z) => { spawn(x, y, z); spawn(-x, y, -z); };
   const spawn4 = (x, y, z) => {
     let p = [x, z];

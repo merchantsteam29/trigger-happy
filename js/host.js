@@ -287,11 +287,13 @@ export class HostLogic {
 
   // CTF bases: the ground-level spawns furthest toward each team's side (red = -x, blue = +x,
   // matching pickSpawn), so every mirrored map gets fair, symmetric bases.
+  // Editor maps with red and blue spawns: the bases are among those.
   makeFlags() {
     const ground = spawns.filter((s) => s.y < 1);
     const pool = ground.length >= 2 ? ground : spawns;
-    const red = pool.reduce((a, b) => (b.x < a.x ? b : a));
-    const blue = pool.reduce((a, b) => (b.x > a.x ? b : a));
+    const reds = spawns.filter((s) => s.team === 1), blues = spawns.filter((s) => s.team === 2), teamed = reds.length && blues.length;
+    const red = (teamed ? reds : pool).reduce((a, b) => (b.x < a.x ? b : a));
+    const blue = (teamed ? blues : pool).reduce((a, b) => (b.x > a.x ? b : a));
     const flag = (s) => ({ home: { x: s.x, y: s.y, z: s.z }, pos: { x: s.x, y: s.y, z: s.z }, carrier: null, dropped: false, returnAt: 0 });
     return { 1: flag(red), 2: flag(blue) };
   }
@@ -557,8 +559,11 @@ export class HostLogic {
 
   pickSpawn(p) {
     const enemies = [...this.players.values()].filter((q) => q.alive && q !== p && this.hostile(p, q));
-    const side = this.mode.redBlue ? (p.team === 1 ? -1 : 1) : 0;
-    const scored = spawns.map((s) => {
+    let side = this.mode.redBlue ? (p.team === 1 ? -1 : 1) : 0;
+    // Editor maps can have red and blue spawns: team modes use your team's.
+    const mine = side && spawns.some((s) => s.team === 1) && spawns.some((s) => s.team === 2) ? spawns.filter((s) => s.team === p.team) : [];
+    if (mine.length) side = 0;
+    const scored = (mine.length ? mine : spawns).map((s) => {
       let min = 1e9;
       for (const o of enemies) min = Math.min(min, Math.hypot(o.st[0] - s.x, o.st[1] - s.y, o.st[2] - s.z));
       if (!enemies.length) min = Math.random() * 50;
@@ -1129,6 +1134,11 @@ export class HostLogic {
     if (this.mode.br) { this.setupLoot(); return; }
     const hills = (MAPS[this.s.map] && MAPS[this.s.map].hills) || [];
     const now = Date.now();
+    const own = MAPS[this.s.map] && MAPS[this.s.map].pickups; // placed in the map editor: [kind, x, y, z]
+    if (own && own.length) {
+      own.forEach(([kind, x, y, z], i) => { if (PICKUP[kind]) this.pickups.push({ id: i, kind, x, y, z, readyAt: now + PICKUP[kind].first, w: null }); });
+      return;
+    }
     hills.slice(0, 5).forEach(([x, y, z], i) => {
       const kind = i === 0 ? 'power' : i % 2 ? 'hp' : 'ammo';
       // Off-center pickups sit a little to the side of the hill so they don't block it.
@@ -1142,7 +1152,7 @@ export class HostLogic {
       if (now < k.readyAt) continue;
       if (k.kind === 'power' && !k.w && !k.loot) {
         k.w = POWER_WEAPONS[(Math.random() * POWER_WEAPONS.length) | 0];
-        this.broadcast({ t: 'notice', text: `POWER WEAPON: ${(WEAPONS[k.w] || {}).name || k.w} at the center` });
+        this.broadcast({ t: 'notice', text: `POWER WEAPON: ${(WEAPONS[k.w] || {}).name || k.w}${MAPS[this.s.map] && MAPS[this.s.map].pickups ? ' is up' : ' at the center'}` });
       }
       for (const p of this.players.values()) {
         if (!p.alive || Math.hypot(p.st[0] - k.x, p.st[2] - k.z) > 1.3 || Math.abs(p.st[1] - k.y) > 2) continue;

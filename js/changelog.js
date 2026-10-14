@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.4', name: 'Editor Upgrades', banner: 'sunset', notes: [
+    'Map editor: ramps, jump pads, and health, ammo and power weapon pickups',
+    'Spawns can be red or blue: team modes spawn each team on its own side',
+    'Play your map in Capture the Flag too (the bases go at the red and blue spawns)',
+  ] },
   { v: '2026.10.14.3', name: 'Breakable Walls', banner: 'blood', notes: [
     'Windows and some doorways on 9 maps are boarded up with wooden planks. Shoot them or blow them up to open a new way in',
     'Bots barge straight through boards in their way',

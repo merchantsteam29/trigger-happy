@@ -393,13 +393,17 @@ ranked divisions, kills on real players, finishing 4 season passes and smashing 
 **🛠 Map editor** (in the menu) lets you build your own map from above on a 60 × 44 m grid:
 - **Block:** drag to draw one. Pick its material (concrete, brick, wood, crates, stone, containers, snow, neon and more),
   its **height**, and where it **starts** (raise it for bridges and floating platforms).
-- **Stairs:** drag the way the steps should go up.
-- **Spawn:** click to place spawn points (up to 16, on top of blocks too). **Erase** removes things, **Undo** undoes.
+- **Stairs** / **Ramp:** drag the way it should go up (a ramp is a smooth slope you can walk or slide up).
+- **Jump pad:** drag a small square on the ground or on a block. It launches players high into the air.
+- **Spawn:** click to place spawn points (up to 16, on top of blocks too). Pick a **team**: Anyone, 🔴 Red or 🔵 Blue.
+  With both red and blue spawns, team modes spawn each team on its own side (and Capture the Flag puts the bases there).
+- **Pickup:** click to place health, ammo or a power weapon (up to 8). Without any, the map gets the usual ones.
+- **Erase** removes things, **Undo** undoes.
 - **Theme:** Day, Night, Snow or Desert.
 
 **Save** keeps up to 5 maps on your device, **Code** copies a map code (starts with `M-`) and **Load code** opens one.
-**Play** hosts a private server on your map (Free For All, Team Deathmatch, Gun Game, Infection, King of the Hill or
-Prop Hunt, with bots); everyone who joins gets your map.
+**Play** hosts a private server on your map (Free For All, Team Deathmatch, Capture the Flag, Gun Game, Infection, King
+of the Hill or Prop Hunt, with bots); everyone who joins gets your map.
 
 ## Update history
 
