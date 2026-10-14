@@ -1,6 +1,6 @@
 import { devices } from './devices.js'; // first: it tracks progress changes from the start
 import { Game } from './game.js';
-import { Net } from './net.js';
+import { Net, probePing } from './net.js';
 import { initAudio } from './audio.js';
 import { WEAPONS, SLOTS, SLOT_NAMES, SHORT, CLASSES, validLoadout, weaponInfo, killStats } from './weapons.js';
 import { MAPS, MAP_ORDER, MAP_BLURB, quality } from './maps.js';
@@ -1258,13 +1258,43 @@ $('sv-create-toggle').onclick = () => showCreate(true);
 $('sv-create-close').onclick = () => showCreate(false);
 $('sv-region').innerHTML = '<option value="">All regions</option>' + REGIONS.map((r) => `<option>${r}</option>`).join('');
 $('sv-region').onchange = () => renderServers();
+// Filters: mode, ping (measured on demand with probePing), friends playing there, not full.
+const pings = new Map(); // code -> { ms (null = no answer), at } or { pending: true }
+$('sv-fmode').innerHTML = '<option value="">All modes</option>' + MODE_ORDER.filter((m) => !MODES[m].event).map((m) => `<option value="${m}">${esc(MODES[m].name)}</option>`).join('');
+$('sv-fmode').onchange = () => renderServers();
+$('sv-fping').onchange = () => { if (Number($('sv-fping').value)) checkPings(); renderServers(); };
+$('sv-ffriends').onchange = () => renderServers();
+$('sv-fopen').onchange = () => renderServers();
+$('sv-pingbtn').onclick = () => checkPings(true);
+async function checkPings(force = false) {
+  const todo = browser.list().map((s) => s.code).filter((c) => { const p = pings.get(c); return !p || (!p.pending && (force || Date.now() - p.at > 60000)); });
+  for (const c of todo) pings.set(c, { pending: true });
+  renderServers();
+  let i = 0;
+  const worker = async () => { while (i < todo.length) { const c = todo[i++]; const ms = await probePing(c); pings.set(c, { ms, at: Date.now() }); renderServers(); } };
+  await Promise.all([worker(), worker(), worker()]);
+}
+// Lobby code -> gamertags of online friends playing there.
+function friendsByLobby() {
+  const out = new Map();
+  for (const f of social.friends.values()) {
+    if (!social.isOnline(f) || !f.pres || !f.pres.lobby) continue;
+    out.set(f.pres.lobby, [...(out.get(f.pres.lobby) || []), f.tag]);
+  }
+  return out;
+}
+const pingHtml = (p) => (!p ? '' : p.pending ? ' · …' : p.ms == null ? ' · ? ms' : ` · <b class="ping-${p.ms < 80 ? 'good' : p.ms < 150 ? 'ok' : 'bad'}">${p.ms} ms</b>`);
 
 function renderServers() {
   const st = browser.status;
   $('sv-status').textContent = st === 'online' ? '● Live' : st === 'connecting' ? 'Connecting…' : st === 'offline' ? 'List unavailable' : '';
   $('sv-status').className = 'sv-status ' + st;
-  const region = $('sv-region').value;
-  const list = browser.list().filter((s) => !region || s.region === region);
+  const region = $('sv-region').value, fmode = $('sv-fmode').value, fping = Number($('sv-fping').value), fr = friendsByLobby();
+  const onlyFriends = $('sv-ffriends').checked, onlyOpen = $('sv-fopen').checked;
+  const list = browser.list().filter((s) => (!region || s.region === region) && (!fmode || s.mode === fmode)
+    && (!onlyFriends || fr.has(s.code)) && (!onlyOpen || s.players < s.max)
+    && (!fping || (() => { const p = pings.get(s.code); return !p || p.pending || (p.ms != null && p.ms < fping); })()));
+  const filtered = !!(region || fmode || fping || onlyFriends || onlyOpen);
   const el = $('sv-list');
   if (st === 'offline') {
     el.innerHTML = '<div class="sv-empty">Couldn\'t reach the server list right now. You can still join with a code or create a server. <button id="sv-retry">Retry</button></div>';
@@ -1272,7 +1302,7 @@ function renderServers() {
     return;
   }
   if (!list.length) {
-    el.innerHTML = `<div class="sv-empty">${st === 'connecting' ? 'Looking for servers…' : 'No public servers right now. Create one and your friends (or anyone) can join!'}</div>`;
+    el.innerHTML = `<div class="sv-empty">${st === 'connecting' ? 'Looking for servers…' : filtered && browser.list().length ? 'No servers match your filters.' : 'No public servers right now. Create one and your friends (or anyone) can join!'}</div>`;
     return;
   }
   el.innerHTML = list.map((s) => {
@@ -1280,8 +1310,8 @@ function renderServers() {
     const mode = MODES[s.mode] ? MODES[s.mode].name : s.mode;
     const map = MAPS[s.map] ? MAPS[s.map].name : s.map;
     return `<div class="sv-row">
-      <div class="sv-main"><b>${s.gn ? '🌙 ' : ''}${esc(s.name)}${s.ranked ? ` ${srBadge(s.sr || 1000)}` : ''}</b><small>${s.mode === featuredMode() ? '⭐ ' : ''}${esc(mode)} · ${esc(map)}${s.rules ? ` · <em class="sv-rules">${esc(s.rules)}</em>` : ''}</small></div>
-      ${s.region ? `<span class="sv-region">${esc(s.region)}</span>` : '<span></span>'}
+      <div class="sv-main"><b>${s.gn ? '🌙 ' : ''}${esc(s.name)}${s.ranked ? ` ${srBadge(s.sr || 1000)}` : ''}</b><small>${s.mode === featuredMode() ? '⭐ ' : ''}${esc(mode)} · ${esc(map)}${s.rules ? ` · <em class="sv-rules">${esc(s.rules)}</em>` : ''}${fr.has(s.code) ? ` · <span class="sv-friends">👥 ${fr.get(s.code).map(esc).join(', ')}</span>` : ''}</small></div>
+      ${s.region || pings.get(s.code) ? `<span class="sv-region">${esc(s.region || '')}${pingHtml(pings.get(s.code))}</span>` : '<span></span>'}
       <div class="sv-players ${full ? 'full' : ''}">${s.players}/${s.max}${s.bots ? `<small>+${s.bots} bots</small>` : ''}</div>
       ${s.mode === 'tourney' || s.mode === 'br' ? `<button data-watch="${esc(s.code)}" title="Watch without playing">👁 Watch</button>` : ''}<button class="primary" data-join="${esc(s.code)}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button>
     </div>`;

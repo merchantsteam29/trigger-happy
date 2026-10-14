@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.5', name: 'Server Filters', banner: 'matrix', notes: [
+    'Find Servers can filter by mode, ping, With friends and Not full',
+    'Check ping measures your real ping to every server in the list',
+    'Servers your online friends are playing on show their names',
+  ] },
   { v: '2026.10.13.4', name: 'Bot Difficulty', banner: 'blood', notes: [
     'Create server has a Bot difficulty: Auto, Easy, Normal, Hard, Expert or Nightmare',
     'Nightmare bots react almost instantly and go for the head',

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.13.4",
+  "version": "2026.10.13.5",
   "notes": [
-    "Bot difficulty: Auto, Easy, Normal, Hard, Expert or Nightmare when you create a server"
+    "Find Servers: filter by mode, ping, friends and not full, and check your ping"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

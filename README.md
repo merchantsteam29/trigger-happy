@@ -10,6 +10,8 @@ Everything starts in the **Servers** tab:
 
 - **Join with code:** type a friend's 5-letter code (from their pause menu or invite link). Works for private servers too.
 - **Find servers:** a live list of public servers (name, mode, map, players, region). Tap **Join** on any open one.
+  Filter by region, mode, ping, **With friends** (servers your online friends are in, with their names) or **Not full**.
+  **📶 Check ping** measures your real ping to each host (a quick connection that doesn't take a slot).
 - **Create server:** pick a name, **Public** (listed in Find Servers) or **Private** (hidden, code / invite link only),
   max players (2–12), fill with bots (bots leave as real players join), bot difficulty (Auto, Easy, Normal, Hard, Expert or Nightmare), a region tag, map rotation, the game mode and
   the starting map. The host can switch public/private any time from the Host panel.

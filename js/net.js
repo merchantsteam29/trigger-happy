@@ -4,6 +4,39 @@ const PREFIX = 'whffa-v1-';
 const MAX_PLAYERS = 12;
 const TIMEOUT_MS = 10000;
 
+// Server list ping: a short connection to a host that only trades 'probe' / 'pong' (no player slot).
+// Resolves with the best of 3 round trips in ms, or null if the host doesn't answer.
+let probePeer = null;
+function probeHub() {
+  if (probePeer && !probePeer.destroyed && !probePeer.disconnected) return Promise.resolve(probePeer);
+  return new Promise((resolve) => {
+    const p = new Peer();
+    p.on('open', () => { probePeer = p; resolve(p); });
+    p.on('error', () => resolve(null));
+    setTimeout(() => resolve(null), 8000);
+  });
+}
+export async function probePing(code, wait = 7000) {
+  const peer = await probeHub();
+  if (!peer) return null;
+  return new Promise((resolve) => {
+    let conn = null, done = false;
+    const times = [], sent = new Map();
+    const finish = (v) => { if (done) return; done = true; clearTimeout(t); try { if (conn) conn.close(); } catch { /* */ } resolve(v); };
+    const t = setTimeout(() => finish(times.length ? Math.round(Math.min(...times)) : null), wait);
+    try { conn = peer.connect(PREFIX + code, { reliable: true }); } catch { finish(null); return; }
+    const ask = (n) => { sent.set(n, performance.now()); conn.send({ t: 'probe', n }); };
+    conn.on('open', () => ask(1));
+    conn.on('data', (m) => {
+      if (!m || m.t !== 'pong' || !sent.has(m.n)) return;
+      times.push(performance.now() - sent.get(m.n));
+      if (times.length >= 3) finish(Math.round(Math.min(...times)));
+      else ask(m.n + 1);
+    });
+    conn.on('error', () => finish(null));
+  });
+}
+
 // Lobby networking over WebRTC (PeerJS). The lobby creator's browser is the host:
 // its peer id is derived from the lobby code, so friends only need the code to connect.
 export class Net {
@@ -82,6 +115,7 @@ export class Net {
     conn.on('data', (m) => {
       conn.lastSeen = Date.now();
       if (!m || typeof m !== 'object' || m.t === 'ping') return;
+      if (m.t === 'probe' && !conn.gid) { conn.send({ t: 'pong', n: m.n }); return; } // ping check from the server list (probePing)
       if (m.t === 'hello' && !conn.gid && m.spec) { // staff spectating: no player slot, checked by the host logic
         conn.gid = 'p' + this.nextId++;
         this.conns.set(conn.gid, conn);

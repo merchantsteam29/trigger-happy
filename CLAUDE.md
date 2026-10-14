@@ -62,7 +62,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 ## Architecture
 
 ### Matches: peer-to-peer, host-authoritative
-- `net.js`: WebRTC via PeerJS. The browser that creates a lobby is the **host**. It runs `HostLogic` (`host.js`)
+- `net.js`: WebRTC via PeerJS (`probePing`: the server list's ping check, a `probe` / `pong` connection that takes no slot). The browser that creates a lobby is the **host**. It runs `HostLogic` (`host.js`)
   locally and relays between clients (lobby code = PeerJS id `whffa-v1-<CODE>`).
 - `host.js` (`HostLogic`) holds the true game state: players, health, kills, scores, modes,
   bots, pickups, barrels/crates, zombies waves, the Battle Royale storm, the tournament, map votes,

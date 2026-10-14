@@ -281,6 +281,13 @@
             <select id="sv-region" title="Filter by region"><option value="">All regions</option></select>
             <button id="sv-create-toggle" class="primary">+ Create server</button>
           </div>
+          <div class="sv-filters">
+            <select id="sv-fmode" title="Filter by mode"><option value="">All modes</option></select>
+            <select id="sv-fping" title="Filter by ping"><option value="0">Any ping</option><option value="80">Under 80 ms</option><option value="150">Under 150 ms</option><option value="250">Under 250 ms</option></select>
+            <label class="sv-check"><input type="checkbox" id="sv-ffriends"> With friends</label>
+            <label class="sv-check"><input type="checkbox" id="sv-fopen"> Not full</label>
+            <button id="sv-pingbtn" title="Measure your ping to every server in the list">📶 Check ping</button>
+          </div>
           <div id="sv-list" class="sv-list"></div>
         </div>
         <!-- Create server -->

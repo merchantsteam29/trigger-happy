@@ -745,3 +745,12 @@ body.mobile:not(.tablet) .rep-guns { display: none; }
 .ed-map.sel button:first-child { border-color: var(--accent); color: var(--accent); }
 body.mobile:not(.tablet) .ed-body { flex-direction: column; }
 body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
+
+/* Server list filters */
+.sv-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -2px 0 10px; }
+.sv-filters select { width: auto; padding: 6px 8px; font-size: 12px; }
+.sv-filters button { padding: 6px 12px; font-size: 12px; margin-left: auto; }
+.sv-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.sv-check input { width: auto; margin: 0; }
+.sv-friends { color: #5fc46a; font-weight: 700; }
+.ping-good { color: #5fc46a; } .ping-ok { color: #ffcf4a; } .ping-bad { color: #ff5a5a; }
