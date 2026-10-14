@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.4', name: 'Bot Difficulty', banner: 'blood', notes: [
+    'Create server has a Bot difficulty: Auto, Easy, Normal, Hard, Expert or Nightmare',
+    'Nightmare bots react almost instantly and go for the head',
+    'In the Host panel, the difficulty picker now changes every bot at once (and the ones that join later)',
+  ] },
   { v: '2026.10.13.3', name: 'Weekly Seasons', banner: 'storm', notes: [
     'Seasons are now one week long: a new season starts every Monday. Season 1 ends Monday 19 October, then Season 2 Frostbite',
     'The season pass is harder to finish: each tier needs 100 XP more than the one before (73,500 XP for all 30)',

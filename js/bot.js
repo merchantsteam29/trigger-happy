@@ -11,6 +11,10 @@ const DIFF = {
 // Auto difficulty: a skill from 0 (easy) through 0.5 (normal) and 1 (hard) up to 1.3 (expert),
 // blended from the tables above. The host moves it with how the real players are doing.
 const EXPERT = { react: 0.32, err: 0.035, turn: 8, see: 60, pause: 0.2, fov: 1.8, head: 0.16, forget: 0.05 };
+// Presets past hard (picked by the host): expert, and nightmare (near-instant, pinpoint, hunts headshots).
+DIFF.expert = EXPERT;
+DIFF.nightmare = { react: 0.18, err: 0.018, turn: 11, see: 80, pause: 0.1, fov: 2.2, head: 0.32, forget: 0.02 };
+export const BOT_DIFFS = ['auto', 'easy', 'normal', 'hard', 'expert', 'nightmare'];
 export function skillParams(s) {
   s = Math.max(0, Math.min(1.3, s));
   const [a, b, k] = s <= 0.5 ? [DIFF.easy, DIFF.normal, s / 0.5] : s <= 1 ? [DIFF.normal, DIFF.hard, (s - 0.5) / 0.5] : [DIFF.hard, EXPERT, (s - 1) / 0.3];
@@ -60,7 +64,7 @@ export class Bot {
     if (this.dS !== s) { this.dS = s; this.dCache = skillParams(s); }
     return this.dCache;
   }
-  get skill() { return this.difficulty === 'auto' ? this.logic.botSkill ?? 0.45 : { easy: 0.1, normal: 0.5, hard: 1 }[this.difficulty]; }
+  get skill() { return this.difficulty === 'auto' ? this.logic.botSkill ?? 0.45 : { easy: 0.1, normal: 0.5, hard: 1, expert: 1.3, nightmare: 1.5 }[this.difficulty]; }
 
   spawn(s, loadout) {
     this.hide = null;

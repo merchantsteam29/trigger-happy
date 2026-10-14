@@ -311,6 +311,11 @@
               <small class="hint">Bots leave as real players join.</small>
             </div>
             <div class="field">
+              <label for="sv-botdiff">Bot difficulty</label>
+              <select id="sv-botdiff"><option value="auto">Auto (matches the players)</option><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option><option value="expert">Expert</option><option value="nightmare">Nightmare</option></select>
+              <small class="hint">Nightmare bots react almost instantly and aim for the head.</small>
+            </div>
+            <div class="field">
               <label for="sv-regionpick">Region tag</label>
               <select id="sv-regionpick"></select>
             </div>
@@ -583,7 +588,7 @@
         <div id="hp-physics"></div>
         <h3>Bots</h3>
         <div class="bot-add">
-          <select id="hp-botdiff"><option value="auto" selected>Auto (matches the players)</option><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select>
+          <select id="hp-botdiff" title="Difficulty for every bot, and for bots added later"><option value="auto" selected>Auto (matches the players)</option><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option><option value="expert">Expert</option><option value="nightmare">Nightmare</option></select>
           <button id="hp-addbot">+ Add bot</button>
           <button id="hp-fill">Fill to 8</button>
           <button id="hp-clearbots" class="danger">Remove all</button>

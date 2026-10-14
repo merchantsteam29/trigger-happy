@@ -1,9 +1,7 @@
 {
-  "version": "2026.10.13.3",
+  "version": "2026.10.13.4",
   "notes": [
-    "Weekly seasons: a new season every Monday",
-    "The season pass is harder: each tier needs more XP, and kills on bots give less",
-    "7 new missions and 7 new achievements"
+    "Bot difficulty: Auto, Easy, Normal, Hard, Expert or Nightmare when you create a server"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

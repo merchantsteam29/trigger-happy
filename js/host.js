@@ -3,7 +3,7 @@ import { phys, raycast } from './physics.js';
 import { WEAPONS, GUNGAME_LADDER, SLOTS } from './weapons.js';
 import { WEAPON_RULES, ruleLoadout, cleanRules } from './rulesets.js';
 import { NavGrid } from './nav.js';
-import { Bot, BOT_NAMES } from './bot.js';
+import { Bot, BOT_NAMES, BOT_DIFFS } from './bot.js';
 import { COLORS } from './util.js';
 import { sanitizeCos, randomCos } from './missions.js';
 import { cleanModMap, randomMods } from './mods.js';
@@ -189,6 +189,7 @@ export class HostLogic {
     if (opts.rules) Object.assign(this.s, cleanRules(opts.rules), { rulesName: String(opts.rules.rulesName || '').slice(0, 24) }); // custom rules preset
     this.botCount = 0;
     this.botFill = Math.max(0, Math.min(12, opts.botFill || 0)); // keep humans + bots at this many
+    this.botDiff = BOT_DIFFS.includes(opts.botDiff) ? opts.botDiff : 'auto'; // fill bots' difficulty (Create server / host panel)
     this.loadMap(this.s.map);
     this.beginMatchState();
     this.last = Date.now();
@@ -383,7 +384,7 @@ export class HostLogic {
     const humans = all.filter((p) => !p.bot).length;
     const bots = all.filter((p) => p.bot && !p.zombie);
     const want = Math.max(0, (this.mode.duel ? Math.min(2, this.botFill) : this.botFill) - humans); // Duel: just one opponent
-    for (let i = bots.length; i < want; i++) this.addBot('auto'); // fill bots follow how the players are doing
+    for (let i = bots.length; i < want; i++) this.addBot(this.botDiff); // 'auto' follows how the players are doing
     for (let i = want; i < bots.length; i++) this.removePlayer(bots[bots.length - 1 - (i - want)].id);
   }
 
@@ -450,7 +451,14 @@ export class HostLogic {
 
   setBotDifficulty(id, diff) {
     const p = this.players.get(id);
-    if (p && p.bot) p.bot.difficulty = diff;
+    if (p && p.bot && BOT_DIFFS.includes(diff)) p.bot.difficulty = diff;
+  }
+
+  // Every bot now, and the fill bots that join later.
+  setAllBotDifficulty(diff) {
+    if (!BOT_DIFFS.includes(diff)) return;
+    this.botDiff = diff;
+    for (const p of this.players.values()) if (p.bot && !p.zombie) p.bot.difficulty = diff;
   }
 
   setTeam(id, team) {

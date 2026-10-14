@@ -1,3 +1,4 @@
+import { BOT_DIFFS } from './bot.js';
 import { MODES, MODE_ORDER, TEAM_COLORS, ZOMBIE_COLOR } from './host.js';
 import { MAPS, MAP_ORDER } from './maps.js';
 import { esc } from './util.js';
@@ -36,6 +37,7 @@ export class HostPanel {
       this.close();
     };
     $('hp-rotate').onchange = () => this.logic.applySettings({ rotate: $('hp-rotate').checked });
+    $('hp-botdiff').onchange = () => { this.logic.setAllBotDifficulty($('hp-botdiff').value); this.renderPlayers(); };
     $('hp-addbot').onclick = () => { this.logic.addBot($('hp-botdiff').value); this.renderPlayers(); };
     $('hp-fill').onclick = () => {
       while (this.logic.players.size < 8) this.logic.addBot($('hp-botdiff').value);
@@ -55,6 +57,7 @@ export class HostPanel {
     $('hp-mode').value = s.mode;
     $('hp-map').value = s.map;
     $('hp-rotate').checked = s.rotate;
+    $('hp-botdiff').value = logic.botDiff || 'auto';
     this.renderRules();
     this.renderPhysics();
     this.renderPlayers();
@@ -177,7 +180,7 @@ export class HostPanel {
       row.innerHTML = `<span class="dot" style="background:${esc(color)}"></span><span class="nm">${esc(p.name)}${p.id === 'host' ? ' (you)' : ''}${p.acStrikes ? ` <em class="ac-flag" title="Anti-cheat: ${esc(p.acWhy || '')} (${p.acStrikes}×)">⚠ ${p.acStrikes}</em>` : ''}</span>`;
       if (p.bot) {
         const sel = document.createElement('select');
-        sel.innerHTML = ['auto', 'easy', 'normal', 'hard'].map((d) => `<option value="${d}" ${p.bot.difficulty === d ? 'selected' : ''}>${d}</option>`).join('');
+        sel.innerHTML = BOT_DIFFS.map((d) => `<option value="${d}" ${p.bot.difficulty === d ? 'selected' : ''}>${d}</option>`).join('');
         sel.onchange = () => L.setBotDifficulty(p.id, sel.value);
         row.appendChild(sel);
       }
