@@ -20,6 +20,7 @@ const PERMA = V + 'permabans'; // staff-signed list of permanently banned player
 const P = V + 'modrec/', ANN = V + 'announce', REP = V + 'report/', PRES = V + 'pres/', FILTER = V + 'chatfilter', APPEAL = V + 'appeal/', STAFFCHAT = V + 'staffchat/', TAG = V + 'tag/';
 const STAFFCHAT_KEEP = 3 * 864e5; // staff chat history: 3 days
 const LOG_MAX = 30;
+const REPLAY = 'whffa/v1/replay/'; // report replay clips (replay.js)
 const REPORT_MAX_AGE = 7 * 864e5;
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -328,14 +329,17 @@ class Moderation {
 
   // Anyone with a gamertag can report a player (once a minute).
   // img: optional small JPEG data URL of the reporter's screen (evidence for staff).
-  async report({ target, lobby, reason, details, img }) {
+  // replay: the last 30 s of the match (replay.js encodeClip), sent signed at replay/<id> for staff.
+  async report({ target, lobby, reason, details, img, replay }) {
     const s = this.social;
     if (!s.tag) throw new Error('Pick a gamertag first so staff know who sent the report.');
     if (Date.now() - (this.lastReport || 0) < 60000) throw new Error('You just sent a report. Wait a minute before sending another.');
     if (!REPORT_REASONS.includes(reason)) throw new Error('Pick a reason.');
     const id = `${low(s.tag)}-${Date.now().toString(36)}`;
     const shot = typeof img === 'string' && img.startsWith('data:image/jpeg;base64,') && img.length < 60000 ? img : undefined;
-    s.relay.publish(REP + id, await s.sign({ id, target: clip(target, 16), lobby: clip(lobby, 8), reason, details: clip(details, 200), img: shot }), { retain: true });
+    const hasClip = typeof replay === 'string' && replay.length < 150000;
+    if (hasClip) s.relay.publish(REPLAY + id, await s.sign({ id, clip: replay }), { retain: true });
+    s.relay.publish(REP + id, await s.sign({ id, target: clip(target, 16), lobby: clip(lobby, 8), reason, details: clip(details, 200), img: shot, rp: hasClip ? 1 : 0 }), { retain: true });
     this.lastReport = Date.now();
   }
 
@@ -344,7 +348,7 @@ class Moderation {
     const b = await this.social.verify(text); // signed by the reporter's own gamertag
     if (!b || b.id !== id || Date.now() - (Number(b.ts) || 0) > REPORT_MAX_AGE) return;
     const img = typeof b.img === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(b.img) ? b.img : null;
-    this.reports.set(id, { id, from: b.from, target: clip(b.target, 16), lobby: clip(b.lobby, 8), reason: clip(b.reason, 40), details: clip(b.details, 200), ts: Number(b.ts), img });
+    this.reports.set(id, { id, from: b.from, target: clip(b.target, 16), lobby: clip(b.lobby, 8), reason: clip(b.reason, 40), details: clip(b.details, 200), ts: Number(b.ts), img, rp: b.rp === 1 });
     if (this.onChange) this.onChange(null);
   }
 
@@ -352,8 +356,25 @@ class Moderation {
   dismissReport(id) {
     if (!roles.myRole()) return;
     this.social.relay.publish(REP + id, '', { retain: true });
+    this.social.relay.publish(REPLAY + id, '', { retain: true });
     this.reports.delete(id);
     if (this.onChange) this.onChange(null);
+  }
+
+  // Staff: the replay clip sent with a report (signed by the reporter), or null.
+  fetchReplay(r) {
+    const s = this.social, topic = REPLAY + r.id;
+    return new Promise((resolve) => {
+      let raw = null;
+      const off = s.relay.onMessage((t, payload) => { if (t === topic && payload.length) raw = payload.toString(); });
+      s.relay.subscribe(topic);
+      setTimeout(async () => {
+        off();
+        s.relay.unsubscribe(topic);
+        const b = raw ? await s.verify(raw) : null;
+        resolve(b && b.id === r.id && low(b.from) === low(r.from) && typeof b.clip === 'string' ? b.clip : null);
+      }, 3000);
+    });
   }
 
   // ---------- Bug reports (owner) ----------

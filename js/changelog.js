@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.9', name: 'Replay Theater', banner: 'galaxy', notes: [
+    'Watch your last match from the home screen: follow any player, see through their eyes or fly a free camera',
+    'Timeline, pause and speeds from 0.25× to 4×, with the kill feed',
+    'Reports now include a replay of the last 30 seconds for the staff',
+  ] },
   { v: '2026.10.14.8', name: 'Tournament Brackets', banner: 'blood', notes: [
     'Hosts can start a 1v1 bracket tournament from the Host panel: up to 8 players, bots count',
     'Each match is a Duel to 3. Everyone else watches, with the bracket on screen, until the final crowns a champion',

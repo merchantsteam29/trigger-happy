@@ -293,6 +293,14 @@ When a match ends, the **MVP** steps onto a stage and does their **victory pose*
 in the match sees it. Everyone has **Cheer**; Flex, Finger Guns, Dab, Heart Hands, Take a Bow, Floss, Spin Jump and
 Levitate are in the **Shop** (🪙 200 to 500). Pick yours in **Character → Victory poses**.
 
+## Replay theater
+
+Your game records every match you play or watch. Afterwards, **🎬 Watch your last match** on the home screen plays it
+back on its map: **follow** any player (Q / E to switch, **R** for their own view) or press **F** for a **free camera**
+(WASD, Space / C, mouse wheel for speed). The timeline jumps anywhere, the speed goes from 0.25× to 4×, **P** pauses,
+**H** hides the controls, and the kill feed shows who got whom. Click the view to look around; Esc frees the mouse.
+Only your last match is kept, until you reload the game.
+
 ## Spectating
 
 Watch a match without playing: **👁 Watch** on a server in **Find Servers**, or type a code and press **👁** next to
@@ -596,8 +604,10 @@ becomes free again.
   - **Online:** every public server (spectate or join), and everyone with a gamertag who has the game open and where
     they are, with **Join** and **Look up**.
   - **Reports:** players report each other from the pause menu (**🚩 Report a player**), choosing a reason and adding
-    optional details. A small **screenshot** of the reporter's screen goes with it as evidence (click it to enlarge).
-    Staff see who reported whom, in which match, and can look either player up, join that match or resolve the report.
+    optional details. A small **screenshot** of the reporter's screen goes with it as evidence (click it to enlarge),
+    and a **replay of the last 30 seconds**: **🎬 Watch replay** opens it in the replay theater (follow anyone, see
+    through their eyes, or fly a free camera). Staff see who reported whom, in which match, and can look either player
+    up, join that match or resolve the report.
   - **Announce:** post a message, either Info or Important, for 1 hour up to "until cleared". Every player sees it at
     the top of the menu, and players in a match get it in chat when it's posted.
   - **Appeals:** banned players can send one appeal per ban from their ban screen. Staff can **Unban** or **Deny**,

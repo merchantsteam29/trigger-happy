@@ -55,6 +55,7 @@ import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanM
 import { COURSES, COURSE_IDS, fmtScore, trainBests, saveBest } from './training.js';
 import { community, openCommunity } from './community.js';
 import { clanPoints, clanStandings, CLAN_POINTS, CLAN_REWARDS } from './clanseason.js';
+import { Theater, encodeClip, decodeClip } from './replay.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -263,6 +264,7 @@ function renderHome() {
     </div>
     ${(() => { const w = motwNow(), p = motwProgress(); return `<div class="hs-tile banner-row hs-motw"><span class="hs-ic">${w.icon}</span><span class="hs-txt"><b>Mode of the week: ${esc(w.name)}</b><small>${esc(w.desc)} · ${p.paid ? '✓ reward earned' : `play ${MOTW_MATCHES} matches: ${p.n}/${MOTW_MATCHES} · 🪙 ${MOTW_TOKENS}`} · new mode in ${fmtDuration(motwEnds() - Date.now())}</small></span><button class="primary sm" data-motw>Play</button></div>`; })()}
     ${holidayRow()}
+    ${game.recorder.last ? '<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Watch your last match</b><small>Replay it from any angle: follow a player, their view or a free camera</small></span><span class="hm-arrow">›</span></button>' : ''}
     ${!tutorialDone() ? '<button class="hs-tile hs-tutorial banner-row" data-tutorial><span class="hs-ic">🎓</span><span class="hs-txt"><b>New here? Take the 1-minute tutorial</b><small>Learn the controls in the Practice Range · 🪙 ' + TUTORIAL_TOKENS + '</small></span><span class="hm-arrow">›</span></button>' : ''}
     ${canInstall() ? '<button class="hs-tile hs-install banner-row" data-install><span class="hs-ic">📲</span><span class="hs-txt"><b>Install the app</b><small>Trigger Happy on your home screen, full screen</small></span><span class="hm-arrow">›</span></button>' : ''}
     <div class="today-row">
@@ -284,6 +286,8 @@ function renderHome() {
   const c = el.querySelector('[data-claim]');
   if (c) c.onclick = doClaim;
   el.querySelector('[data-quick]').onclick = quickPlay;
+  const lr = el.querySelector('[data-lastreplay]');
+  if (lr) lr.onclick = () => openTheater(game.recorder.last, 'Your last match');
   const tu = el.querySelector('[data-tutorial]');
   if (tu) tu.onclick = () => startPractice(true);
   el.querySelector('[data-ranked]').onclick = playRanked;
@@ -1640,6 +1644,12 @@ renderStaff();
 // var: showPane() may run before this line
 var modPanel = new ModPanel($('mod-pane'), social, {
   joinLobby: (code, spectate = false) => { $('join-code').value = code; showPane('play'); joinLobby(spectate); },
+  watchReplay: (clip, r) => {
+    if (game.active) { toast('Leave the match first to watch replays.'); return; }
+    const rec = decodeClip(clip);
+    if (!rec) { toast('That replay is broken.'); return; }
+    openTheater(rec, `Report: ${r.target} · ${r.reason} · by ${r.from}`);
+  },
   servers: { list: () => browser.list(), start: () => browser.start() },
 });
 function renderModNav() {
@@ -1873,7 +1883,7 @@ function openReport(p) {
   $('rp-send').onclick = async () => {
     if (!reportReason) { $('rp-msg').textContent = 'Pick a reason.'; return; }
     try {
-      await moderation.report({ target: p.gt || p.name, lobby: net ? net.code : '', reason: reportReason, details: $('rp-details').value, img: reportShot });
+      await moderation.report({ target: p.gt || p.name, lobby: net ? net.code : '', reason: reportReason, details: $('rp-details').value, img: reportShot, replay: encodeClip(game.recorder.latest(), 30) });
       $('report-pop').classList.add('hidden');
       toast(`Report sent. Thanks, the staff will look into ${p.name}.`);
     } catch (err) { $('rp-msg').textContent = err.message; }
@@ -1965,6 +1975,14 @@ moderation.onRename = (r) => {
   msg.className = 'tag-msg bad';
   msg.textContent = `${r.by} asked you to change your gamertag "${old}": ${r.reason}`;
 };
+
+// ---------- Replay theater (replay.js) ----------
+function openTheater(rec, title) {
+  if (!rec || game.active || game.theater) return;
+  const th = new Theater(game, rec, { title, onClose: () => { $('menu').classList.remove('hidden'); renderHome(); } });
+  if (!th.open()) { toast('Could not open that replay.'); return; }
+  $('menu').classList.add('hidden');
+}
 
 // ---------- Practice Range (single player, offline) ----------
 

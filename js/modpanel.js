@@ -33,10 +33,11 @@ const when = (ts) => new Date(ts).toLocaleString([], { dateStyle: 'medium', time
 const opts = (list, sel) => list.map(([v, n]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${n}</option>`).join('');
 
 export class ModPanel {
-  constructor(el, social, { joinLobby, servers } = {}) {
+  constructor(el, social, { joinLobby, servers, watchReplay } = {}) {
     this.el = el;
     this.social = social;
     this.joinLobby = joinLobby;
+    this.watchReplay = watchReplay; // (clip, report): open the replay theater (main.js)
     this.servers = servers; // { list(), start() } public server listings (servers.js)
     this.query = '';
     this.tab = 'players';
@@ -300,6 +301,7 @@ export class ModPanel {
           <div class="mp-actions">
             ${validTag(r.target) ? `<button class="primary" data-look="${esc(r.target)}">Look up ${esc(r.target)}</button>` : ''}
             ${r.lobby && this.joinLobby ? `<button data-spec="${esc(r.lobby)}">👁 Spectate that match</button><button data-join="${esc(r.lobby)}">▶ Join</button>` : ''}
+            ${r.rp && this.watchReplay ? `<button data-replay="${esc(r.id)}" title="The last 30 seconds before they reported, from any angle">🎬 Watch replay</button>` : ''}
             <button data-look="${esc(r.from)}">Look up reporter</button>
             <button class="ghost" data-dismiss="${esc(r.id)}">✓ Resolve</button>
           </div>
@@ -308,6 +310,16 @@ export class ModPanel {
     body.querySelectorAll('[data-look]').forEach((b) => { b.onclick = () => this.look(b.dataset.look); });
     body.querySelectorAll('[data-join]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.join); });
     body.querySelectorAll('[data-spec]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.spec, true); });
+    body.querySelectorAll('[data-replay]').forEach((b) => {
+      b.onclick = async () => {
+        const r = reports.find((x) => x.id === b.dataset.replay);
+        b.disabled = true; b.textContent = 'Loading…';
+        const clip = r && await moderation.fetchReplay(r);
+        b.disabled = false; b.textContent = '🎬 Watch replay';
+        if (!clip) { alert('That replay could not be loaded (it may have expired).'); return; }
+        this.watchReplay(clip, r);
+      };
+    });
     body.querySelectorAll('[data-shot]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); a.classList.toggle('big'); }; });
     body.querySelectorAll('[data-dismiss]').forEach((b) => { b.onclick = () => { moderation.dismissReport(b.dataset.dismiss); this.say('Report resolved.'); this.render(); }; });
   }

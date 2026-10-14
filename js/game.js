@@ -32,6 +32,7 @@ import { Training } from './training.js';
 import { buildBoards, applyBoards, boardById, boardCenter, setBroken } from './walls.js';
 import { buildZiplines, zipNear, zipFeet, zipLength, ZIP_SPEED } from './ziplines.js';
 import { bracketPair, bracketHtml, roundName } from './bracket.js';
+import { Recorder } from './replay.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -185,6 +186,7 @@ export class Game {
     this.fireCd = 0; this.switchT = 0; this.reloadT = 0; this.autoSwitchT = 0;
     this.lastSlot = 1; this.returnSlot = -1; this.returnT = 0; this.wheelCd = 0;
     this.train = this.train || new Training(this); // training courses (Practice Range)
+    this.recorder = this.recorder || new Recorder(); // replay theater (replay.js)
     this.burstLeft = 0; this.burstT = 0; this.spin = 0;
     this.pendingMelee = null; this.pendingThrow = null; this.cycleSfxT = 0;
     this.recoil = 0; this.shake = 0; this.flinch = 0; this.landDip = 0;
@@ -348,7 +350,7 @@ export class Game {
     // Keys go through the bindings (binds.js); this.keys holds raw codes plus '@action' entries
     // pressed by the controller / touch buttons.
     document.addEventListener('keydown', (e) => {
-      if (!this.active) return;
+      if (!this.active && !this.theater) return;
       const act = actionOf(e.code);
       if (act === 'scores') { e.preventDefault(); this.showScores = true; }
       const vk = { Digit1: 0, Digit2: 1, Digit3: 2 }[e.code];
@@ -710,6 +712,7 @@ export class Game {
     this.hist = null;
     this.active = false;
     this.setWeather(); // back to a clear sky behind the menu
+    if (this.recorder) this.recorder.end();
     this.myId = null;
     for (const r of this.remotes.values()) r.dispose();
     this.remotes.clear();
@@ -801,8 +804,10 @@ export class Game {
           const p = { ...p0, name: this.alias(p0.id, p0.name, p0.bot) };
           this.players.set(p.id, { id: p.id, name: p.name, color: p.color, k: p.k, d: p.d, team: p.team, sc: p.sc, bot: p.bot, role: p.role || null, gt: p.gt || null, lvl: (p.cos && p.cos.lvl) || 0 });
           this.addRemote(p);
+          this.recorder.cosOf.set(p.id, p.cos || null);
         }
         this.refreshColors();
+        this.recorder.begin(this, m.settings);
         this.hud.show(true);
         this.net.send({ t: 'mods', m: this.mods }); // so everyone sees our attachments
         if (this.onWelcome) this.onWelcome(); // staff send their proof (main.js)
@@ -812,6 +817,8 @@ export class Game {
         this.players.set(m.id, { id: m.id, name: m.name, color: m.color, k: 0, d: 0, team: m.team, sc: 0, bot: m.bot, z: !!m.z, role: m.role || null, gt: m.gt || null, lvl: (m.cos && m.cos.lvl) || 0 });
         this.addRemote(m);
         this.refreshColors();
+        this.recorder.cosOf.set(m.id, m.cos || null);
+        this.recorder.player(this, this.players.get(m.id));
         if (!m.z) this.hud.say(`${m.name} joined`);
         break;
       case 'settings':
@@ -949,6 +956,7 @@ export class Game {
         applyBoards(m.wb);
         this.tourData = m.tr || null;
         this.bkData = m.bk || null;
+        this.recorder.snap(m.tm, m.s);
         this.tagData = m.tg || null;
         this.pickupData = m.pk || null;
         this.rot = m.rot || null;
@@ -984,7 +992,7 @@ export class Game {
       case 'hitc':
         this.hud.hit(m.kill ? 'kill' : m.head ? 'head' : null, !!m.head);
         break;
-      case 'kill': this.onKill(m); break;
+      case 'kill': this.onKill(m); this.recorder.kill(m); break;
       case 'shot': this.remoteShot(m); break;
       case 'fx': this.remoteFx(m); break;
       case 'proj': {
@@ -1017,6 +1025,7 @@ export class Game {
         break;
       }
       case 'end':
+        this.recorder.end();
         if (opts.streamer) { m = { ...m, title: this.unalias(m.title), scores: (m.scores || []).map((s) => ({ ...s, name: this.players.get(s.id) ? this.players.get(s.id).name : s.name })), mvp: m.mvp ? { ...m.mvp, name: this.players.get(m.mvp.id) ? this.players.get(m.mvp.id).name : m.mvp.name } : m.mvp }; }
         if (!this.matchOver && this.playedThisMatch) this.trackMatchEnd(m);
         this.playedThisMatch = false;
@@ -1061,6 +1070,7 @@ export class Game {
         this.hud.end(false);
         for (const p of this.players.values()) { p.k = 0; p.d = 0; p.sc = 0; }
         this.hud.say(`${MODES[m.mode] ? MODES[m.mode].name.toUpperCase() : ''} · ${MAPS[m.map] ? MAPS[m.map].name.toUpperCase() : ''}`);
+        this.recorder.begin(this, { map: m.map, mode: m.mode, customMap: this.rules.customMap });
         break;
     }
   }
@@ -1310,7 +1320,8 @@ export class Game {
       this.fps.last = now;
       if (this.fps.acc >= 0.5) { this.hud.fps(Math.round(this.fps.frames / this.fps.acc)); this.fps.frames = 0; this.fps.acc = 0; }
     }
-    if (this.active) this.update(gdt, now);
+    if (this.theater) this.theater.frame(dt); // replay theater (replay.js)
+    else if (this.active) this.update(gdt, now);
     else this.menuCam(now);
     this.weather.update(gdt, this.camera.position, now);
     if (this.stage) this.runStage(dt, now);

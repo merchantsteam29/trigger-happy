@@ -747,6 +747,21 @@ body.mobile:not(.tablet) .rep-guns { display: none; }
 .cl-season { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; margin: 6px 0; border-radius: 10px; background: rgba(255, 210, 58, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 210, 58, 0.25); }
 .cl-season small { opacity: 0.75; }
 .cl-pts { margin-left: 4px; color: #ffd23a; font-weight: 700; }
+/* Replay theater (replay.js) */
+#theater { position: fixed; inset: 0; z-index: 40; pointer-events: none; color: #fff; }
+#theater > * { pointer-events: auto; }
+#theater.bare > :not(.th-top) { display: none; }
+.th-top { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 12px; background: rgba(10, 8, 20, 0.75); }
+.th-top small { opacity: 0.7; }
+.th-feed { position: absolute; top: 70px; right: 16px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; pointer-events: none; }
+.th-feed div { padding: 3px 10px; border-radius: 6px; background: rgba(10, 8, 20, 0.7); font-size: 13px; }
+.th-who { position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%); padding: 4px 12px; border-radius: 8px; background: rgba(10, 8, 20, 0.6); font-weight: 700; pointer-events: none; }
+.th-bar { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(10, 8, 20, 0.8); }
+.th-bar input[type=range] { flex: 1; min-width: 200px; }
+.th-bar > small { width: 100%; opacity: 0.6; font-size: 11px; }
+.th-time { font-variant-numeric: tabular-nums; min-width: 92px; }
+.th-speed { display: flex; }
+.th-speed button { padding: 4px 8px; font-size: 12px; }
 .ed-body { flex: 1; min-height: 0; display: flex; gap: 14px; }
 .ed-stage { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
 #ed-canvas { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); cursor: crosshair; touch-action: none; }
