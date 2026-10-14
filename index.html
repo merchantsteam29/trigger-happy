@@ -104,6 +104,7 @@
 <link rel="modulepreload" href="js/ziplines.js">
 <link rel="modulepreload" href="js/community.js">
 <link rel="modulepreload" href="js/clanseason.js">
+<link rel="modulepreload" href="js/bracket.js">
 <link rel="modulepreload" href="js/killfx.js">
 <link rel="modulepreload" href="js/poses.js">
 <link rel="modulepreload" href="js/playercard.js">
@@ -160,6 +161,7 @@
   <div id="dmg-nums"></div>
   <div id="spec-bar"></div>
   <div id="zip-hint" class="hidden"><kbd>E</kbd> Ride the zipline</div>
+  <div id="bk-panel" class="hidden"></div>
   <div id="frozen-bar">🧊 FROZEN BY STAFF<small>You can't move or shoot</small></div>
   <div id="killfeed"></div>
   <div id="notice"></div>
@@ -605,6 +607,7 @@
         <label class="check"><input type="checkbox" id="hp-rotate"> Rotate maps after each match</label>
         <label class="check"><input type="checkbox" id="hp-public"> Public: listed in Find Servers</label>
         <button id="hp-restart" class="primary">Restart match with these</button>
+        <button id="hp-bracket" title="Single elimination 1v1s for up to 8 players (bots count). Everyone else watches.">🏆 Start a bracket tournament</button>
         <h3>Match rules</h3>
         <div id="hp-rules"></div>
       </section>

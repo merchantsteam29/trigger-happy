@@ -31,6 +31,7 @@ import { registerCustomMap } from './editor.js';
 import { Training } from './training.js';
 import { buildBoards, applyBoards, boardById, boardCenter, setBroken } from './walls.js';
 import { buildZiplines, zipNear, zipFeet, zipLength, ZIP_SPEED } from './ziplines.js';
+import { bracketPair, bracketHtml, roundName } from './bracket.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -947,6 +948,7 @@ export class Game {
         this.propData = m.pr || null;
         applyBoards(m.wb);
         this.tourData = m.tr || null;
+        this.bkData = m.bk || null;
         this.tagData = m.tg || null;
         this.pickupData = m.pk || null;
         this.rot = m.rot || null;
@@ -969,7 +971,10 @@ export class Game {
             pl.k = a[9]; pl.d = a[10]; pl.sc = a[13];
             if (pl.team !== a[12]) { pl.team = a[12]; teamsChanged = true; }
           }
-          if (id === this.myId) { if (this.me.alive) this.me.hp = a[8]; }
+          if (id === this.myId) {
+            if (this.me.alive) this.me.hp = a[8];
+            if (this.me.alive && !a[7] && this.bkData && !this.deathInfo) { this.me.alive = false; this.ads = false; } // bracket: benched until your match
+          }
           else { const r = this.remotes.get(id); if (r) r.setState(a, m.tm || 0); }
         }
         if (teamsChanged) this.refreshColors();
@@ -1393,7 +1398,7 @@ export class Game {
       if (!this.deathSpectate(dt, now)) { this.endDeathSpectate(); this.deathCam(dt, now); }
     } else {
       // Waiting to spawn (joined mid-round, or out of a Game Night event): watch the players, if any.
-      if (MODES[this.rules.mode].event && [...this.remotes.values()].some((r) => r.alive)) this.specCam(dt, null, true);
+      if ((MODES[this.rules.mode].event || this.rules.mode === 'bracket') && [...this.remotes.values()].some((r) => r.alive)) this.specCam(dt, null, true);
       else this.menuCam(now);
     }
     cam.updateMatrixWorld();
@@ -3080,6 +3085,12 @@ export class Game {
       }
       return bar;
     }
+    if (mode === 'bracket' && this.bkData) {
+      const b = this.bkData, nm = (id) => esc((this.players.get(id) || {}).name || '?');
+      if (b.c < 0) return b.w[6] ? `🏆 ${nm(b.w[6])} WINS THE BRACKET` : 'BRACKET · NEXT MATCH SOON';
+      const [x, y] = bracketPair(b, b.c), mine = this.myId === x || this.myId === y;
+      return `🏆 ${roundName(b.c)} · ${nm(x)} ${b.sc[0]} – ${b.sc[1]} ${nm(y)}<span class="lim"> · first to ${this.rules.scoreLimit}${mine ? " · YOU'RE UP" : ' · watching'}</span>`;
+    }
     if (mode === 'duel' && this.duel) {
       const [round, gun, next] = this.duel, W = WEAPONS[gun];
       return next > 0 ? `NEXT ROUND IN ${next}s` : `ROUND ${round} · <span class="jugg">${W ? W.name.toUpperCase() : ''}</span> · FIRST TO ${this.rules.scoreLimit}`;
@@ -3230,6 +3241,9 @@ export class Game {
     }));
     hud.lowPulse(me.alive && ((me.hp > 0 && me.hp <= this.maxHp * 0.3) || !!this.horrorNear)); // Lights Out: heartbeat when a zombie is close
     hud.captions(opts.captions ? this.capList(now) : []);
+    const bkEl = document.getElementById('bk-panel'), bkOn = !!(this.bkData && this.rules.mode === 'bracket' && !this.matchOver && (!me.alive || this.showScores));
+    if (bkOn !== !bkEl.classList.contains('hidden')) bkEl.classList.toggle('hidden', !bkOn);
+    if (bkOn && now - (this.bkT || 0) > 400) { this.bkT = now; bkEl.innerHTML = bracketHtml(this.bkData, (id) => (this.players.get(id) || {}).name || '?', this.myId); }
     // Watching (spectators, viewers, players knocked out of an event): every player marked through
     // walls, and a live scoreboard.
     const mine = this.players.get(this.myId);

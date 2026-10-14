@@ -1156,6 +1156,17 @@ body.mobile #death .big { font-size: 20px; }
 #spec-bar small { display: block; color: var(--muted); font-size: 11px; }
 #hud.spec #spec-bar { display: block; }
 #zip-hint { position: absolute; left: 50%; top: 60%; transform: translateX(-50%); padding: 6px 14px; border-radius: 8px; background: rgba(10, 8, 20, 0.6); color: #fff; font-weight: 700; font-size: 14px; }
+#bk-panel { position: absolute; left: 50%; top: 110px; transform: translateX(-50%); padding: 10px 12px; border-radius: 12px; background: rgba(10, 8, 20, 0.78); color: #fff; font-size: 12px; pointer-events: none; }
+.bk-tree { display: flex; gap: 14px; align-items: center; }
+.bk-col { display: flex; flex-direction: column; justify-content: space-around; gap: 8px; min-width: 120px; }
+.bk-col > small { opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; font-size: 10px; }
+.bk-m { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15); }
+.bk-m.live { box-shadow: inset 0 0 0 2px #ffd23a; }
+.bk-p { display: flex; justify-content: space-between; gap: 8px; padding: 3px 8px; background: rgba(255,255,255,0.05); white-space: nowrap; }
+.bk-p.win { color: #ffd23a; font-weight: 700; }
+.bk-p.out { opacity: 0.45; text-decoration: line-through; }
+.bk-p.me { color: #4dff9a; }
+.bk-champ .bk-p { font-size: 14px; }
 #zip-hint kbd { background: #ffd23a; color: #111; border-radius: 4px; padding: 1px 6px; margin-right: 6px; }
 #hud.cine > * { visibility: hidden !important; } /* spectating: H hides the HUD */
 #hud.spec #health, #hud.spec #weapon-info, #hud.spec #crosshair, #hud.spec #reload-hint, #hud.spec #death { display: none; }

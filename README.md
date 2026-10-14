@@ -136,6 +136,9 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
   code (R-…) anyone can paste with **Use a code…**. Presets can also be picked when creating a server, and the
   server list shows them.
 - Physics: game speed, move speed, jump height, gravity
+- **🏆 Start a bracket tournament:** a single-elimination 1v1 bracket for everyone in the server (up to 8, bots count;
+  random seeds, byes when there are fewer). Each match is a Duel, first to 3, and only the two fighters play: everyone
+  else watches, with the bracket on screen. The final crowns the champion, then the server goes back to its mode.
 - Bots: add, fill to 8, change difficulty (one bot, or all of them with the difficulty picker), remove. Presets go up to
   **Expert** and **Nightmare** (near-instant reactions, aims for the head). **Auto** (the default)
   gets better when players are beating the bots and eases off when the bots are winning, up to an expert level.

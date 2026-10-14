@@ -5,6 +5,7 @@ import { WEAPON_RULES, ruleLoadout, cleanRules } from './rulesets.js';
 import { NavGrid } from './nav.js';
 import { breakables } from './maps.js';
 import { BOARD_HP, boardById, boardCenter, withoutBoards } from './walls.js';
+import { isFighter, bracketKill, bracketTick, bracketLeave, bracketSnap } from './bracket.js';
 import { Bot, BOT_NAMES, BOT_DIFFS } from './bot.js';
 import { WEATHER, rollWeather } from './weather.js';
 import { COLORS } from './util.js';
@@ -53,6 +54,9 @@ const SND = { roundMs: 90000, fuseMs: 35000, plantMs: 3000, defuseMs: 5000, post
 // same new random loadout (with more players it's a free-for-all with shared loadouts).
 MODES.duel = { name: 'Duel', short: 'DUEL', teams: false, duel: true, score: 5, time: 8,
   desc: '1v1, first to 5. Every kill starts a new round: you both respawn far apart with the same new random loadout. With more players: everyone vs everyone, one shared loadout.' };
+// Bracket (bracket.js): a custom 1v1 tournament started from the Host panel, never picked as a mode.
+MODES.bracket = { name: 'Bracket', short: 'BRACKET', teams: false, duel: true, bracket: true, score: 3, time: 0,
+  desc: 'A 1v1 single-elimination tournament for up to 8 players. Duel rules, first to 3. Everyone else watches.' };
 const DUEL_PRIMARY = ['ar', 'carbine', 'br', 'burst', 'smg', 'pdw', 'vector', 'lmg', 'dmr', 'sniper', 'shotgun', 'autoshot', 'slug', 'doublebarrel', 'crossbow'];
 const DUEL_SECONDARY = ['pistol', 'bpistol', 'handcannon', 'revolver', 'autorev', 'mpistol', 'microsmg'];
 const DUEL_UTILITY = ['frag', 'sticky', 'smoke', 'flash', 'grapple'];
@@ -414,11 +418,11 @@ export class HostLogic {
 
   // "Fill with bots": add bots up to the fill size, and drop one each time a real player joins.
   balanceBots() {
-    if (!this.botFill || this.tour) return; // the tournament's line-up is set when it starts
+    if (!this.botFill || this.tour || this.bk) return; // the tournament's line-up is set when it starts
     const all = [...this.players.values()];
     const humans = all.filter((p) => !p.bot).length;
     const bots = all.filter((p) => p.bot && !p.zombie);
-    const want = Math.max(0, (this.mode.duel ? Math.min(2, this.botFill) : this.botFill) - humans); // Duel: just one opponent
+    const want = Math.max(0, (this.mode.duel && !this.mode.bracket ? Math.min(2, this.botFill) : this.botFill) - humans); // Duel: just one opponent
     for (let i = bots.length; i < want; i++) this.addBot(this.botDiff); // 'auto' follows how the players are doing
     for (let i = want; i < bots.length; i++) this.removePlayer(bots[bots.length - 1 - (i - want)].id);
   }
@@ -476,6 +480,7 @@ export class HostLogic {
     this.checkZombiesEnd();
     this.checkBrEnd();
     if (this.tour && this.tour.ids.delete(id) && this.tour.ids.size <= 1 && this.phase === 'playing') this.endMatch(); // last one left wins
+    if (this.bk && this.phase === 'playing') bracketLeave(this, id);
     if (!p.bot) this.balanceBots(); // a real player left: a bot takes the slot
   }
 
@@ -587,6 +592,7 @@ export class HostLogic {
       p.st = [p.home.x, p.home.y, p.home.z, p.home.yaw, 0, 'pan', 0, 0];
       return;
     }
+    if (this.bk && this.s.mode === 'bracket' && !isFighter(this, p)) { p.alive = false; p.respawnAt = 0; return; } // bracket: only the two fighters play
     const s = this.pickSpawn(p);
     p.alive = true;
     p.hp = this.maxHp(p);
@@ -1104,6 +1110,9 @@ export class HostLogic {
         v.respawnAt = 0; // one life per round
         attacker.score = attacker.kills;
         if (this.sd && this.sd.bomb.carrier === v.id) this.dropBomb(v);
+        break;
+      case 'bracket':
+        bracketKill(this, v);
         break;
       case 'duel':
         if (enemyKill) attacker.score = attacker.kills;
@@ -1729,6 +1738,10 @@ export class HostLogic {
       this.endTitle = winnerTeam === 2 ? 'HUNTERS WIN' : 'PROPS WIN';
     } else if (this.mode.infect) {
       this.endTitle = winnerTeam === 2 ? 'ZOMBIES WIN' : 'SURVIVORS WIN';
+    } else if (this.bk) {
+      const champ = this.bk.done && this.players.get(this.bk.w[6]);
+      this.endTitle = champ ? `${champ.name} WINS THE BRACKET` : 'BRACKET OVER';
+      this.bk.done = true;
     } else if (this.tour) {
       const t = this.tour, rank = this.tourneyRank();
       if (rank.length <= 2 || t.force) {
@@ -1814,6 +1827,8 @@ export class HostLogic {
     }
     const manual = !!(mode || map);
     if (mode && mode !== 'tourney') this.tour = null;
+    if (!mode && this.bk && this.bk.done) mode = this.bk.prev; // the bracket is over: back to the server's mode
+    if (mode !== 'bracket' && (mode || this.s.mode === 'bracket')) { if (!mode) mode = (this.bk && this.bk.prev) || 'ffa'; this.bk = null; }
     if (mode && MODES[mode] && mode !== this.s.mode) {
       this.s.mode = mode;
       this.s.scoreLimit = MODES[mode].score;
@@ -1888,6 +1903,7 @@ export class HostLogic {
       if (this.mode.infect && !this.infected && this.infectAt && now >= this.infectAt) this.startInfection();
       if (this.mode.prop) this.tickProps(now);
       if (this.mode.duel && this.duelNextAt && now >= this.duelNextAt) this.nextDuelRound();
+      if (this.bk) bracketTick(this, now);
       if (this.mode.snd) this.tickSnd(now, dt);
       if (this.zw) this.tickZombies(now);
       // Auto bots: every 15 s, nudge their skill toward an even fight with the real players.
@@ -1932,6 +1948,7 @@ export class HostLogic {
     if (this.brZone) { const z = this.brZone, nx = BR_STAGES[z.shrinkUntil ? z.stage : z.stage + 1]; msg.br = [r2(z.cx), r2(z.cz), r2(z.r), r2(nx ? z.size * nx[2] : z.r), z.shrinkUntil ? 0 : Math.max(0, Math.ceil((z.holdUntil - now) / 1000)), Math.max(2, z.dps)]; }
     // Tournament: [round, final (1/0), ids still in]
     if (this.tour && this.s.mode === 'tourney') msg.tr = [this.tour.round, this.tour.ids.size <= 2 ? 1 : 0, [...this.tour.ids]];
+    if (this.bk && this.s.mode === 'bracket') msg.bk = bracketSnap(this.bk);
     // Broken wooden boards (walls.js): everything else stands.
     if (this.wallHp) { const wb = []; for (const [id, hp] of this.wallHp) if (hp <= 0) wb.push(id); if (wb.length) msg.wb = wb; }
     // Barrels and crates still standing: [id, 1 barrel / 2 crate, x, y, z]

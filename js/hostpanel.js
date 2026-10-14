@@ -1,3 +1,4 @@
+import { startBracket } from './bracket.js';
 import { WEATHER_PICKS } from './weather.js';
 import { BOT_DIFFS } from './bot.js';
 import { MODES, MODE_ORDER, TEAM_COLORS, ZOMBIE_COLOR } from './host.js';
@@ -46,6 +47,12 @@ export class HostPanel {
     $('hp-fill').onclick = () => {
       while (this.logic.players.size < 8) this.logic.addBot($('hp-botdiff').value);
       this.renderPlayers();
+    };
+    $('hp-bracket').onclick = () => {
+      if (!confirm('Start a 1v1 bracket tournament with everyone here (up to 8, bots count)? The current match ends.')) return;
+      const err = startBracket(this.logic);
+      if (err) { alert(err); return; }
+      this.close();
     };
     $('hp-clearbots').onclick = () => {
       for (const p of [...this.logic.players.values()]) if (p.bot) this.logic.removePlayer(p.id);

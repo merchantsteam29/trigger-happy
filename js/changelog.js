@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.8', name: 'Tournament Brackets', banner: 'blood', notes: [
+    'Hosts can start a 1v1 bracket tournament from the Host panel: up to 8 players, bots count',
+    'Each match is a Duel to 3. Everyone else watches, with the bracket on screen, until the final crowns a champion',
+  ] },
   { v: '2026.10.14.7', name: 'Clan Seasons', banner: 'gold', notes: [
     'Clan seasons: every week clans score points from their members (1 per kill, 10 per win, 50 per clan war won)',
     'The top 3 clans each week get tokens (300 / 150 / 75 each), and #1 the Top Clan banner',
