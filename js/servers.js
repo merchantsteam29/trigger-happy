@@ -53,6 +53,7 @@ function clean(code, raw) {
     rules: str(raw.rules, 24), // custom rules preset name (rulesets.js), '' for normal
     motw: str(raw.motw, 16), // Mode of the week id (modeweek.js), '' for normal
     ranked: raw.ranked === 1, sr: int(raw.sr, 0, 5000), // ranked server and its host's rating
+    watch: raw.w === 1, // anyone may 👁 Watch it
     ts: Number(raw.ts) || 0,
   };
 }

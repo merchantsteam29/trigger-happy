@@ -154,6 +154,7 @@ export function defaultSettings(mode = 'ffa', map = 'warehouse') {
     scoreLimit: MODES[mode].score, timeLimit: MODES[mode].time,
     health: 100, respawn: 3, infiniteAmmo: false, headshotsOnly: false, friendlyFire: false, pickups: true, oneShot: false, weapons: 'any', rulesName: '',
     weather: 'random', wx: 'clear', // weather pick, and this match's weather (weather.js)
+    watch: true, // anyone may 👁 Watch (spectate without a player slot)
     ...PHYS_DEFAULTS, ...MODES[mode].preset,
   };
 }
@@ -190,6 +191,7 @@ export class HostLogic {
     if (opts.ranked) this.s.ranked = true; // ranked server: standard rules, SR on (ranked.js)
     if (opts.rules) Object.assign(this.s, cleanRules(opts.rules), { rulesName: String(opts.rules.rulesName || '').slice(0, 24) }); // custom rules preset
     if (WEATHER[opts.weather] || opts.weather === 'random') this.s.weather = opts.weather;
+    if (opts.watch === false) this.s.watch = false;
     this.botCount = 0;
     this.botFill = Math.max(0, Math.min(12, opts.botFill || 0)); // keep humans + bots at this many
     this.botDiff = BOT_DIFFS.includes(opts.botDiff) ? opts.botDiff : 'auto'; // fill bots' difficulty (Create server / host panel)
@@ -409,13 +411,16 @@ export class HostLogic {
     return id;
   }
 
-  // Staff can watch a match invisibly. They prove who they are when connecting (signed lobby code);
-  // anyone else asking to spectate is turned away.
+  // Can people 👁 Watch this server? Game Night events always; otherwise the host's `watch` rule
+  // (never ranked or clan-war servers).
+  watchable() { return !!(this.tour || this.mode.br || (this.s.watch !== false && !this.s.ranked && !this.s.war)); }
+
+  // Staff can watch a match invisibly. They prove who they are when connecting (signed lobby code).
   async addSpectator(id, proof) {
-    // Anyone may watch a Game Night tournament or Battle Royale (no player slot, up to 30 viewers).
+    // Anyone may watch (no player slot, up to 30 viewers) when the server allows it.
     if (proof === 'watch') {
       const viewers = [...this.specs.values()].filter((x) => x.viewer).length;
-      if (!(this.tour || this.mode.br) || viewers >= 30) { this.rawSend(id, { t: 'kicked', reason: viewers >= 30 ? 'Too many people are watching right now.' : 'There is nothing to watch on this server right now.' }); if (this.onKick) this.onKick(id); return; }
+      if (!this.watchable() || viewers >= 30) { this.rawSend(id, { t: 'kicked', reason: viewers >= 30 ? 'Too many people are watching right now.' : 'This server doesn\'t allow spectators.' }); if (this.onKick) this.onKick(id); return; }
       this.specs.set(id, { id, name: 'Viewer', role: null, spec: true, viewer: true });
       this.sendTo(id, { t: 'welcome', id, spec: true, viewer: true, settings: this.s, players: [...this.players.values()].map((q) => this.info(q)) });
       if (this.phase !== 'playing') this.sendTo(id, this.endMsg());

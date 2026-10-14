@@ -1,8 +1,8 @@
 {
-  "version": "2026.10.13.9",
+  "version": "2026.10.14.1",
   "notes": [
-    "Player cards: profiles show your character, a title, your picked stats, favorite gun and ranked division",
-    "Set yours up in Character → Player card, and save it as an image to share"
+    "Spectator camera: watch any server that allows it, with a free camera (mouse wheel sets the speed)",
+    "R watches through a player's eyes, H hides the HUD"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

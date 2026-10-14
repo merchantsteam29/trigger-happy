@@ -247,16 +247,17 @@ export class Hud {
   // Queue medals (ids from medals.js) — shown one at a time near the top of the screen.
   medals(ids, extra = {}) { if (ids.length) this.medalQ.add(ids, extra); }
 
-  // Spectating staff: who you're watching, and the controls.
-  // death: watching others while waiting to respawn (no free camera).
-  spectate(name, free, death = false) {
-    const key = free + '|' + name + '|' + death;
+  // Spectating: who you're watching, and the controls.
+  // death: watching others while waiting to respawn (no free camera). o: { speed, fp }
+  spectate(name, free, death = false, o = {}) {
+    const key = [free, name, death, o.speed, o.fp].join('|');
     if (key === this.lastSpec) return;
     this.lastSpec = key;
+    const view = o.fp ? 'R view from behind' : 'R their view';
     $('spec-bar').innerHTML = death
-      ? `<b>👁 WATCHING</b>${name ? ` · <span>${esc(name)}</span>` : ''}<small>Q / E or click to switch player · mouse to orbit</small>`
-      : `<b>👁 SPECTATING</b>${free ? ' · Free camera' : name ? ` · <span>${esc(name)}</span>` : ''}
-      <small>${free ? 'WASD move · Space / C up / down · Shift fast · F follow players' : 'Q / E or click switch player · mouse orbit · F free camera'}</small>`;
+      ? `<b>👁 WATCHING</b>${name ? ` · <span>${esc(name)}</span>` : ''}<small>Q / E or click to switch player · ${o.fp ? '' : 'mouse to orbit · '}${view} · H hide HUD</small>`
+      : `<b>👁 SPECTATING</b>${free ? ` · Free camera · speed ${o.speed}` : name ? ` · <span>${esc(name)}</span>` : ''}
+      <small>${free ? 'WASD move · Space / C up / down · Shift fast · mouse wheel speed · F follow players · H hide HUD' : `Q / E or click switch player · ${o.fp ? '' : 'mouse orbit · '}${view} · F free camera · H hide HUD`}</small>`;
   }
 
   scope(v) {

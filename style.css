@@ -1155,6 +1155,7 @@ body.mobile #death .big { font-size: 20px; }
 #spec-bar span { font-weight: 700; }
 #spec-bar small { display: block; color: var(--muted); font-size: 11px; }
 #hud.spec #spec-bar { display: block; }
+#hud.cine > * { visibility: hidden !important; } /* spectating: H hides the HUD */
 #hud.spec #health, #hud.spec #weapon-info, #hud.spec #crosshair, #hud.spec #reload-hint, #hud.spec #death { display: none; }
 #frozen-bar { position: absolute; left: 50%; top: 32%; transform: translateX(-50%); display: none; text-align: center; font-size: 26px; font-weight: 800;
   letter-spacing: 4px; color: #9fe4ff; text-shadow: 0 0 18px rgba(80,200,255,0.8), 0 2px 3px #000; }

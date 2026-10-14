@@ -281,6 +281,7 @@
             <div class="join sv-join" title="The 5-letter code from a friend's pause menu or invite link. Works for private servers too.">
               <input id="join-code" maxlength="5" placeholder="CODE" autocomplete="off" spellcheck="false" inputmode="text" autocapitalize="characters">
               <button id="btn-join" class="primary">Join</button>
+              <button id="btn-watch" title="Watch without playing (if the server allows spectators)">👁</button>
             </div>
             <select id="sv-region" title="Filter by region"><option value="">All regions</option></select>
             <button id="sv-create-toggle" class="primary">+ Create server</button>
@@ -341,6 +342,9 @@
             </div>
             <div class="field">
               <label class="check"><input type="checkbox" id="sv-rotate" checked> Rotate maps after each match</label>
+            </div>
+            <div class="field">
+              <label class="check"><input type="checkbox" id="sv-watch" checked> Allow spectators (👁 Watch)</label>
             </div>
           </div>
           <label class="sub">Game mode</label>

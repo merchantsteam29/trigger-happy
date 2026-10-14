@@ -714,7 +714,7 @@ function status(msg, err = false) {
 
 function setBusy(v) {
   busy = v;
-  $('btn-host').disabled = $('btn-join').disabled = v;
+  $('btn-host').disabled = $('btn-join').disabled = $('btn-watch').disabled = v;
 }
 
 $('name').value = settings.name;
@@ -1225,7 +1225,7 @@ function renderMaps() {
 
 // ---------- Servers: browse public servers, create your own ----------
 const serverCfg = {
-  name: '', vis: 'public', max: 12, bots: 0, botDiff: 'auto', weather: 'random', region: guessRegion(), rotate: true,
+  name: '', vis: 'public', max: 12, bots: 0, botDiff: 'auto', weather: 'random', region: guessRegion(), rotate: true, watch: true,
   ...store.get('serverCfg', {}),
 };
 const saveCfg = () => store.set('serverCfg', serverCfg);
@@ -1246,6 +1246,7 @@ function renderCreateForm() {
   $('sv-weather').value = serverCfg.weather || 'random';
   $('sv-regionpick').innerHTML = REGIONS.map((r) => `<option ${r === serverCfg.region ? 'selected' : ''}>${r}</option>`).join('');
   $('sv-rotate').checked = serverCfg.rotate;
+  $('sv-watch').checked = serverCfg.watch !== false;
   document.querySelectorAll('#sv-vis button').forEach((b) => b.classList.toggle('sel', b.dataset.v === serverCfg.vis));
   $('sv-vis-hint').textContent = serverCfg.vis === 'public'
     ? 'Anyone can find it in Find Servers.'
@@ -1258,6 +1259,7 @@ $('sv-botdiff').onchange = () => { serverCfg.botDiff = $('sv-botdiff').value; sa
 $('sv-weather').onchange = () => { serverCfg.weather = $('sv-weather').value; saveCfg(); };
 $('sv-regionpick').onchange = () => { serverCfg.region = $('sv-regionpick').value; saveCfg(); };
 $('sv-rotate').onchange = () => { serverCfg.rotate = $('sv-rotate').checked; saveCfg(); };
+$('sv-watch').onchange = () => { serverCfg.watch = $('sv-watch').checked; saveCfg(); };
 $('sv-rules').onchange = () => { serverCfg.rules = $('sv-rules').value; saveCfg(); };
 document.querySelectorAll('#sv-vis button').forEach((b) => { b.onclick = () => { serverCfg.vis = b.dataset.v; saveCfg(); renderCreateForm(); }; });
 const showCreate = (v) => {
@@ -1324,7 +1326,7 @@ function renderServers() {
       <div class="sv-main"><b>${s.gn ? '🌙 ' : ''}${esc(s.name)}${s.ranked ? ` ${srBadge(s.sr || 1000)}` : ''}</b><small>${s.mode === featuredMode() ? '⭐ ' : ''}${esc(mode)} · ${esc(map)}${s.rules ? ` · <em class="sv-rules">${esc(s.rules)}</em>` : ''}${fr.has(s.code) ? ` · <span class="sv-friends">👥 ${fr.get(s.code).map(esc).join(', ')}</span>` : ''}</small></div>
       ${s.region || pings.get(s.code) ? `<span class="sv-region">${esc(s.region || '')}${pingHtml(pings.get(s.code))}</span>` : '<span></span>'}
       <div class="sv-players ${full ? 'full' : ''}">${s.players}/${s.max}${s.bots ? `<small>+${s.bots} bots</small>` : ''}</div>
-      ${s.mode === 'tourney' || s.mode === 'br' ? `<button data-watch="${esc(s.code)}" title="Watch without playing">👁 Watch</button>` : ''}<button class="primary" data-join="${esc(s.code)}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button>
+      ${s.mode === 'tourney' || s.mode === 'br' || s.watch ? `<button data-watch="${esc(s.code)}" title="Watch without playing">👁 Watch</button>` : ''}<button class="primary" data-join="${esc(s.code)}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button>
     </div>`;
   }).join('');
   el.querySelectorAll('[data-join]').forEach((b) => { b.onclick = () => { $('join-code').value = b.dataset.join; joinLobby(); }; });
@@ -1340,6 +1342,7 @@ function listingInfo() {
     name: hosting.name, max: hosting.max, region: hosting.region, gn: hosting.gn ? 1 : 0, motw: L && L.s.motw ? L.s.motw : '', ranked: L && L.s.ranked ? 1 : 0, sr: myRanked().sr, rules: L ? L.s.rulesName || '' : '',
     mode: L ? L.s.mode : settings.mode, map: L ? L.s.map : settings.map,
     players: all.filter((p) => !p.bot).length, bots: all.filter((p) => p.bot).length,
+    w: L && L.watchable() ? 1 : 0,
   };
 }
 function setPublic(v) {
@@ -2047,7 +2050,7 @@ async function hostLobby(preset = null) {
     try {
       await net.host(code, settings.name || 'Player', settings.color,
         preset ? { map: preset.map, mode: preset.mode, maxPlayers: preset.max, botFill: Math.min(preset.bots, preset.max), gn: !!preset.gn, ranked: !!preset.ranked, war: preset.war || null, rules: preset.rules || null, motw: preset.motw || null, customMap: preset.customMap || null }
-          : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, weather: serverCfg.weather, rules }, myCos());
+          : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, weather: serverCfg.weather, watch: serverCfg.watch !== false, rules }, myCos());
       net.logic.s.rotate = preset ? preset.rotate : serverCfg.rotate;
       net.logic.onFlag = (p, details) => moderation.autoFlag({ target: p.name, lobby: net.code, details });
       hosting = preset
@@ -2072,7 +2075,7 @@ async function hostLobby(preset = null) {
 
 // spectate: staff only; joins invisibly with a signed proof instead of a player.
 async function joinLobby(spectateArg = false) {
-  const watch = spectateArg === 'watch'; // public viewer of a Game Night event
+  const watch = spectateArg === 'watch'; // 👁 Watch: a viewer without a player slot
   const spectate = spectateArg === true || watch; // only an explicit true (never a click event)
   if (busy) return;
   if (moderation.myBan()) { moderation.lastBan = null; moderation.applyMine(); return; }
@@ -2125,6 +2128,7 @@ function leave(reason) {
 
 $('btn-host').onclick = () => hostLobby();
 $('btn-join').onclick = () => joinLobby();
+$('btn-watch').onclick = () => joinLobby('watch');
 const touch = new TouchControls(game, () => {
   game.setLocked(false);
   touch.show(false);

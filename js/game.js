@@ -375,6 +375,7 @@ export class Game {
     });
     this.canvas.addEventListener('wheel', (e) => {
       // Trackpads fire a stream of wheel events; one switch per notch.
+      if ((this.spectating || this.deathSpecOn) && e.deltaY && !this.matchOver) { this.specSpeed = Math.max(2, Math.min(60, (this.specSpeed || 9) * (e.deltaY < 0 ? 1.25 : 0.8))); return; } // free camera speed
       if (!this.locked || !this.me.alive || this.matchOver || this.wheelCd > 0 || !e.deltaY) return;
       this.wheelCd = 0.14;
       this.cycleSlot(Math.sign(e.deltaY));
@@ -715,8 +716,8 @@ export class Game {
     this.deathInfo = null;
     this.endDeathSpectate();
     this.spectating = this.frozen = false;
-    this.specPos = null;
-    this.hud.el.classList.remove('spec', 'frozen');
+    this.specPos = this.specTarget = null; this.specFree = this.specFP = false;
+    this.hud.el.classList.remove('spec', 'frozen', 'cine');
     this.rules = defaultSettings();
     phys.gravity = 1;
     this.zone = null;
@@ -1049,6 +1050,7 @@ export class Game {
     const me = this.me;
     this.endKillcam();
     this.endDeathSpectate(); // back to your own view
+    this.hud.el.classList.remove('cine');
     me.pos.set(m.p[0], m.p[1], m.p[2]);
     me.vel.set(0, 0, 0);
     me.yaw = m.yaw;
@@ -1406,6 +1408,7 @@ export class Game {
       if (this.killcam) this.replayRemote(r);
       r.update(dt);
       if (this.killcam && r.id === this.killcam.killer) { r.root.visible = r.limbs.visible = false; r.tag.visible = false; } // we're looking through their eyes
+      else if (this.specFP && r === this.specTarget && !this.me.alive) { r.root.visible = r.limbs.visible = false; r.tag.visible = false; } // spectating from their view
       if (r.disguise && !this.isAlly(r)) r.tag.visible = false; // Prop Hunt: no name tags on hidden props
       if (r.stepped && r.crouch < 0.5 && r.pos.distanceTo(cam.position) < 32) this.posSound(this.stepSound(r.pos.x, r.pos.y, r.pos.z), r.pos, r.sprint > 0.5 ? 0.6 : 0.42, this.isAlly(r) ? null : { k: 'step' + r.id, label: r.sprint > 0.5 ? 'Running' : 'Footsteps', enemy: true, pri: 1 }); // teammates' steps aren't captioned
       // Enemies reloading nearby can be heard.
@@ -1437,8 +1440,9 @@ export class Game {
     this.hud.updateDmgNums(this.camera, dt);
   }
 
-  // Spectating staff: follow a player from behind (mouse orbits, Q / E or click to switch), or
-  // F for a free camera (WASD, Space up, Ctrl / C down, Shift faster).
+  // Spectating: follow a player from behind (mouse orbits, Q / E or click to switch, R for their own
+  // view), or F for a free camera (WASD, Space up, Ctrl / C down, Shift faster, mouse wheel sets the
+  // speed). H hides the HUD for clean shots.
   // list: who can be watched (default: everyone alive); free: allow the F free camera.
   specCam(dt, list = null, free = true) {
     const me = this.me, cam = this.camera, k = this.keys;
@@ -1451,30 +1455,43 @@ export class Game {
     this.specClick = this.mouse.left;
     if (edge('KeyE') || click) this.specIdx = (this.specIdx || 0) + 1;
     if (edge('KeyQ')) this.specIdx = (this.specIdx || 0) - 1;
+    if (edge('KeyR')) this.specFP = !this.specFP;
+    if (edge('KeyH')) this.hud.el.classList.toggle('cine');
     const cp = Math.cos(me.pitch);
     if (this.specFree || !list.length) {
       if (!this.specPos) this.specPos = cam.position.clone();
-      const sp = (this.down('sprint') ? 22 : 9) * dt;
+      if (!this.specVel) this.specVel = new THREE.Vector3();
+      const sp = (this.specSpeed || 9) * (this.down('sprint') ? 2.5 : 1);
       const f = (this.down('forward') ? 1 : 0) - (this.down('back') ? 1 : 0), s = (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0);
       const u = (this.down('jump') ? 1 : 0) - (this.down('crouch') ? 1 : 0);
-      this.specPos.x += (-Math.sin(me.yaw) * cp * f + Math.cos(me.yaw) * s) * sp;
-      this.specPos.y += (Math.sin(me.pitch) * f + u) * sp;
-      this.specPos.z += (-Math.cos(me.yaw) * cp * f - Math.sin(me.yaw) * s) * sp;
+      _c.set(-Math.sin(me.yaw) * cp * f + Math.cos(me.yaw) * s, Math.sin(me.pitch) * f + u, -Math.cos(me.yaw) * cp * f - Math.sin(me.yaw) * s);
+      if (_c.lengthSq() > 1) _c.normalize();
+      this.specVel.lerp(_c.multiplyScalar(sp), Math.min(1, dt * 7)); // eases in and out
+      this.specPos.addScaledVector(this.specVel, dt);
+      const b = MAPS[this.mapId].bounds * 1.5; // stay around the map
+      this.specPos.set(Math.max(-b, Math.min(b, this.specPos.x)), Math.max(-4, Math.min(b, this.specPos.y)), Math.max(-b, Math.min(b, this.specPos.z)));
       cam.position.copy(this.specPos);
       cam.rotation.set(me.pitch, me.yaw, 0);
       this.specTarget = null;
     } else {
       const i = ((this.specIdx || 0) % list.length + list.length) % list.length;
       const r = list[i], d = 3.4;
-      _c.set(r.pos.x, r.pos.y + 1.5, r.pos.z);
-      cam.position.set(_c.x + Math.sin(me.yaw) * cp * d, _c.y - Math.sin(me.pitch) * d + 0.4, _c.z + Math.cos(me.yaw) * cp * d);
-      cam.lookAt(_c);
+      if (this.specFP) { // through their eyes
+        r.headPos(_c);
+        cam.position.set(_c.x - Math.sin(r.yaw) * 0.12, _c.y + 0.04, _c.z - Math.cos(r.yaw) * 0.12);
+        cam.rotation.set(r.pitch, r.yaw, 0);
+      } else {
+        _c.set(r.pos.x, r.pos.y + 1.5, r.pos.z);
+        cam.position.set(_c.x + Math.sin(me.yaw) * cp * d, _c.y - Math.sin(me.pitch) * d + 0.4, _c.z + Math.cos(me.yaw) * cp * d);
+        cam.lookAt(_c);
+      }
       this.specTarget = r;
+      if (this.specVel) this.specVel.set(0, 0, 0);
     }
     // The minimap and sounds follow the camera.
     me.pos.set(cam.position.x, cam.position.y - 1.6, cam.position.z);
     const p = this.specTarget && this.players.get(this.specTarget.id);
-    this.hud.spectate(p ? p.name : null, this.specFree || !list.length, !free);
+    this.hud.spectate(p ? p.name : null, this.specFree || !list.length, !free, { speed: Math.round(this.specSpeed || 9), fp: !!this.specFP && !this.specFree && !!list.length });
   }
 
   // After dying: watch the killer, then other living players (teammates only in team modes)
@@ -1500,7 +1517,7 @@ export class Game {
       this.me.pitch = -0.25;
     }
     const keep = this.me.pos.clone();
-    this.specCam(dt, list, !out); // out of the event for good: free camera allowed (F)
+    this.specCam(dt, list, out); // out of the event for good: free camera allowed (F)
     this.me.pos.copy(keep); // stay where we died (radar, sounds)
     return true;
   }
@@ -1508,7 +1525,8 @@ export class Game {
   endDeathSpectate() {
     if (!this.deathSpecOn) return;
     this.deathSpecOn = false;
-    this.hud.el.classList.remove('dspec');
+    this.specTarget = null; this.specFree = false;
+    this.hud.el.classList.remove('dspec', 'cine');
   }
   deathCam(dt, now) {
     const di = this.deathInfo, cam = this.camera;

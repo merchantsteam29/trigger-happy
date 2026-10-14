@@ -75,6 +75,8 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 - Host → client messages (`game.js` `onNet`): `welcome`, `snap`, `spawn`, `dmg`, `hitc`, `kill`,
   `notice`, `start`, `end`, `settings`, `pjoin`, `pleave`, `loadout`, `pickup`, `propbreak`, `spray`,
   `ping`, `kicked` (with `reason`), `warend`, `tourney`, `vc`, `votes` / `voted`, staff messages.
+- Spectators: `HostLogic.addSpectator` takes staff (signed proof, invisible) and viewers (`'watch'`, no slot, up to 30) when
+  `watchable()` (host rule `watch`, never ranked / clan wars; Game Night events always). The camera is `game.js` `specCam`.
 - Bots (`bot.js`) run inside the host (`p.bot`), with A* paths over `nav.js` and "Auto" skill that
   follows how real players are doing (`HostLogic.botSkill`).
 - Modes are entries in `MODES` (`host.js`) with flags: `teams`, `redBlue`, `infect` (Infection

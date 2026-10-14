@@ -275,6 +275,19 @@ When a match ends, the **MVP** steps onto a stage and does their **victory pose*
 in the match sees it. Everyone has **Cheer**; Flex, Finger Guns, Dab, Heart Hands, Take a Bow, Floss, Spin Jump and
 Levitate are in the **Shop** (🪙 200 to 500). Pick yours in **Character → Victory poses**.
 
+## Spectating
+
+Watch a match without playing: **👁 Watch** on a server in **Find Servers**, or type a code and press **👁** next to
+**Join**. Viewers don't take a player slot (up to 30 per server). Hosts can turn it off (**Allow spectators** in Create
+server or the Host panel); ranked and clan-war servers can't be watched.
+
+- **Follow a player:** Q / E or click to switch, the mouse orbits, **R** watches through their eyes.
+- **Free camera (F):** fly anywhere with WASD, Space / C up and down, Shift faster, and the **mouse wheel** sets the speed.
+- **H** hides the HUD for clean shots.
+
+After dying in a normal match you can watch other players (R and H work too), but the free camera is only for spectators
+and players who are out for good (Battle Royale, Last Man Standing, a Tournament).
+
 ## Banners
 
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
@@ -326,9 +339,9 @@ banner for that division and every one below it (Contender, Veteran, Elite, Mast
   "10 MINS UNTIL TOURNAMENT. LEAVE SOON IF YOU DON'T WANT TO PARTICIPATE". Everyone still in the server is in.
   Free-for-all rounds (first to 15, 5 minutes, new map each) where the top half go through, then a **1v1 final**
   (first to 7). The champion gets 🪙 750 and the Champion wrap, the runner-up 🪙 250.
-- **Watch:** while a Battle Royale or Tournament is on, that server has a **👁 Watch** button in the server list.
-  Watchers (and players knocked out) see every player marked through walls, a live scoreboard, and can use a free
-  camera (F).
+- **Watch:** while a Battle Royale or Tournament is on, that server can always be watched (**👁 Watch**, see
+  Spectating). Watchers (and players knocked out) see every player marked through walls, a live scoreboard, and can use
+  the free camera (F).
 - **Game Night voice:** pause menu → **🎤 Join Game Night voice** talks with everyone in the Game Night server (needs
   a gamertag; push to talk and volume follow your voice settings).
 - The owner sets the schedule (days, start time, length, time zone) in **Mod Panel → Announce**. Until then it's every

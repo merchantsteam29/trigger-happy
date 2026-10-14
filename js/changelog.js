@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.1', name: 'Spectator Camera', banner: 'matrix', notes: [
+    'Watch any server that allows it: 👁 Watch in Find Servers, or type a code and press 👁. Viewers take no player slot',
+    'Free camera (F): fly anywhere, mouse wheel sets the speed. R watches through a player\'s eyes, H hides the HUD',
+    'Hosts can turn spectators off in Create server or the Host panel',
+  ] },
   { v: '2026.10.13.9', name: 'Player Cards', banner: 'galaxy', notes: [
     'Profiles are now player cards: your character in your outfit, a title, your stats, favorite gun and ranked division',
     'Set yours up in Character → Player card: pick a title from your achievements and the four stats to show',
