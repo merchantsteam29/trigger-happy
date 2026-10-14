@@ -30,6 +30,7 @@ import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 import { registerCustomMap } from './editor.js';
 import { Training } from './training.js';
 import { buildBoards, applyBoards, boardById, boardCenter, setBroken } from './walls.js';
+import { buildZiplines, zipNear, zipFeet, zipLength, ZIP_SPEED } from './ziplines.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -328,6 +329,7 @@ export class Game {
     }
     this.mapGroup = buildMapScene(this.scene, id);
     buildBoards(this.mapGroup);
+    buildZiplines(this.mapGroup, MAPS[id].ziplines);
     spookySky(this.scene);
     this.mapId = id;
     this.pumpkins.place(id);
@@ -1059,7 +1061,7 @@ export class Game {
   }
 
   respawn(m) {
-    this.mantle = null; this.wallrun = null; this.lastWall = null;
+    this.mantle = null; this.wallrun = null; this.lastWall = null; this.zip = null;
     if (this.grapple) this.endGrapple(false);
     this.utilCd = 0;
     const me = this.me;
@@ -1571,6 +1573,7 @@ export class Game {
       if (p >= 1) { this.mantle = null; me.onGround = true; this.coyote = 0; }
       return;
     }
+    if (this.updateZip(dt)) return;
     let f = (this.down('forward') ? 1 : 0) - (this.down('back') ? 1 : 0);
     let s = (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0);
     let analog = 1;
@@ -2165,6 +2168,44 @@ export class Game {
   }
 
   // ---------- Grappling hook ----------
+  // Ziplines (ziplines.js): Use (E) near a cable grabs it and you ride the way you face; jumping or
+  // reaching the end lets go (keeping your speed). Returns true while riding (no normal movement).
+  updateZip(dt) {
+    const me = this.me, lines = MAPS[this.mapId] && MAPS[this.mapId].ziplines;
+    const use = this.down('use'), usePress = use && !this.zipUseHeld;
+    this.zipUseHeld = use;
+    const hint = !!(lines && !this.zip && me.alive && !this.matchOver && zipNear(lines, me.pos));
+    if (hint !== !!this.zipHint) { this.zipHint = hint; document.getElementById('zip-hint').classList.toggle('hidden', !hint); }
+    if (!lines || !me.alive) { this.zip = null; return false; }
+    if (!this.zip) {
+      if (!usePress || this.grapple || this.matchOver) return false;
+      const n = zipNear(lines, me.pos);
+      if (!n) return false;
+      const l = lines[n.i];
+      _c.set(-Math.sin(me.yaw), 0, -Math.cos(me.yaw)); // the way you face picks the direction
+      const dir = (l[3] - l[0]) * _c.x + (l[5] - l[2]) * _c.z >= 0 ? 1 : -1;
+      this.zip = { i: n.i, t: n.t, dir };
+      if (this.wallrun) this.endWallrun();
+      sfx.harpoon ? sfx.harpoon(0.5) : sfx.equip(0.7);
+      document.getElementById('zip-hint').classList.add('hidden'); this.zipHint = false;
+    }
+    const z = this.zip, l = lines[z.i], len = zipLength(l);
+    const jump = this.down('jump'), jumpNow = jump && !this.jumpHeld;
+    this.jumpHeld = jump;
+    z.t += (z.dir * ZIP_SPEED * dt) / len;
+    const end = z.t <= 0 || z.t >= 1;
+    z.t = Math.max(0, Math.min(1, z.t));
+    zipFeet(l, z.t, me.pos);
+    me.vel.set(((l[3] - l[0]) / len) * ZIP_SPEED * z.dir, ((l[4] - l[1]) / len) * ZIP_SPEED * z.dir, ((l[5] - l[2]) / len) * ZIP_SPEED * z.dir);
+    me.onGround = false;
+    if (end || jumpNow) {
+      this.zip = null;
+      if (jumpNow) me.vel.y = Math.max(me.vel.y, JUMP * this.rules.jump * 0.7);
+      sfx.jump(0.35);
+    }
+    return true;
+  }
+
   fireGrapple(w) {
     if (this.util <= 0 || this.grapple) { sfx.empty(0.6); return; }
     this.camBasis();

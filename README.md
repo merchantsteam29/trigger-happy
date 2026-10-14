@@ -168,6 +168,11 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
 | Arctic Base | Big snowy research base: labs and barracks with roof access, a radar tower, fuel tanks and a frozen lake |
 | Neon Streets | Night city blocks with shops you can walk through, alleys, parked cars and a raised highway down the middle |
 | Haunted Manor | A dark manor at night: three rooms inside, outside stairs up to a roof terrace with an attic tower, graveyards with a crypt on both sides, hedges, a pumpkin patch and dead trees |
+| Skyline | Sunset city: a tall tower, a brick block and apartments with stairs up the outside, a climbable kiosk in the plaza, and **ziplines** between the roofs |
+| Farmstead | Sunny farm: a big barn with hay lofts at both ends, silos, farmhouses with boarded windows, sheds and a cornfield to sneak through |
+
+**Ziplines** (Skyline): stand under a cable (or by its post) and press **E** to grab it. You ride the way you're facing;
+jump to let go, or ride to the end.
 
 ## Loadout
 

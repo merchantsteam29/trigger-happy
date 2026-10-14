@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.5', name: 'Two New Maps', banner: 'sunset', notes: [
+    'Skyline: a sunset city with rooftops linked by ziplines. Press E under a cable to ride it',
+    'Farmstead: a barn with hay lofts, silos, farmhouses and a cornfield',
+  ] },
   { v: '2026.10.14.4', name: 'Editor Upgrades', banner: 'sunset', notes: [
     'Map editor: ramps, jump pads, and health, ammo and power weapon pickups',
     'Spawns can be red or blue: team modes spawn each team on its own side',

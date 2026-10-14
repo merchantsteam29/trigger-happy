@@ -6,7 +6,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 export const boxes = [];
 export const spawns = [];
 export const breakables = []; // wooden boards (mat 'boards', id `brk`): see walls.js
-export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets', 'manor'];
+export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets', 'manor', 'skyline', 'farm'];
 // Short descriptions for the map pickers and the end-of-match vote.
 export const MAP_BLURB = {
   warehouse: 'Indoor · mezzanines', yard: 'Outdoor · containers', town: 'Rooftops · houses', pit: 'Small · jump pads',
@@ -16,6 +16,7 @@ export const MAP_BLURB = {
   castle: 'Keep · ramparts', hangar: 'Plane · catwalks', mall: 'Shops · 2 floors',
   temple: 'Pyramid · jungle', oilrig: 'Decks · derrick', subway: 'Tracks · platforms',
   skyislands: 'Floating · don\'t fall', arctic: 'Snow · big base', neonstreets: 'Night city · highway', manor: 'Night · graveyard · roof',
+  skyline: 'City · ziplines', farm: 'Farm · barn · silos',
 };
 // Render quality (lowered on mobile before any map is built).
 export const quality = { shadowSize: 2048, pointLights: true, decor: true }; // decor: off in Low-end graphics
@@ -1335,6 +1336,85 @@ export const MAPS = {
       for (let x = -34; x <= 34; x += 4) lines.push(new THREE.BoxGeometry(2, 0.02, 0.18).translate(x, 0.011, 6));
       for (let x = -34; x <= 34; x += 4) lines.push(new THREE.BoxGeometry(2, 0.02, 0.18).translate(x, 0.011, -6));
       addMerged(g, lines, M.roadLine);
+    },
+  },
+
+  // Sunset city: towers with stairs up the outside and ziplines between the roofs (ziplines.js).
+  skyline: {
+    name: 'Skyline',
+    theme: { sky: '#f3a46b', fog: [55, 160], hemi: ['#ffe0c0', '#4a3c55', 1.8], sun: ['#ffb56b', 2.8, [-35, 26, 12]] },
+    bounds: 38,
+    hills: [[0, 4.3, 0, 3], [-14, 0, 2, 3.5], [14, 0, -2, 3.5], [-28, 12.3, -18, 3], [28, 12.3, 18, 3]],
+    // [ax, ay, az, bx, by, bz]: each listed with its 180° twin
+    ziplines: [
+      [-23, 14.9, -13, 0, 6.9, 0], [23, 14.9, 13, 0, 6.9, 0], // tower roofs down to the plaza
+      [-28, 14.9, -12.6, -29, 8.9, 12], [28, 14.9, 12.6, 29, 8.9, -12], // towers across the street
+      [-13, 10.9, -14.6, 29, 8.9, -13], [13, 10.9, 14.6, -29, 8.9, 13], // long lines over the street
+    ],
+    build({ add, add2, crate2, spawn2, stairs, building }) {
+      add(-38, -1, -28, 38, 0, 28, 'asphalt');
+      add(-38, 0, 27, 38, 7, 28, 'officeExt');
+      add(-38, 0, -28, 38, 7, -27, 'officeExt');
+      add(37, 0, -27, 38, 7, 27, 'officeExt');
+      add(-38, 0, -27, -37, 7, 27, 'officeExt');
+      // A: the tall tower (12 m), stairs up its side
+      building(-34, -24, -22, -12, 12, [{ side: 'n', at: -28, w: 2 }, { side: 'w', at: -18, w: 1.4, y0: 1.2, h: 1 }, { side: 's', at: -28, w: 1.4, y0: 1.2, h: 1 }], { mat: 'officeExt', roofMat: 'metalFloor' });
+      stairs(-22, -24, -20.2, -12, 0, 12.3, '-z');
+      add2(-32, 12.3, -22, -30.5, 13.3, -20.5, 'ac');
+      // B: brick block (8 m)
+      building(-18, -24, -8, -14, 8, [{ side: 'n', at: -13, w: 2 }, { side: 'w', at: -19, w: 1.8 }, { side: 'n', at: -10, w: 1.2, y0: 1.2, h: 1 }], { mat: 'brick', roofMat: 'metalFloor' });
+      stairs(-8, -24, -6.2, -14, 0, 8.3, '-z');
+      // C: apartments (6 m)
+      building(-34, 6, -24, 20, 6, [{ side: 'e', at: 10, w: 2 }, { side: 's', at: -29, w: 2 }, { side: 'e', at: 16, w: 1.4, y0: 1.2, h: 1 }], { mat: 'brickDark', roofMat: 'metalFloor', parapet: ['w'] });
+      stairs(-24, 12, -22.2, 20, 0, 6.3, '+z');
+      // The plaza in the middle: a kiosk you can climb
+      building(-5, -4, 5, 4, 4, [{ side: 's', at: 0, w: 2 }, { side: 'n', at: 0, w: 2 }], { mat: 'concreteWall', roofMat: 'metalFloor', boards: false }, add);
+      stairs(5, -4, 6.8, 4, 0, 4.3, '-z');
+      // Street cover
+      add2(-14, 0, -7, -12, 1.4, -3, 'carRed');
+      add2(-22, 0, 1, -18, 1.4, 3, 'carBlue');
+      add2(-16, 0, 9, -12, 1, 9.4, 'barrier');
+      add2(-3, 0, -13, 3, 1, -12.6, 'barrier');
+      crate2(-2, -9); crate2(-9, 10); crate2(-30, -6); crate2(-30, -6, 1.2);
+      for (const [x, y, z] of [[-36, 0, -2], [-20, 0, -6], [-10, 0, -10], [-30, 0, 24], [-12, 0, 24], [-28, 12.3, -18], [-13, 8.3, -19], [-2, 0, -16]]) spawn2(x, y, z);
+    },
+  },
+
+  // A farm on a sunny day: a big barn with hay lofts, silos, farmhouses, sheds and a cornfield.
+  farm: {
+    name: 'Farmstead',
+    theme: { sky: '#9cc8ec', fog: [60, 150], hemi: ['#eef6ff', '#6b5a38', 1.9], sun: ['#fff2d4', 2.8, [30, 42, 18]] },
+    bounds: 34,
+    hills: [[0, 0, 0, 4], [-26, 0, -1, 3], [26, 0, 1, 3], [-14, 0, -12, 3.5], [14, 0, 12, 3.5]],
+    build({ add, add2, spawn2, stairs, building }) {
+      add(-34, -1, -24, 34, 0, 24, 'grass');
+      add(-34, 0, 23, 34, 5, 24, 'hedge');
+      add(-34, 0, -24, 34, 5, -23, 'hedge');
+      add(33, 0, -23, 34, 5, 23, 'hedge');
+      add(-34, 0, -23, -33, 5, 23, 'hedge');
+      // The barn: doors on every side, a hay loft at each end
+      building(-8, -6, 8, 6, 6, [{ side: 's', at: 0, w: 3, h: 3 }, { side: 'n', at: 0, w: 3, h: 3 }, { side: 'w', at: 0, w: 2.4, h: 2.6 }, { side: 'e', at: 0, w: 2.4, h: 2.6 },
+        { side: 's', at: -5, w: 1.2, y0: 3.8, h: 1 }, { side: 'n', at: 5, w: 1.2, y0: 3.8, h: 1 }], { mat: 'wood', roofMat: 'roof', boards: false }, add);
+      add2(-7.7, 3, -5.7, -4.6, 3.3, 5.7, 'wood');
+      stairs(-4.6, 3.7, -2.8, 5.7, 0, 3.3, '-x', 'wood');
+      add2(-2, 0, -4, -0.8, 1, -2.8, 'hay');
+      add2(-7.4, 3.3, -5.4, -6.2, 4.3, -4.2, 'hay');
+      // Silos
+      add2(-26, 0, -20, -22, 12, -16, 'tank');
+      add2(-20, 0, -21, -17, 8, -18, 'tank');
+      // Farmhouses (boarded windows and back door)
+      building(-31, -6, -22, 4, 4, [{ side: 'e', at: -1, w: 1.8 }, { side: 'n', at: -27, w: 1.8 }, { side: 's', at: -27, w: 1.4, y0: 1.1, h: 1 }, { side: 'w', at: 0, w: 1.4, y0: 1.1, h: 1 }], { mat: 'wood', roofMat: 'roof' });
+      // Sheds
+      building(10, 10, 18, 16, 3.2, [{ side: 's', at: 14, w: 2.2 }, { side: 'w', at: 13, w: 1.8 }, { side: 'n', at: 14, w: 1.2, y0: 1.1, h: 0.9 }], { mat: 'wood', roofMat: 'roof' });
+      // Cornfield rows (cut through the middle)
+      for (let i = 0; i < 5; i++) { const z = -22 + i * 2; add2(12, 0, z, 20, 2.2, z + 0.6, 'hedge'); add2(21.6, 0, z, 30, 2.2, z + 0.6, 'hedge'); }
+      // Cover
+      add2(-14, 0, 8, -6, 1.1, 8.15, 'fence');
+      add2(-12, 0, -9, -9, 0.8, -8.2, 'wood');
+      add2(-14, 0, -3, -12.8, 1, -1.8, 'hay'); add2(-14, 1, -3, -12.8, 2, -1.8, 'hay');
+      add2(-6, 0, 12, -4.8, 1, 13.2, 'hay'); add2(-4.8, 0, 12, -3.6, 1, 13.2, 'hay');
+      add2(-20, 0, 6, -17, 2, 8, 'carGreen'); // tractor
+      for (const [x, y, z] of [[-32, 0, -12], [-32, 0, 12], [-14, 0, -20], [-2, 0, -20], [-10, 0, 20], [-20, 0, 10], [-6, 3.3, 0], [-26, 0, -1]]) spawn2(x, y, z);
     },
   },
 
