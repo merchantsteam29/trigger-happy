@@ -4,6 +4,7 @@ import { WEAPONS, GUNGAME_LADDER, SLOTS } from './weapons.js';
 import { WEAPON_RULES, ruleLoadout, cleanRules } from './rulesets.js';
 import { NavGrid } from './nav.js';
 import { Bot, BOT_NAMES, BOT_DIFFS } from './bot.js';
+import { WEATHER, rollWeather } from './weather.js';
 import { COLORS } from './util.js';
 import { sanitizeCos, randomCos } from './missions.js';
 import { cleanModMap, randomMods } from './mods.js';
@@ -152,6 +153,7 @@ export function defaultSettings(mode = 'ffa', map = 'warehouse') {
     mode, map, rotate: true,
     scoreLimit: MODES[mode].score, timeLimit: MODES[mode].time,
     health: 100, respawn: 3, infiniteAmmo: false, headshotsOnly: false, friendlyFire: false, pickups: true, oneShot: false, weapons: 'any', rulesName: '',
+    weather: 'random', wx: 'clear', // weather pick, and this match's weather (weather.js)
     ...PHYS_DEFAULTS, ...MODES[mode].preset,
   };
 }
@@ -187,6 +189,7 @@ export class HostLogic {
     if (opts.motw) this.s.motw = String(opts.motw).slice(0, 16); // a Mode of the week server (modeweek.js)
     if (opts.ranked) this.s.ranked = true; // ranked server: standard rules, SR on (ranked.js)
     if (opts.rules) Object.assign(this.s, cleanRules(opts.rules), { rulesName: String(opts.rules.rulesName || '').slice(0, 24) }); // custom rules preset
+    if (WEATHER[opts.weather] || opts.weather === 'random') this.s.weather = opts.weather;
     this.botCount = 0;
     this.botFill = Math.max(0, Math.min(12, opts.botFill || 0)); // keep humans + bots at this many
     this.botDiff = BOT_DIFFS.includes(opts.botDiff) ? opts.botDiff : 'auto'; // fill bots' difficulty (Create server / host panel)
@@ -218,6 +221,7 @@ export class HostLogic {
 
   beginMatchState() {
     this.phase = 'playing';
+    this.rollWx();
     this.firstBlood = false;
     this.vote = null; // end-of-match map vote (see endMatch)
     this.mvp = null;
@@ -1785,11 +1789,17 @@ export class HostLogic {
     for (const p of this.players.values()) if (!this.tour || this.s.mode !== 'tourney' || this.tour.ids.has(p.id)) this.spawn(p);
   }
 
+  // This match's weather from the host's pick (practice is always clear).
+  rollWx() {
+    this.s.wx = this.s.mode === 'practice' ? 'clear' : WEATHER[this.s.weather] ? this.s.weather : rollWeather();
+  }
+
   applySettings(partial) {
     // Ranked servers keep the standard rules (only map rotation can change).
     if (this.s.ranked) partial = 'rotate' in partial ? { rotate: partial.rotate } : {};
     const weaponsBefore = this.s.weapons;
     Object.assign(this.s, partial);
+    if ('weather' in partial) this.rollWx();
     if ('weapons' in partial && partial.weapons !== weaponsBefore) {
       this.broadcast({ t: 'notice', text: `Weapons: ${(WEAPON_RULES[this.s.weapons] || WEAPON_RULES.any).name} (from your next life)` });
     }

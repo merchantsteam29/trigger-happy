@@ -22,6 +22,7 @@ import { applyColorblind, pal } from './access.js';
 import { SPRAY_PALETTE } from './clans.js';
 import { setVolume, setFeedbackSounds, hitSound, killSound } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
+import { Weather, WEATHER } from './weather.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 import { registerCustomMap } from './editor.js';
@@ -102,6 +103,7 @@ export class Game {
     this.mapId = null;
     this.mapGroup = null;
     this.pumpkins = new Pumpkins(this.scene); // Halloween event only
+    this.weather = new Weather(this.scene); // rain / fog / thunderstorm, picked by the host (weather.js)
 
     this.vm = new Viewmodel();
     this.mods = {}; // weapon id -> attachments (set from the loadout screen)
@@ -130,6 +132,7 @@ export class Game {
     });
     this.fovK = 1; // widens the view on portrait screens (see resize)
     onOpts((o) => {
+      if (this.weather && this.weather.fx !== (o.weatherFx !== false)) this.setWeather();
       this.vm.camera.fov = o.vmFov * this.fovK;
       this.vm.camera.updateProjectionMatrix();
       if (!this.active || !this.ads) { this.camera.fov = o.fov * this.fovK; this.camera.updateProjectionMatrix(); }
@@ -216,9 +219,11 @@ export class Game {
       this.mapGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.isMesh && o.material && !o.material.userData.shared) o.material.dispose(); });
       this.mapGroup = buildMapScene(this.scene, this.mapId);
       spookySky(this.scene);
+      this.weather.mapBuilt(this.mapGroup);
       this.fogFar0 = this.scene.fog ? this.scene.fog.far : 300;
     }
     this.applyGfx();
+    this.setWeather();
   }
 
   applyGfx() {
@@ -266,6 +271,18 @@ export class Game {
     this.rules = { ...this.rules, ...s };
     phys.gravity = this.rules.gravity;
     if (modeChanged) this.refreshColors();
+    this.setWeather();
+  }
+
+  // The match's weather (settings `wx`) with this device's graphics level and Weather effects setting.
+  setWeather() {
+    const kind = this.active ? this.rules.wx || 'clear' : 'clear';
+    const before = this.weather.kind;
+    this.weather.set(kind, false, { drops: this.gfx === 'potato' ? 0 : this.lowGfx ? 0.4 : 1, fx: opts.weatherFx !== false });
+    if (!this.scene.fog) return;
+    this.fogFar0 = this.weather.base ? this.scene.fog.far : this.fogFar0;
+    if (this.gfx === 'potato') this.scene.fog.far = Math.min(this.fogFar0, 65);
+    if (this.active && kind !== before && kind !== 'clear') this.hud.say(`${WEATHER[kind].icon} ${WEATHER[kind].name.toUpperCase()}`);
   }
 
   refreshColors() {
@@ -308,6 +325,7 @@ export class Game {
     spookySky(this.scene);
     this.mapId = id;
     this.pumpkins.place(id);
+    this.weather.mapBuilt(this.mapGroup);
     this.fogFar0 = this.scene.fog ? this.scene.fog.far : 300;
     if (this.gfx === 'potato' && this.scene.fog) this.scene.fog.far = Math.min(this.fogFar0, 65);
     for (const p of this.projectiles || []) this.scene.remove(p.mesh);
@@ -633,6 +651,7 @@ export class Game {
     this.stopAim(true);
     this.hist = null;
     this.active = false;
+    this.setWeather(); // back to a clear sky behind the menu
     this.myId = null;
     for (const r of this.remotes.values()) r.dispose();
     this.remotes.clear();
@@ -1211,6 +1230,7 @@ export class Game {
     }
     if (this.active) this.update(gdt, now);
     else this.menuCam(now);
+    this.weather.update(gdt, this.camera.position, now);
     this.watchPerf(dt);
     this.fx.update(gdt);
     this.renderer.clear();

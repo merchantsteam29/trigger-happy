@@ -21,11 +21,12 @@ const RULE_SPEC = {
   health: { min: 10, max: 1000 }, respawn: { min: 0, max: 30 },
   infiniteAmmo: 'bool', headshotsOnly: 'bool', friendlyFire: 'bool', pickups: 'bool', oneShot: 'bool',
   weapons: Object.keys(WEAPON_RULES),
+  weather: ['random', 'clear', 'rain', 'fog', 'storm'],
   gameSpeed: { min: 0.25, max: 2 }, moveSpeed: { min: 0.5, max: 2.5 }, jump: { min: 0.5, max: 3 }, gravity: { min: 0.2, max: 2 },
 };
 export const RULE_DEFAULTS = {
   health: 100, respawn: 3, infiniteAmmo: false, headshotsOnly: false, friendlyFire: false, pickups: true, oneShot: false,
-  weapons: 'any', gameSpeed: 1, moveSpeed: 1, jump: 1, gravity: 1,
+  weapons: 'any', weather: 'random', gameSpeed: 1, moveSpeed: 1, jump: 1, gravity: 1,
 };
 
 // Only known rules with sane values.

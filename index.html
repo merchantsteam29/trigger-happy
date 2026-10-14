@@ -98,6 +98,7 @@
 <link rel="modulepreload" href="js/prophunt.js">
 <link rel="modulepreload" href="js/emotes.js">
 <link rel="modulepreload" href="js/editor.js">
+<link rel="modulepreload" href="js/weather.js">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -316,6 +317,10 @@
                 <option value="6">Up to 6 players</option><option value="8">Up to 8 players</option><option value="12">Up to 12 players</option>
               </select>
               <small class="hint">Bots leave as real players join.</small>
+            </div>
+            <div class="field">
+              <label for="sv-weather">Weather</label>
+              <select id="sv-weather"><option value="random">Random each match</option><option value="clear">Clear</option><option value="rain">Rain</option><option value="fog">Fog</option><option value="storm">Thunderstorm</option></select>
             </div>
             <div class="field">
               <label for="sv-botdiff">Bot difficulty</label>

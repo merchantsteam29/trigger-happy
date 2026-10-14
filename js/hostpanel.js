@@ -1,3 +1,4 @@
+import { WEATHER_PICKS } from './weather.js';
 import { BOT_DIFFS } from './bot.js';
 import { MODES, MODE_ORDER, TEAM_COLORS, ZOMBIE_COLOR } from './host.js';
 import { MAPS, MAP_ORDER } from './maps.js';
@@ -17,6 +18,7 @@ const RULES = [
   { key: 'pickups', label: 'Map pickups (health, ammo, power weapon)', type: 'check' },
   { key: 'oneShot', label: 'One shot kills', type: 'check' },
   { key: 'weapons', label: 'Weapons', type: 'select', options: Object.entries(WEAPON_RULES).map(([k, v]) => [k, v.name]) },
+  { key: 'weather', label: 'Weather', type: 'select', options: WEATHER_PICKS },
 ];
 const PHYSICS = [
   { key: 'gameSpeed', label: 'Game speed', min: 0.25, max: 2, step: 0.05 },

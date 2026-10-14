@@ -25,6 +25,7 @@ const DEFAULTS = {
   hitSound: 'classic', // hitmarker sound (audio.js HIT_SOUNDS)
   killSound: 'classic', // kill sound (audio.js KILL_SOUNDS)
   showFps: false,
+  weatherFx: true,    // rain and lightning flashes (weather.js); fog and light still change when off
   blood: true,
   killcam: true,
   colorblind: 'off',  // off | protan | deutan | tritan (see access.js)

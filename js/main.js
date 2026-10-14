@@ -1216,7 +1216,7 @@ function renderMaps() {
 
 // ---------- Servers: browse public servers, create your own ----------
 const serverCfg = {
-  name: '', vis: 'public', max: 12, bots: 0, botDiff: 'auto', region: guessRegion(), rotate: true,
+  name: '', vis: 'public', max: 12, bots: 0, botDiff: 'auto', weather: 'random', region: guessRegion(), rotate: true,
   ...store.get('serverCfg', {}),
 };
 const saveCfg = () => store.set('serverCfg', serverCfg);
@@ -1234,6 +1234,7 @@ function renderCreateForm() {
   $('sv-max').innerHTML = Array.from({ length: 11 }, (_, i) => i + 2).map((n) => `<option value="${n}" ${n === serverCfg.max ? 'selected' : ''}>${n} players</option>`).join('');
   $('sv-bots').value = String(serverCfg.bots);
   $('sv-botdiff').value = serverCfg.botDiff || 'auto';
+  $('sv-weather').value = serverCfg.weather || 'random';
   $('sv-regionpick').innerHTML = REGIONS.map((r) => `<option ${r === serverCfg.region ? 'selected' : ''}>${r}</option>`).join('');
   $('sv-rotate').checked = serverCfg.rotate;
   document.querySelectorAll('#sv-vis button').forEach((b) => b.classList.toggle('sel', b.dataset.v === serverCfg.vis));
@@ -1245,6 +1246,7 @@ $('sv-name').addEventListener('input', () => { serverCfg.name = $('sv-name').val
 $('sv-max').onchange = () => { serverCfg.max = Number($('sv-max').value); saveCfg(); };
 $('sv-bots').onchange = () => { serverCfg.bots = Number($('sv-bots').value); saveCfg(); };
 $('sv-botdiff').onchange = () => { serverCfg.botDiff = $('sv-botdiff').value; saveCfg(); };
+$('sv-weather').onchange = () => { serverCfg.weather = $('sv-weather').value; saveCfg(); };
 $('sv-regionpick').onchange = () => { serverCfg.region = $('sv-regionpick').value; saveCfg(); };
 $('sv-rotate').onchange = () => { serverCfg.rotate = $('sv-rotate').checked; saveCfg(); };
 $('sv-rules').onchange = () => { serverCfg.rules = $('sv-rules').value; saveCfg(); };
@@ -2036,7 +2038,7 @@ async function hostLobby(preset = null) {
     try {
       await net.host(code, settings.name || 'Player', settings.color,
         preset ? { map: preset.map, mode: preset.mode, maxPlayers: preset.max, botFill: Math.min(preset.bots, preset.max), gn: !!preset.gn, ranked: !!preset.ranked, war: preset.war || null, rules: preset.rules || null, motw: preset.motw || null, customMap: preset.customMap || null }
-          : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, rules }, myCos());
+          : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, weather: serverCfg.weather, rules }, myCos());
       net.logic.s.rotate = preset ? preset.rotate : serverCfg.rotate;
       net.logic.onFlag = (p, details) => moderation.autoFlag({ target: p.name, lobby: net.code, details });
       hosting = preset

@@ -13,7 +13,7 @@ Everything starts in the **Servers** tab:
   Filter by region, mode, ping, **With friends** (servers your online friends are in, with their names) or **Not full**.
   **📶 Check ping** measures your real ping to each host (a quick connection that doesn't take a slot).
 - **Create server:** pick a name, **Public** (listed in Find Servers) or **Private** (hidden, code / invite link only),
-  max players (2–12), fill with bots (bots leave as real players join), bot difficulty (Auto, Easy, Normal, Hard, Expert or Nightmare), a region tag, map rotation, the game mode and
+  max players (2–12), fill with bots (bots leave as real players join), bot difficulty (Auto, Easy, Normal, Hard, Expert or Nightmare), weather, a region tag, map rotation, the game mode and
   the starting map. The host can switch public/private any time from the Host panel.
 
 The creator's browser is the host: if they leave, the server closes.
@@ -118,7 +118,9 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
 - Change mode / map and restart, toggle map rotation
 - Rules: score limit, time limit, health, respawn delay, infinite ammo, headshots only, friendly fire, map pickups,
   one shot kills, and **weapons** (any, snipers / shotguns / rifles / pistols / melee / explosives only, or a random
-  loadout every life)
+  loadout every life), and **weather**: random each match (the default), clear, rain, fog or a thunderstorm. Rain
+  stops under a roof; storms darken the map and flash lightning with thunder. Settings → **Weather effects** turns off
+  the rain and lightning flashes on your device (the fog and darker light stay, so it's still fair)
 - **Rule presets:** Snipers only, One shot one kill, Moon knife fight, Shotgun madness, Pistol duel, Boom boom, Moon
   gravity, Speed demons, Tanks, Headhunters and Chaos. **Save current…** keeps your own, **Copy share code** gives a
   code (R-…) anyone can paste with **Use a code…**. Presets can also be picked when creating a server, and the

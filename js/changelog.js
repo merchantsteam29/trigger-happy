@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.6', name: 'Weather', banner: 'storm', notes: [
+    'Matches can have rain, fog or a thunderstorm. Servers roll it each match, or the host picks one',
+    'Rain stops when you are under a roof. Storms darken the map, with lightning and thunder',
+    'Settings: Weather effects turns off the rain and lightning flashes (the fog stays)',
+  ] },
   { v: '2026.10.13.5', name: 'Server Filters', banner: 'matrix', notes: [
     'Find Servers can filter by mode, ping, With friends and Not full',
     'Check ping measures your real ping to every server in the list',

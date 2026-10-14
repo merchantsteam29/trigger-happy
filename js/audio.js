@@ -212,3 +212,33 @@ sfx.sticky = sfx.throw;
 sfx.flash = sfx.throw;
 sfx.tknife = sfx.knife;
 sfx.smoke = sfx.throw;
+
+// Weather (weather.js): a rolling thunder clap after `delay` s, and a looping rain hiss
+// (level 0 stops it; muffled = you're under a roof).
+export function thunder(vol = 1, delay = 0) {
+  if (!ctx) return;
+  setTimeout(() => {
+    if (!ctx) return;
+    const g = out(0.9 * vol, (Math.random() - 0.5) * 0.6, { echo: 0.35, echoGain: 0.3 });
+    nz(g, { dur: 0.25, f0: 2400, f1: 300, gain: 0.7 });
+    nz(g, { dur: 2.6, f0: 420, f1: 60, gain: 1, attack: 0.08 });
+    tone(g, { dur: 2.2, f0: 55, f1: 32, type: 'sawtooth', gain: 0.25 });
+  }, delay * 1000);
+}
+let rain = null;
+export function rainLoop(level = 0, muffled = false) {
+  if (!ctx) return;
+  if (!level) { if (rain) { const r = rain; rain = null; r.g.gain.setTargetAtTime(0, ctx.currentTime, 0.3); setTimeout(() => { try { r.src.stop(); } catch { /* */ } }, 1500); } return; }
+  if (!rain) {
+    const src = ctx.createBufferSource();
+    src.buffer = noise; src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 5000;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 400;
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(hp).connect(f).connect(g).connect(master);
+    src.start();
+    rain = { src, f, g };
+  }
+  rain.g.gain.setTargetAtTime(0.09 * level * (muffled ? 0.6 : 1), ctx.currentTime, 0.4);
+  rain.f.frequency.setTargetAtTime(muffled ? 900 : 5000, ctx.currentTime, 0.3);
+}
