@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MAPS, setMapData, buildMapScene, boxes, quality } from './maps.js';
+import { MAPS, setMapData, buildMapScene, boxes, quality, spawns } from './maps.js';
 import { moveBody, overlap, raycast, rayAABB, PLAYER_R, phys, GRAVITY } from './physics.js';
 import { MODES, TEAM_COLORS, ZOMBIE_COLOR, JUGG_COLOR, JUGG_TEAM, defaultSettings } from './host.js';
 import { WEAPONS, DEFAULT_LOADOUT, GUNGAME_LADDER, SLOTS } from './weapons.js';
@@ -24,6 +24,7 @@ import { setVolume, setFeedbackSounds, hitSound, killSound } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
 import { Weather, WEATHER } from './weather.js';
 import { playKillFx } from './killfx.js';
+import { POSE_IDS } from './poses.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 import { registerCustomMap } from './editor.js';
@@ -494,6 +495,53 @@ export class Game {
     this.hud.killcam(false);
   }
 
+  // ---------- Victory stage ----------
+  // When a match ends, the MVP (in their cosmetics) does their victory pose (poses.js) on a spawn
+  // point with room in front, while the MVP card is up.
+  startStage(mvp) {
+    this.endStage();
+    if (!mvp || this.rules.mode === 'practice') return;
+    const mine = mvp.id === this.myId, r = this.remotes.get(mvp.id);
+    const cos = mine ? getCos() : r && r.cos;
+    if (!cos) return;
+    const pose = POSE_IDS.includes(cos.pose) ? cos.pose : 'cheer';
+    let spot = null;
+    for (const s of [...spawns].sort(() => Math.random() - 0.5)) {
+      const fx = -Math.sin(s.yaw), fz = -Math.cos(s.yaw);
+      const hit = raycast(s.x, s.y + 1.4, s.z, fx, 0, fz, 5);
+      const d = hit ? hit.t - 0.4 : 4.6;
+      if (d >= 2.8) { spot = { s, d: Math.min(4.6, d), fx, fz }; break; }
+    }
+    if (!spot) return;
+    const p = this.players.get(mvp.id);
+    const g = new RemotePlayer(this.scene, 'stage', mvp.name, p ? this.colorFor(p) : mvp.color || '#fff', cos, {});
+    g.hasState = true; g.alive = true; g.replay = true;
+    g.pos.set(spot.s.x, spot.s.y, spot.s.z); g.prev.copy(g.pos); g.yaw = spot.s.yaw;
+    g.setWeapon('ar'); g.swapT = 0;
+    g.setPose(pose);
+    this.stage = { g, spot, at: performance.now(), hide: mvp.id };
+  }
+  runStage(dt, now) {
+    const st = this.stage;
+    if (!this.matchOver || now - st.at > 4500) { this.endStage(); return; }
+    st.g.update(dt);
+    const { s, d, fx, fz } = st.spot, t = (now - st.at) / 1000;
+    const sway = Math.sin(t * 0.6) * 0.35; // the camera drifts a little around them
+    const cx = Math.cos(sway), sx = Math.sin(sway);
+    const dx = fx * cx - fz * sx, dz = fx * sx + fz * cx;
+    const dist = d - Math.min(0.5, t * 0.15);
+    // aimed low, so they stand in the top half of the screen (the MVP card is below)
+    this.camera.position.set(s.x + dx * dist, s.y + 1.25, s.z + dz * dist);
+    this.camera.lookAt(s.x, s.y + 0.25 + (st.g.root.position.y - s.y) * 0.5, s.z);
+    const r = this.remotes.get(st.hide);
+    if (r) { r.root.visible = r.limbs.visible = false; r.tag.visible = false; }
+  }
+  endStage() {
+    if (!this.stage) return;
+    this.stage.g.dispose();
+    this.stage = null;
+  }
+
   // ---------- Clan sprays ----------
   // Sprays your clan's spray on the wall you're looking at (within 5 m). this.mySpray comes from
   // main.js (your clan's record). One every 8 s; each player has one spray up at a time.
@@ -647,6 +695,7 @@ export class Game {
 
   reset() {
     this.endKillcam();
+    this.endStage();
     this.horrorOff();
     this.clearSprays();
     this.stopAim(true);
@@ -955,6 +1004,7 @@ export class Game {
             scores: m.scores, until: now + m.next * 1000, nextMap: m.nextMap, title: m.title, at: now, mvp: m.mvp || null,
             vote: m.vote ? { maps: m.vote.maps, counts: m.vote.counts, opensAt: now + m.vote.opens, endsAt: now + m.vote.ends, winner: m.vote.winner, mine: null } : null,
           };
+          this.startStage(m.mvp);
           // Free the mouse so the vote can be clicked (without opening the pause menu).
           if (this.endInfo.vote && document.pointerLockElement === this.canvas) document.exitPointerLock();
         }
@@ -972,6 +1022,7 @@ export class Game {
         if (this.endInfo && this.endInfo.vote) { this.endInfo.vote.winner = m.map; this.endInfo.vote.counts = m.counts; this.endInfo.nextMap = m.map; }
         break;
       case 'start':
+        this.endStage();
         this.clearSprays(); // new match: walls are clean again
         this.streaks.clear();
         if (this.onMatchStart) this.onMatchStart();
@@ -1238,6 +1289,7 @@ export class Game {
     if (this.active) this.update(gdt, now);
     else this.menuCam(now);
     this.weather.update(gdt, this.camera.position, now);
+    if (this.stage) this.runStage(dt, now);
     this.watchPerf(dt);
     this.fx.update(gdt);
     this.renderer.clear();

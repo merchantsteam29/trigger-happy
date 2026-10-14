@@ -1,3 +1,4 @@
+import { poseHand, poseBody } from './poses.js';
 import * as THREE from 'three';
 import { overlap } from './physics.js';
 import { RoundedBoxGeometry as RoundedBox } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -423,6 +424,12 @@ export class RemotePlayer {
         this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, Math.sin(t * 6) * 0.5));
         this.root.position.y += Math.abs(Math.sin(t * 8)) * 0.08;
       }
+      if (this.poseId) { // victory pose (poses.js)
+        this.poseT = (this.poseT || 0) + dt;
+        const b = this.poseB = poseBody(this.poseId, this.poseT);
+        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw));
+        this.root.position.y += b.y;
+      }
     }
 
     // Body: the hips dip on every footstep and sway side to side, the torso counter-rotates
@@ -451,6 +458,7 @@ export class RemotePlayer {
     this.spine.rotation.z = -this.lean * 0.12;
     this.neck.rotation.x = this.pitch * 0.5 + this.sprint * 0.2 + runK * 0.06 * moving;
     this.neck.rotation.y = Math.sin(this.phase) * 0.04 * moving;
+    if (this.poseId && this.poseB) { this.spine.rotation.x += this.poseB.bend; this.hips.position.x += this.poseB.hipX; }
 
     // Gun pose
     const w = WEAPONS[this.weapon] || WEAPONS.ar;
@@ -565,6 +573,7 @@ export class RemotePlayer {
   }
 
   emoteArm(side) {
+    if (this.poseId && this.alive) { const h = poseHand(this.poseId, side, this.poseT || 0); if (h) this.root.localToWorld(_b.set(h[0], h[1], h[2])); return; }
     if (!(this.emoteT > 0) || !this.alive || this.disguise) return;
     const h = emoteHand(this.emoteId, side, EMOTE_TIME - this.emoteT);
     if (h) this.root.localToWorld(_b.set(h[0], h[1] - this.crouch * 0.3, h[2]));
@@ -588,6 +597,13 @@ export class RemotePlayer {
     arm.fo.set(_m, _e);
     arm.hand.position.copy(_e);
     arm.hand.quaternion.copy(this.root.quaternion);
+  }
+
+  // Victory pose (poses.js) on the end-of-match stage: hands free, no gun.
+  setPose(id) {
+    this.poseId = id || null;
+    this.poseT = 0;
+    this.gunHolder.visible = !id;
   }
 
   // Big Heads mode: a giant head (and matching hitbox), name tag lifted above it.

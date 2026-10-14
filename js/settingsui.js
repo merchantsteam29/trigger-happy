@@ -344,7 +344,7 @@ export class SettingsUI {
       const cos = getCos();
       const t = this.tryOn;
       const shown = t ? { ...cos, [t.slot]: t.id } : cos;
-      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['wraps', 'Weapon wraps']];
+      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['wraps', 'Weapon wraps']];
       if (!TABS.some(([k]) => k === this.czTab)) this.czTab = t ? t.slot : 'hat';
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
@@ -382,7 +382,7 @@ export class SettingsUI {
       if (tab === 'wraps') {
         panel.appendChild(this.wrapsView(rerender));
       } else if (ICON_SLOTS.includes(tab)) {
-        const hint = { killfx: 'Plays where your victim stood when you get a kill. Everyone in the match sees it.' }[tab] || '';
+        const hint = { killfx: 'Plays where your victim stood when you get a kill. Everyone in the match sees it.', pose: 'When you\'re the match MVP, everyone sees you do this on the end screen.' }[tab] || '';
         panel.innerHTML = `<div class="cz-hint">${hint}</div>
           <div class="cz-grid cz-icon-grid">${COSMETICS[tab].map((c) => {
             const st = state(tab, c);

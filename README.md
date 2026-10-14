@@ -269,6 +269,12 @@ A **kill effect** plays where your victim stood when you get a kill, and everyon
 **Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
 Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
 
+## Victory poses
+
+When a match ends, the **MVP** steps onto a stage and does their **victory pose** while the MVP card is up, and everyone
+in the match sees it. Everyone has **Cheer**; Flex, Finger Guns, Dab, Heart Hands, Take a Bow, Floss, Spin Jump and
+Levitate are in the **Shop** (🪙 200 to 500). Pick yours in **Character → Victory poses**.
+
 ## Banners
 
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
