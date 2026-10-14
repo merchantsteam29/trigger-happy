@@ -71,9 +71,9 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 - Clients (`game.js`) simulate their own movement and shooting (hitscan raycasts) and send intents.
   The host validates, applies damage and broadcasts the results.
 - Client → host messages (`host.js` `handle`): `st` (state), `shot`, `hit`, `proj`, `boom`, `fx`,
-  `prop`, `ping`, `spray`, `vc`, `chat`, `vote`, `mods`, `cos`, `ident`, `staff`, `mod*`.
+  `prop`, `wall`, `ping`, `spray`, `vc`, `chat`, `vote`, `mods`, `cos`, `ident`, `staff`, `mod*`.
 - Host → client messages (`game.js` `onNet`): `welcome`, `snap`, `spawn`, `dmg`, `hitc`, `kill`,
-  `notice`, `start`, `end`, `settings`, `pjoin`, `pleave`, `loadout`, `pickup`, `propbreak`, `spray`,
+  `notice`, `start`, `end`, `settings`, `pjoin`, `pleave`, `loadout`, `pickup`, `propbreak`, `wallbreak`, `spray`,
   `ping`, `kicked` (with `reason`), `warend`, `tourney`, `vc`, `votes` / `voted`, staff messages.
 - Spectators: `HostLogic.addSpectator` takes staff (signed proof, invisible) and viewers (`'watch'`, no slot, up to 30) when
   `watchable()` (host rule `watch`, never ranked / clan wars; Game Night events always). The camera is `game.js` `specCam`.
@@ -128,7 +128,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every
   screen's look). Classes and ids are shared with the JS, so restyle in `ui.css` and keep them. Icons: `icons/icon.svg` is the
   source; the PNGs (favicon, 192/512, maskable, apple-touch) are rendered from it. `icons/mark.svg` is the logo without its tile.
-- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `playercard.js` (player cards: the profile popup's card, `cardHtml` / `cardImage`; the title and stats you pick are saved as `card` and posted with your profile), `poses.js` (victory poses: cosmetic slot `pose`, shown on the end-of-match stage by `game.js` `startStage` with `RemotePlayer.setPose`), `killfx.js` (kill effects: cosmetic slot `killfx`, played in `game.js` `onKill` from the killer's cosmetics; `ICON_SLOTS` in missions.js are slots shown as icon cards), `devices.js` (linked devices: one account on several devices, progress sync), `changelog.js` (`UPDATES`: the update history in Settings → 📜 Updates), `training.js` (Practice Range training courses: `Training` on `game.train`, bests in `trainBest`), `weather.js` (rain / fog / thunderstorm: the host's `weather` rule, rolled per match into settings `wx`), `editor.js` (map editor; a hosted custom map
+- **Other:** `updater.js` + `sw.js` (self-update and offline cache), `version.js`, `util.js` (`store`, `esc`), `qr.js` (QR code SVG for the Share button), `playercard.js` (player cards: the profile popup's card, `cardHtml` / `cardImage`; the title and stats you pick are saved as `card` and posted with your profile), `poses.js` (victory poses: cosmetic slot `pose`, shown on the end-of-match stage by `game.js` `startStage` with `RemotePlayer.setPose`), `killfx.js` (kill effects: cosmetic slot `killfx`, played in `game.js` `onKill` from the killer's cosmetics; `ICON_SLOTS` in missions.js are slots shown as icon cards), `devices.js` (linked devices: one account on several devices, progress sync), `changelog.js` (`UPDATES`: the update history in Settings → 📜 Updates), `walls.js` (breakable wooden boards: `maps.js` boards up windows and spare doorways as mat `boards` with ids `brk`, the host keeps their health in `wallHp` and sends broken ids in snapshots as `wb`; bots' nav ignores boards and `botBreach` breaks them), `training.js` (Practice Range training courses: `Training` on `game.train`, bests in `trainBest`), `weather.js` (rain / fog / thunderstorm: the host's `weather` rule, rolled per match into settings `wx`), `editor.js` (map editor; a hosted custom map
   travels in the settings as `customMap` and is registered as map `custom` by `registerCustomMap`)
 
 ### Where to add things

@@ -20,6 +20,7 @@ const RULES = [
   { key: 'weapons', label: 'Weapons', type: 'select', options: Object.entries(WEAPON_RULES).map(([k, v]) => [k, v.name]) },
   { key: 'weather', label: 'Weather', type: 'select', options: WEATHER_PICKS },
   { key: 'watch', label: 'Allow spectators (👁 Watch)', type: 'check' },
+  { key: 'walls', label: 'Breakable walls (wooden boards)', type: 'check' },
 ];
 const PHYSICS = [
   { key: 'gameSpeed', label: 'Game speed', min: 0.25, max: 2, step: 0.05 },

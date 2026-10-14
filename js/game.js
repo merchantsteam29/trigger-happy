@@ -29,6 +29,7 @@ import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 import { registerCustomMap } from './editor.js';
 import { Training } from './training.js';
+import { buildBoards, applyBoards, boardById, boardCenter, setBroken } from './walls.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -326,6 +327,7 @@ export class Game {
       });
     }
     this.mapGroup = buildMapScene(this.scene, id);
+    buildBoards(this.mapGroup);
     spookySky(this.scene);
     this.mapId = id;
     this.pumpkins.place(id);
@@ -941,6 +943,7 @@ export class Game {
         this.zw = m.zw || null;
         this.brData = m.br || null;
         this.propData = m.pr || null;
+        applyBoards(m.wb);
         this.tourData = m.tr || null;
         this.tagData = m.tg || null;
         this.pickupData = m.pk || null;
@@ -988,6 +991,16 @@ export class Game {
       }
       case 'boom': this.remoteBoom(m); break;
       case 'spray': this.addSpray(m); break;
+      case 'wallbreak': { // a wooden board broke (walls.js)
+        const b = boardById(m.id);
+        if (!b) break;
+        setBroken(b, true);
+        const pos = new THREE.Vector3(...boardCenter(b));
+        this.fx.burst(pos, null, '#8b5a2b', 22, 6, 0.1, 0.9);
+        this.fx.burst(pos, null, '#5e3b1a', 12, 4, 0.07, 0.6);
+        this.posSound(sfx.bounce, pos, 1);
+        break;
+      }
       case 'propbreak': { // a barrel blew up / a crate broke
         const pos = new THREE.Vector3(...m.p);
         this.propData = (this.propData || []).filter((x) => x[0] !== m.id);
@@ -1944,6 +1957,7 @@ export class Game {
     this.camBasis();
     const hits = new Map();
     const propHits = new Map(); // barrels / crates hit by this shot
+    const wallHits = new Map(); // wooden boards hit by this shot (walls.js)
     const ends = [];
     const aiming = this.train.shooting;
     let aimHit = false;
@@ -1994,6 +2008,11 @@ export class Game {
       } else if (wh && !w.flame) {
         this.fx.impact(end, _n.set(wh.nx, wh.ny, wh.nz));
       }
+      if (!prop && !best && !pk && wh && wh.box && wh.box.brk && maxT >= wh.t - 1e-6) { // a board took it
+        let dmg = w.dmg;
+        if (w.falloff) { const [near, far, min] = w.falloff; dmg *= 1 - clamp((maxT - near) / (far - near), 0, 1) * (1 - min); }
+        wallHits.set(wh.box.brk, (wallHits.get(wh.box.brk) || 0) + dmg);
+      }
       if (w.flame) this.fx.flame(muzzle, end); else this.fx.tracer(muzzle, end, w.tracer);
       ends.push(arr(end));
     }
@@ -2008,6 +2027,7 @@ export class Game {
     if (aimHit) { this.hud.hit(null); hitSound(false, 0.8); }
     if (this.rules.mode === 'prophunt' && this.myTeam === 2 && !hits.size) this.net.send({ t: 'miss' }); // misses cost hunters health
     for (const [pid, dmg] of propHits) this.net.send({ t: 'prop', id: pid, dmg: Math.round(dmg) });
+    for (const [bid, dmg] of wallHits) this.net.send({ t: 'wall', id: bid, dmg: Math.round(dmg) });
     this.net.send({ t: 'shot', w: id, o: arr(muzzle), e: ends, q: w.quiet ? 1 : 0 });
   }
 

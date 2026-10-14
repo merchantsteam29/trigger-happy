@@ -5,6 +5,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // These arrays are mutated in place when the map changes so importers keep valid references.
 export const boxes = [];
 export const spawns = [];
+export const breakables = []; // wooden boards (mat 'boards', id `brk`): see walls.js
 export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets', 'manor'];
 // Short descriptions for the map pickers and the end-of-match vote.
 export const MAP_BLURB = {
@@ -63,6 +64,8 @@ function makeApi() {
   };
   // Hollow building with door/window openings and a flat roof.
   // openings: {side: 'n'|'s'|'e'|'w', at, w, y0 = 0, h = 2.3}
+  // Windows are boarded up, and so is the last door of a building with more than one (breakable,
+  // walls.js); opts.boards: false keeps them all open.
   const building = (x0, z0, x1, z1, h, openings = [], opts = {}, fn = add2) => {
     const t = 0.3, mat = opts.mat || 'adobe';
     const walls = {
@@ -71,11 +74,13 @@ function makeApi() {
       w: { a0: z0 + t, a1: z1 - t, fixed: [x0, x0 + t], ax: 'z' },
       e: { a0: z0 + t, a1: z1 - t, fixed: [x1 - t, x1], ax: 'z' },
     };
-    const seg = (w, a0, a1, y0, y1) => {
+    const seg = (w, a0, a1, y0, y1, m = mat) => {
       if (a1 - a0 < 0.01 || y1 - y0 < 0.01) return;
-      if (w.ax === 'x') fn(a0, y0, w.fixed[0], a1, y1, w.fixed[1], mat);
-      else fn(w.fixed[0], y0, a0, w.fixed[1], y1, a1, mat);
+      if (w.ax === 'x') fn(a0, y0, w.fixed[0], a1, y1, w.fixed[1], m);
+      else fn(w.fixed[0], y0, a0, w.fixed[1], y1, a1, m);
     };
+    const doors = openings.filter((o) => !o.y0);
+    const boarded = (o) => opts.boards !== false && (o.y0 > 0 || (doors.length > 1 && o === doors[doors.length - 1]));
     for (const [side, w] of Object.entries(walls)) {
       const ops = openings.filter((o) => o.side === side).map((o) => ({ ...o, y0: o.y0 || 0, h: o.h || 2.3 }))
         .sort((a, b) => a.at - b.at);
@@ -85,6 +90,7 @@ function makeApi() {
         seg(w, cur, o0, 0, h);
         seg(w, o0, o1, 0, o.y0);
         seg(w, o0, o1, o.y0 + o.h, h);
+        if (boarded(openings.find((x) => x.side === side && x.at === o.at) || o)) seg(w, o0, o1, o.y0, o.y0 + o.h, 'boards');
         cur = o1;
       }
       seg(w, cur, w.a1, 0, h);
@@ -96,22 +102,27 @@ function makeApi() {
       else fn(w.fixed[0], r, z0, w.fixed[1], r + 0.8, z1, mat);
     }
   };
-  // Thin walls with door gaps: gaps = [[center, width], ...].
+  // Thin walls with door gaps: gaps = [[center, width], ...]. With 2+ gaps the last one is
+  // boarded up (breakable, walls.js).
   const wallX = (z, x0, x1, gaps, y0, h, mat, fn = add2, t = 0.15) => {
     let cur = x0;
-    for (const [c, w] of [...gaps].sort((a, b) => a[0] - b[0])) {
+    const sorted = [...gaps].sort((a, b) => a[0] - b[0]);
+    for (const [c, w] of sorted) {
       if (c - w / 2 > cur) fn(cur, y0, z - t, c - w / 2, y0 + h, z, mat);
       cur = c + w / 2;
     }
     if (x1 > cur) fn(cur, y0, z - t, x1, y0 + h, z, mat);
+    if (sorted.length > 1) { const [c, w] = sorted[sorted.length - 1]; fn(c - w / 2, y0, z - t, c + w / 2, y0 + Math.min(h, 3), z, 'boards'); }
   };
   const wallZ = (x, z0, z1, gaps, y0, h, mat, fn = add2, t = 0.15) => {
     let cur = z0;
-    for (const [c, w] of [...gaps].sort((a, b) => a[0] - b[0])) {
+    const sorted = [...gaps].sort((a, b) => a[0] - b[0]);
+    for (const [c, w] of sorted) {
       if (c - w / 2 > cur) fn(x - t, y0, cur, x, y0 + h, c - w / 2, mat);
       cur = c + w / 2;
     }
     if (z1 > cur) fn(x - t, y0, cur, x, y0 + h, z1, mat);
+    if (sorted.length > 1) { const [c, w] = sorted[sorted.length - 1]; fn(x - t, y0, c - w / 2, x, y0 + Math.min(h, 3), c + w / 2, 'boards'); }
   };
   return { add, add2, add4, spawn, spawn2, spawn4, crate2, stairs, building, wallX, wallZ };
 }
@@ -1401,6 +1412,8 @@ export function setMapData(id) {
   boxes.length = 0;
   spawns.length = 0;
   map.build(makeApi());
+  breakables.length = 0;
+  for (const b of boxes) if (b.mat === 'boards') { b.brk = breakables.length + 1; breakables.push(b); }
   // Drop any spawn that ended up inside geometry.
   for (let i = spawns.length - 1; i >= 0; i--) {
     const s = spawns[i];
@@ -1793,7 +1806,7 @@ export function buildMapScene(scene, id) {
   const byMat = {};
   for (const b of boxes) (byMat[b.mat] ||= []).push(b);
   for (const [name, list] of Object.entries(byMat)) {
-    if (name === 'invisible') continue; // collision only (e.g. walls that stop you falling overboard)
+    if (name === 'invisible' || name === 'boards') continue; // collision only (e.g. walls that stop you falling overboard); boards: walls.js
     const def = M[name] || { color: '#ff00ff' };
     const mat = new THREE.MeshStandardMaterial({
       map: def.map || null, color: def.color || '#ffffff',

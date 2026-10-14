@@ -116,13 +116,18 @@ open ground. Shoot or blast a crate and it breaks. A barrel explodes: up to 110 
 sets off barrels and crates nearby. You get the kill, you take half damage from your own barrel, and teammates are
 safe. They block shots behind them but you can walk through them.
 
+**Breakable walls:** on maps with buildings (Desert Town, Snow Outpost, Harbor Docks, Military Compound, Castle, Shopping Mall, Arctic Base,
+Neon Streets and Haunted Manor), windows and some doorways are boarded up with wooden planks. Shoot them (about 10 rifle
+shots) or blow them up with a grenade or rocket to open a new path or sight line. Bots barge straight through them.
+Every board is back at the start of the next match. The host can turn them off (Host panel → **Breakable walls**).
+
 ## Host panel
 
 The lobby creator gets a **Host panel** button in the pause menu (Esc):
 
 - Change mode / map and restart, toggle map rotation
 - Rules: score limit, time limit, health, respawn delay, infinite ammo, headshots only, friendly fire, map pickups,
-  one shot kills, and **weapons** (any, snipers / shotguns / rifles / pistols / melee / explosives only, or a random
+  breakable walls, spectators, one shot kills, and **weapons** (any, snipers / shotguns / rifles / pistols / melee / explosives only, or a random
   loadout every life), and **weather**: random each match (the default), clear, rain, fog or a thunderstorm. Rain
   stops under a roof; storms darken the map and flash lightning with thunder. Settings → **Weather effects** turns off
   the rain and lightning flashes on your device (the fog and darker light stay, so it's still fair)

@@ -114,5 +114,5 @@ export function raycast(ox, oy, oz, dx, dy, dz, maxT) {
   ];
   faces.sort((a, b) => a[0] - b[0]);
   const [, nx, ny, nz] = faces[0];
-  return { t: best, x, y, z, nx, ny, nz };
+  return { t: best, x, y, z, nx, ny, nz, box: hit };
 }

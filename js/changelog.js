@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.3', name: 'Breakable Walls', banner: 'blood', notes: [
+    'Windows and some doorways on 9 maps are boarded up with wooden planks. Shoot them or blow them up to open a new way in',
+    'Bots barge straight through boards in their way',
+    'Every board is back at the start of the next match. Hosts can turn them off in the Host panel',
+  ] },
   { v: '2026.10.14.2', name: 'Training Courses', banner: 'neon', notes: [
     'The Practice Range has 5 training courses: Gridshot, Flick, Tracking, Speed run and a Movement course',
     'Speed run and Movement are timed: clear 20 targets, or run and jump through 10 rings, as fast as you can',

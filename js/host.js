@@ -3,6 +3,8 @@ import { phys, raycast } from './physics.js';
 import { WEAPONS, GUNGAME_LADDER, SLOTS } from './weapons.js';
 import { WEAPON_RULES, ruleLoadout, cleanRules } from './rulesets.js';
 import { NavGrid } from './nav.js';
+import { breakables } from './maps.js';
+import { BOARD_HP, boardById, boardCenter, withoutBoards } from './walls.js';
 import { Bot, BOT_NAMES, BOT_DIFFS } from './bot.js';
 import { WEATHER, rollWeather } from './weather.js';
 import { COLORS } from './util.js';
@@ -155,6 +157,7 @@ export function defaultSettings(mode = 'ffa', map = 'warehouse') {
     health: 100, respawn: 3, infiniteAmmo: false, headshotsOnly: false, friendlyFire: false, pickups: true, oneShot: false, weapons: 'any', rulesName: '',
     weather: 'random', wx: 'clear', // weather pick, and this match's weather (weather.js)
     watch: true, // anyone may 👁 Watch (spectate without a player slot)
+    walls: true, // wooden boards in windows and doorways can be shot / blown open (walls.js)
     ...PHYS_DEFAULTS, ...MODES[mode].preset,
   };
 }
@@ -215,10 +218,34 @@ export class HostLogic {
   loadMap(id) {
     setMapData(id);
     this.nav = null;
+    this.resetWalls();
   }
 
   ensureNav() {
-    if (!this.nav && [...this.players.values()].some((p) => p.bot)) this.nav = new NavGrid(MAPS[this.s.map].bounds);
+    if (!this.nav && [...this.players.values()].some((p) => p.bot)) this.nav = withoutBoards(() => new NavGrid(MAPS[this.s.map].bounds)); // bots path through boards (and break them)
+  }
+
+  // ---------- Breakable walls (walls.js) ----------
+  // Health per board id; all of them stand again each match (or are gone with the walls rule off).
+  resetWalls() {
+    this.wallHp = new Map(breakables.map((b) => [b.brk, this.s && this.s.walls === false ? 0 : BOARD_HP]));
+  }
+  damageWall(id, dmg, by) {
+    const hp = this.wallHp && this.wallHp.get(id);
+    if (!(hp > 0) || this.phase !== 'playing' || !(dmg > 0)) return;
+    this.wallHp.set(id, hp - dmg);
+    if (hp - dmg <= 0) this.broadcast({ t: 'wallbreak', id, by: by ? by.id : null });
+  }
+  // Bots barge through boards in their way.
+  botBreach(dt) {
+    for (const p of this.players.values()) {
+      if (!p.bot || !p.alive) continue;
+      const [x, y, z] = p.st;
+      for (const b of breakables) {
+        if (!(this.wallHp.get(b.brk) > 0)) continue;
+        if (x > b.x0 - 0.8 && x < b.x1 + 0.8 && z > b.z0 - 0.8 && z < b.z1 + 0.8 && y + 1.8 > b.y0 && y < b.y1) this.damageWall(b.brk, 160 * dt, p);
+      }
+    }
   }
 
   beginMatchState() {
@@ -600,6 +627,16 @@ export class HostLogic {
         break;
       case 'proj': case 'boom': case 'fx':
         this.broadcast({ ...m, id }, id);
+        // Explosions blow boards open (walls.js).
+        if (m.t === 'boom' && Array.isArray(m.p) && this.wallHp && this.wallHp.size) {
+          const W = WEAPONS[m.k];
+          if (W && W.radius && W.splash && !W.smoke && !W.flash) {
+            for (const b of breakables) {
+              const c = boardCenter(b), r = W.radius + 1, d = Math.hypot(c[0] - m.p[0], c[1] - m.p[1], c[2] - m.p[2]);
+              if (d < r) this.damageWall(b.brk, W.splash * 2.5 * (1 - d / r) + 40, p);
+            }
+          }
+        }
         // Explosions also hit barrels and crates.
         if (m.t === 'boom' && Array.isArray(m.p) && this.props && this.props.length) {
           const W = WEAPONS[m.k];
@@ -611,6 +648,15 @@ export class HostLogic {
           }
         }
         break;
+      case 'wall': { // shot a wooden board
+        const b = boardById(m.id);
+        if (!b || !p.alive) break;
+        const now = Date.now();
+        if (now - (p.lastWall || 0) < 40) break; // a few per shot at most
+        p.lastWall = now;
+        this.damageWall(b.brk, Math.min(150, Number(m.dmg) || 0), p);
+        break;
+      }
       case 'prop': { // shot a barrel / crate
         const pr = this.props && this.props.find((o) => o.id === m.id);
         if (!pr || !p.alive || Math.hypot(p.st[0] - pr.x, p.st[2] - pr.z) > 200) break;
@@ -1805,6 +1851,7 @@ export class HostLogic {
     const weaponsBefore = this.s.weapons;
     Object.assign(this.s, partial);
     if ('weather' in partial) this.rollWx();
+    if ('walls' in partial) this.resetWalls();
     if ('weapons' in partial && partial.weapons !== weaponsBefore) {
       this.broadcast({ t: 'notice', text: `Weapons: ${(WEAPON_RULES[this.s.weapons] || WEAPON_RULES.any).name} (from your next life)` });
     }
@@ -1855,6 +1902,7 @@ export class HostLogic {
       if (this.flags) this.tickFlags(now);
       if (this.dom && this.phase === 'playing') this.tickDom(rdt);
       for (const p of this.players.values()) if (p.bot && !p.frozen) p.bot.update(dt);
+      if (this.wallHp && this.wallHp.size) this.botBreach(dt);
       if (this.mode.practice) this.tickDummies(now);
     } else {
       if (this.vote && !this.vote.winner && now >= this.vote.endsAt) this.closeVote();
@@ -1874,6 +1922,8 @@ export class HostLogic {
     if (this.brZone) { const z = this.brZone, nx = BR_STAGES[z.shrinkUntil ? z.stage : z.stage + 1]; msg.br = [r2(z.cx), r2(z.cz), r2(z.r), r2(nx ? z.size * nx[2] : z.r), z.shrinkUntil ? 0 : Math.max(0, Math.ceil((z.holdUntil - now) / 1000)), Math.max(2, z.dps)]; }
     // Tournament: [round, final (1/0), ids still in]
     if (this.tour && this.s.mode === 'tourney') msg.tr = [this.tour.round, this.tour.ids.size <= 2 ? 1 : 0, [...this.tour.ids]];
+    // Broken wooden boards (walls.js): everything else stands.
+    if (this.wallHp) { const wb = []; for (const [id, hp] of this.wallHp) if (hp <= 0) wb.push(id); if (wb.length) msg.wb = wb; }
     // Barrels and crates still standing: [id, 1 barrel / 2 crate, x, y, z]
     if (this.props && this.props.length) msg.pr = this.props.map((o) => [o.id, o.kind === 'barrel' ? 1 : 2, r2(o.x), r2(o.y), r2(o.z)]);
     if (this.zw) msg.zw = [this.zw.wave, this.zombiesLeft(), this.zw.breakUntil ? Math.max(0, Math.ceil((this.zw.breakUntil - now) / 1000)) : 0];
