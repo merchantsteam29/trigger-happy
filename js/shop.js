@@ -1,5 +1,5 @@
 import { esc, store } from './util.js';
-import { COSMETICS, SLOT_LABELS, getTokens, buy, buyWrap, getCos, setCos } from './missions.js';
+import { COSMETICS, SLOT_LABELS, ICON_SLOTS, getTokens, buy, buyWrap, getCos, setCos } from './missions.js';
 import { CAMOS, camoSwatch } from './camos.js';
 import { bannerOf, bannerHtml } from './banners.js';
 import { drawAvatar } from './settingsui.js';
@@ -11,10 +11,10 @@ import { gifts, giftable, ownsItem, GIFT_MIN, GIFT_MAX, GIFTS_PER_DAY } from './
 
 const CATS = [
   ['all', 'Everything', '🛒'], ['hat', 'Hats', '🎩'], ['hair', 'Hair', '💇'], ['face', 'Face', '🕶'], ['back', 'Back', '🎒'],
-  ['banner', 'Banners', '🏳'], ['wrap', 'Weapon wraps', '🎨'], ['gifts', 'Gifts', '🎁'],
+  ['banner', 'Banners', '🏳'], ['killfx', 'Kill effects', '💥'], ['wrap', 'Weapon wraps', '🎨'], ['gifts', 'Gifts', '🎁'],
 ];
 const items = (cat) => {
-  const wear = ['hat', 'hair', 'face', 'back', 'banner'];
+  const wear = ['hat', 'hair', 'face', 'back', 'banner', ...ICON_SLOTS];
   const list = [];
   for (const slot of cat === 'all' ? [...wear, 'wrap'] : [cat]) {
     if (slot === 'wrap') for (const c of CAMOS) { if (c.price > 0 || c.reward) list.push({ slot, c }); }
@@ -57,6 +57,7 @@ export class Shop {
     let pic;
     if (slot === 'banner') { const b = bannerOf(c.id); pic = `<span class="cz-bnr-swatch" style="--bg:${b.bg}"><em>${b.emblem}</em></span>`; }
     else if (slot === 'wrap') pic = `<span class="shop-wrap" style="background:${camoSwatch(c)}"></span>`;
+    else if (ICON_SLOTS.includes(slot)) pic = `<span class="shop-icon">${c.icon}</span>`;
     else pic = '<canvas width="76" height="100"></canvas>';
     return `<button class="shop-card ${own ? 'owned' : ''} ${sel ? 'sel' : ''}" data-slot="${slot}" data-id="${esc(c.id)}">${pic}<b>${esc(c.name)}</b><small>${esc(slot === 'wrap' ? 'Weapon wrap' : SLOT_LABELS[slot])}</small>${tag}</button>`;
   }
@@ -92,6 +93,7 @@ export class Shop {
     let big;
     if (s.slot === 'banner') big = `<div class="shop-bnr">${bannerHtml(c.id, this.ctx.getName(), this.ctx.getColor(), 'KILLED YOU', '<span class="chip">Assault Rifle</span>')}</div>`;
     else if (s.slot === 'wrap') big = `<div class="shop-wrap big" style="background:${camoSwatch(c)}"></div>`;
+    else if (ICON_SLOTS.includes(s.slot)) big = `<div class="shop-icon big">${c.icon}</div><p class="note">${esc(c.desc || '')}</p>`;
     else big = '<canvas class="shop-avatar" width="200" height="262"></canvas>';
     const friends = this.ctx.social ? [...this.ctx.social.friends.values()].map((f) => f.tag) : [];
     const canGift = !c.reward && c.price > 0 && friends.length;

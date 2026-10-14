@@ -23,6 +23,7 @@ import { SPRAY_PALETTE } from './clans.js';
 import { setVolume, setFeedbackSounds, hitSound, killSound } from './audio.js';
 import { Pumpkins, spookySky } from './halloween.js';
 import { Weather, WEATHER } from './weather.js';
+import { playKillFx } from './killfx.js';
 import { buildDisguise, DISGUISES, DISGUISE_NAME } from './prophunt.js';
 import { EMOTES, EMOTE_COOLDOWN } from './emotes.js';
 import { registerCustomMap } from './editor.js';
@@ -1066,6 +1067,12 @@ export class Game {
     if (m.k === this.myId && m.v !== this.myId) { const g = this.rep(m.w); g.kills++; if (m.head) g.heads++; }
     const pk = this.players.get(m.k), pv = this.players.get(m.v);
     const k = pk && { ...pk, color: this.colorFor(pk) }, v = pv && { ...pv, color: this.colorFor(pv) };
+    // The killer's kill effect (cosmetic), where the victim stood.
+    if (m.k !== m.v) {
+      const kc = m.k === this.myId ? getCos() : this.remotes.get(m.k) && this.remotes.get(m.k).cos;
+      const vp = m.v === this.myId ? this.me.pos : this.remotes.get(m.v) && this.remotes.get(m.v).pos;
+      if (kc && kc.killfx && kc.killfx !== 'none' && vp) playKillFx(this.fx, kc.killfx, vp.clone().add(new THREE.Vector3(0, 1.1, 0)));
+    }
     if (v) this.hud.feed(k, v, m.w, m.head, m.k === this.myId || m.v === this.myId);
     // Everyone's current kill streak (for SHUTDOWN medals), from the kills we've seen.
     const victimStreak = this.streaks.get(m.v) || 0;

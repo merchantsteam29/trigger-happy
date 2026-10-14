@@ -39,17 +39,21 @@ export class Effects {
     this.boomLight = new THREE.PointLight('#ff9040', 0, 22, 2);
     scene.add(this.boomLight);
     this.boomLT = 0;
+    this.fxLight = new THREE.PointLight('#ffffff', 0, 16, 2);
+    scene.add(this.fxLight);
+    this.fxLT = 0;
   }
 
   // color: optional (e.g. laser beams); beams also linger a little longer and look thicker.
-  tracer(from, to, color = null) {
+  // o: { life, w } to override (the lightning kill effect).
+  tracer(from, to, color = null, o = null) {
     const len = from.distanceTo(to);
     if (len < 0.5) return;
     if (this.tracers.length >= MAX_TRACERS) this.tracers.shift();
     _ab.subVectors(to, from).normalize();
     this.tracers.push({
       pos: from.clone().lerp(to, 0.5), quat: new THREE.Quaternion().setFromUnitVectors(Z, _ab), len,
-      t: color ? 0.12 : 0.07, life: color ? 0.12 : 0.07, w: color ? 0.035 : 0.018, col: color ? new THREE.Color(color) : TRACER_COLOR,
+      t: (o && o.life) || (color ? 0.12 : 0.07), life: (o && o.life) || (color ? 0.12 : 0.07), w: (o && o.w) || (color ? 0.035 : 0.018), col: color ? new THREE.Color(color) : TRACER_COLOR,
     });
   }
 
@@ -70,6 +74,21 @@ export class Effects {
         rot: new THREE.Euler(Math.random() * 3, Math.random() * 3, 0), t: life * (0.6 + Math.random() * 0.6), g: 9,
       });
     }
+  }
+
+  // One particle with its own velocity and gravity (g < 0 floats up). Kill effects (killfx.js).
+  particle(pos, v, color, size = 0.08, life = 1, g = 9) {
+    if (this.particles.length >= MAX_PARTICLES || Math.random() > this.scale) return;
+    this.particles.push({ pos: pos.clone(), v: v.clone(), size: size * (0.7 + Math.random() * 0.6), col: new THREE.Color(color), rot: new THREE.Euler(Math.random() * 3, Math.random() * 3, 0), t: life * (0.7 + Math.random() * 0.5), g });
+  }
+
+  // A short colored light flash (kill effects).
+  flashAt(pos, color, intensity = 20, time = 0.2) {
+    this.fxLight.position.copy(pos);
+    this.fxLight.color.set(color);
+    this.fxLight.intensity = intensity;
+    this.fxLT = this.fxLT0 = time;
+    this.fxLI = intensity;
   }
 
   // Flamethrower: a short stream of fire puffs along the shot.
@@ -207,5 +226,6 @@ export class Effects {
     if (this.flashT <= 0) this.flashLight.intensity = 0;
     this.boomLT -= dt;
     this.boomLight.intensity = Math.max(0, this.boomLT / 0.25) * 60;
+    if (this.fxLT > 0) { this.fxLT -= dt; this.fxLight.intensity = Math.max(0, this.fxLT / this.fxLT0) * this.fxLI; }
   }
 }

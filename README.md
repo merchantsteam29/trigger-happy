@@ -263,6 +263,12 @@ Switching holsters your current weapon before drawing the next (heavier weapons 
 immediately and then puts your previous weapon back in your hands. When you throw your last grenade you go back to
 the weapon you had out before.
 
+## Kill effects
+
+A **kill effect** plays where your victim stood when you get a kill, and everyone in the match sees it. Buy them in the
+**Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
+Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
+
 ## Banners
 
 Your **banner** is the card shown behind your name on the death screen of everyone you kill

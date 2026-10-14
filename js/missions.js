@@ -3,6 +3,7 @@ import { HOLIDAY_BANNER_ITEMS } from './holidays.js';
 import { RANKED_BANNER_ITEMS } from './ranked.js';
 import { camoOf } from './camos.js';
 import { roles } from './roles.js';
+import { KILL_FX_ITEMS } from './killfx.js';
 
 // Cosmetics shown on your character to other players. `free` items are owned from the start;
 // everything else is bought with tokens earned from missions (`price`).
@@ -115,10 +116,14 @@ export const COSMETICS = {
     ...RANKED_BANNER_ITEMS,
     { id: 'clantop', name: 'Top Clan', reward: true, how: 'Be in the #1 clan of a week (Leaderboard → Clans)' },
   ],
+  // Plays where your victim stood when you get a kill (killfx.js). Items have an icon and desc.
+  killfx: KILL_FX_ITEMS,
 };
-export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner' };
+export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect' };
+// Slots shown as an icon card instead of your character wearing the item.
+export const ICON_SLOTS = ['killfx'];
 export const HAIR_COLORS = ['#3b2a1e', '#111111', '#e3c16f', '#b5462a', '#3d6fd8', '#e86fb6', '#e8e8e8'];
-export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard' };
+export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none' };
 
 // Each mission tracks one lifetime stat and pays tokens once when finished.
 export const MISSIONS = [
@@ -324,6 +329,7 @@ export function randomCos() {
   const pick = (a) => a[(Math.random() * a.length) | 0];
   const c = { hairColor: pick(HAIR_COLORS) };
   for (const slot of Object.keys(COSMETICS)) c[slot] = pick(COSMETICS[slot]).id;
+  if (Math.random() < 0.75) c.killfx = 'none'; // most bots don't have a kill effect
   c.lvl = 1 + Math.floor(Math.random() ** 2 * 40); // bots show a level too
   return c;
 }

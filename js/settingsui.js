@@ -13,7 +13,7 @@ import { WEAPONS } from './weapons.js';
 import { CB_MODES } from './access.js';
 import { PAD_ACTIONS, padButton, setPadButton, resetPadButtons, buttonName, padStyle, padInput } from './gamepad.js';
 import { hasMods, cleanMods } from './mods.js';
-import { COSMETICS, SLOT_LABELS, HAIR_COLORS, MISSIONS, getStat, missionDone, isOwned, priceOf, buy, getTokens, getCos, setCos, ownsWrap, buyWrap } from './missions.js';
+import { COSMETICS, SLOT_LABELS, ICON_SLOTS, HAIR_COLORS, MISSIONS, getStat, missionDone, isOwned, priceOf, buy, getTokens, getCos, setCos, ownsWrap, buyWrap } from './missions.js';
 
 const $ = (id) => document.getElementById(id);
 const pct = (v) => Math.round(v * 100) + '%';
@@ -344,7 +344,7 @@ export class SettingsUI {
       const cos = getCos();
       const t = this.tryOn;
       const shown = t ? { ...cos, [t.slot]: t.id } : cos;
-      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['wraps', 'Weapon wraps']];
+      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['wraps', 'Weapon wraps']];
       if (!TABS.some(([k]) => k === this.czTab)) this.czTab = t ? t.slot : 'hat';
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
@@ -381,6 +381,15 @@ export class SettingsUI {
       };
       if (tab === 'wraps') {
         panel.appendChild(this.wrapsView(rerender));
+      } else if (ICON_SLOTS.includes(tab)) {
+        const hint = { killfx: 'Plays where your victim stood when you get a kill. Everyone in the match sees it.' }[tab] || '';
+        panel.innerHTML = `<div class="cz-hint">${hint}</div>
+          <div class="cz-grid cz-icon-grid">${COSMETICS[tab].map((c) => {
+            const st = state(tab, c);
+            return `<button class="cz-card cz-icon-card ${st.on ? 'sel' : ''} ${st.trying ? 'trying' : ''} ${st.have ? '' : 'locked'}" data-id="${c.id}" title="${esc(c.desc || c.name)}">
+              <span class="cz-icon">${c.icon}</span><b>${esc(c.name)}</b><small>${esc(c.desc || '')}</small>${st.tag}</button>`;
+          }).join('')}</div>`;
+        panel.querySelectorAll('[data-id]').forEach((b) => { b.onclick = () => pick(tab, b.dataset.id); });
       } else if (tab === 'banner') {
         panel.innerHTML = `<div class="cz-hint">Shown behind your name on the death screen of everyone you kill.</div>
           <div class="cz-bnr-preview">${bannerHtml(shown.banner, this.getName(), this.getColor(), 'KILLED YOU', '<span class="chip">Assault Rifle</span>')}</div>

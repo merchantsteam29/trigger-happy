@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.13.7', name: 'Kill Effects', banner: 'rainbow', notes: [
+    'Kill effects: a burst where your victim stood when you get a kill. Everyone in the match sees it',
+    'Eight to pick from in the Shop: Confetti, Love Bomb, Pixel Burst, Lightning, Ember Burst, Spirit, Jackpot and Black Hole',
+    'Wear one in Character → Kill effects',
+  ] },
   { v: '2026.10.13.6', name: 'Weather', banner: 'storm', notes: [
     'Matches can have rain, fog or a thunderstorm. Servers roll it each match, or the host picks one',
     'Rain stops when you are under a roof. Storms darken the map, with lightning and thunder',
