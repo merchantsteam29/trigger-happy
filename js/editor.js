@@ -128,8 +128,11 @@ export const savedMaps = () => (store.get('customMaps', []) || []).map(cleanMap)
 // ---------- The editor screen ----------
 export class MapEditor {
   // onPlay(map, mode): host a private server on it. toast(text): a message.
-  constructor({ onPlay, toast }) {
+  // onPublish(map) / onCommunity(): community maps (community.js).
+  constructor({ onPlay, toast, onPublish, onCommunity }) {
     this.onPlay = onPlay;
+    this.onPublish = onPublish;
+    this.onCommunity = onCommunity;
     this.toast = toast;
     this.el = document.getElementById('editor');
     this.canvas = document.getElementById('ed-canvas');
@@ -153,6 +156,9 @@ export class MapEditor {
   }
 
   close() { this.el.classList.add('hidden'); }
+
+  // Opens a copy of someone's map (Community maps) as a new, unsaved map.
+  load(map) { this.push(); this.map = cleanMap(map); this.slot = -1; this.renderPanel(); this.draw(); }
 
   // Canvas cell <-> world: x across, z down; 1 m = `this.k` pixels.
   fit() {
@@ -301,6 +307,7 @@ export class MapEditor {
       <small id="ed-count" class="ed-hint"></small>
       <div class="ed-btns"><button id="ed-undo">↶ Undo</button><button id="ed-clear" class="ghost">Clear</button></div>
       <div class="ed-btns"><button id="ed-save" class="primary">💾 Save</button><button id="ed-code">🔗 Code</button><button id="ed-import">📥 Load code</button></div>
+      <div class="ed-btns"><button id="ed-publish" title="Share it with everyone in Community maps">🌍 Publish</button><button id="ed-community">🌍 Community maps</button></div>
       <div class="ed-l">Play it<div class="ed-btns"><select id="ed-mode">${[['ffa', 'Free For All'], ['tdm', 'Team Deathmatch'], ['ctf', 'Capture the Flag'], ['gungame', 'Gun Game'], ['infection', 'Infection'], ['koth', 'King of the Hill'], ['prophunt', 'Prop Hunt']].map(([id, n]) => `<option value="${id}">${n}</option>`).join('')}</select><button id="ed-play" class="primary">▶ Play</button></div></div>
       <div class="ed-l">My maps${saved.length ? `<div class="ed-maps">${saved.map((s, i) => `<span class="ed-map ${i === this.slot ? 'sel' : ''}"><button data-load="${i}">${esc(s.name)}</button><button class="ghost" data-del="${i}" title="Delete">✖</button></span>`).join('')}</div>` : '<small class="ed-hint">Saved maps show here (up to 5).</small>'}</div>
       <button id="ed-close" class="ghost">Close editor</button>`;
@@ -362,5 +369,7 @@ export class MapEditor {
       };
     });
     $('ed-close').onclick = () => this.close();
+    $('ed-publish').onclick = () => { if (this.onPublish) this.onPublish(cleanMap(this.map)); };
+    $('ed-community').onclick = () => { if (this.onCommunity) this.onCommunity(); };
   }
 }

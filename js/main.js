@@ -53,6 +53,7 @@ import { qrSvg } from './qr.js';
 import { MapEditor, registerCustomMap } from './editor.js';
 import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanModMap, statsFor } from './mods.js';
 import { COURSES, COURSE_IDS, fmtScore, trainBests, saveBest } from './training.js';
+import { community, openCommunity } from './community.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1623,7 +1624,7 @@ $('staff-add').addEventListener('submit', async (e) => {
 });
 $('staff-tag').addEventListener('keydown', (e) => e.stopPropagation());
 roles.init(social);
-roles.onChange = () => { renderStaff(); renderFriends(); renderChip(); moderation.sync(); renderModNav(); leaderboard.reverify(); };
+roles.onChange = () => { renderStaff(); renderFriends(); renderChip(); moderation.sync(); renderModNav(); leaderboard.reverify(); community.reverify(); };
 renderStaff();
 
 // ---------- Mod panel, warnings, bans, forced gamertag changes ----------
@@ -1645,6 +1646,7 @@ seasons.onTier = (e) => {
   else toast(`Season tier ${e.tier}: 🪙 ${e.tokens}${what}`);
 };
 profiles.init(social);
+community.init(social);
 clans.init(social);
 clans.onChange = () => {
   if (!game.active && menuPane === 'friends' && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#clan-card input'))) renderClan();
@@ -1978,12 +1980,18 @@ async function startPractice(tut = false) {
 }
 $('btn-practice').onclick = () => startPractice();
 // Map editor (editor.js): build a map, then host a private server on it.
+const playCustom = (map, mode) => {
+  registerCustomMap(map);
+  hostLobby({ map: 'custom', mode, max: 8, bots: 4, vis: 'private', name: map.name, rotate: false, customMap: map });
+};
 const mapEditor = new MapEditor({
   toast,
-  onPlay: (map, mode) => {
-    registerCustomMap(map);
-    hostLobby({ map: 'custom', mode, max: 8, bots: 4, vis: 'private', name: map.name, rotate: false, customMap: map });
+  onPlay: playCustom,
+  onPublish: async (map) => {
+    if (!confirm(`Publish "${map.name}" to Community maps? Everyone will be able to play and copy it.`)) return;
+    try { await community.publish(map); toast(`Published "${map.name}"! Find it in 🌍 Community maps.`); } catch (e) { toast(e.message); }
   },
+  onCommunity: () => openCommunity(document.querySelector('#editor .editor-panel'), { toast, onPlay: (map, mode) => { mapEditor.close(); playCustom(map, mode); }, onCopy: (map) => { mapEditor.load(map); toast(`Copied "${map.name}". Save it to keep your own version.`); } }),
 });
 $('btn-editor').onclick = () => mapEditor.open();
 // A slow device gets one suggestion to switch to Low-end graphics.

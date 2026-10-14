@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.6', name: 'Community Maps', banner: 'rainbow', notes: [
+    'Publish your editor maps for everyone (Map editor → 🌍 Publish)',
+    'Community maps lists every player\'s maps by likes or newest: play one, copy it to edit, or ♥ like it',
+  ] },
   { v: '2026.10.14.5', name: 'Two New Maps', banner: 'sunset', notes: [
     'Skyline: a sunset city with rooftops linked by ziplines. Press E under a cable to ride it',
     'Farmstead: a barn with hay lofts, silos, farmhouses and a cornfield',

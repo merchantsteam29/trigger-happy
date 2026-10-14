@@ -410,6 +410,11 @@ ranked divisions, kills on real players, finishing 4 season passes and smashing 
 **Play** hosts a private server on your map (Free For All, Team Deathmatch, Capture the Flag, Gun Game, Infection, King
 of the Hill or Prop Hunt, with bots); everyone who joins gets your map.
 
+**🌍 Community maps:** **🌍 Publish** shares your map with everyone (needs a gamertag, up to 5 maps; publishing a map
+with the same name again updates it). **🌍 Community maps** lists everyone's maps, by **♥ Top** or **New**, with a
+picture of each: **▶ Play** hosts a private match on it, **✎ Copy** opens your own copy in the editor, and **♥** likes it
+(once each). 🗑 takes one of yours down. Staff can hide maps that break the rules.
+
 ## Update history
 
 **Settings → 📜 Updates** lists every update so far, newest first: each one's name on a banner that fits it, with
