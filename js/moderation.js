@@ -25,6 +25,7 @@ const REPLAY = 'whffa/v1/replay/'; // report replay clips (replay.js)
 const REPDONE = 'whffa/v1/repdone/'; // "reviewed" notes for reporters (staff-signed, cleared by the reporter once seen)
 const REPORT_MAX_AGE = 7 * 864e5;
 const SUSPECTS = V + 'suspects'; // staff-signed shared watchlist: [{ t: tag, why, by, ts }]; every staff member is alerted
+const EVID = V + 'evidence/'; // staff-signed replay clips kept with a player's record: evidence/<lower tag>-<id>
 const APPROVE = V + 'approve/'; // trial moderators' ban / unban requests, waiting for the owner (signed, retained)
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -274,7 +275,7 @@ class Moderation {
   // ---------- Staff actions on a gamertag ----------
 
   // act: 'warn' | 'ban' | 'unban' | 'mute' | 'smute' (shadow mute) | 'unmute' | 'rename' | 'clearwarns' | 'note'.
-  async act(tag, act, { reason = '', hours = 0 } = {}) {
+  async act(tag, act, { reason = '', hours = 0, clip: clipId = '' } = {}) {
     const s = this.social, me = roles.myRole();
     if (!me) throw new Error('Only staff can do that.');
     const claim = await s.lookup(tag, true);
@@ -326,7 +327,7 @@ class Moderation {
       note = reason;
     } else if (act === 'note') {
       if (!reason) throw new Error('Type the note first.');
-      rec.notes = [...rec.notes, { by: s.tag, text: reason, ts: now }].slice(-20);
+      rec.notes = [...rec.notes, { by: s.tag, text: reason, ts: now, ...(/^[a-z0-9]{4,12}$/.test(clipId) ? { clip: clipId } : {}) }].slice(-20);
       note = reason;
     } else throw new Error('Unknown action.');
     rec.log = [...rec.log, { by: s.tag, act, note, ts: now }].slice(-LOG_MAX);
@@ -443,6 +444,35 @@ class Moderation {
         s.relay.unsubscribe(topic);
         const b = raw ? await s.verify(raw) : null;
         resolve(b && b.id === r.id && low(b.from) === low(r.from) && typeof b.clip === 'string' ? b.clip : null);
+      }, 3000);
+    });
+  }
+
+  // ---------- Evidence clips ----------
+  // Staff save the last 60 s of a match they're in or watching onto a player's record: the clip is
+  // retained at evidence/<tag>-<id> (signed by the staff member) and a staff note points at it.
+
+  async saveEvidence(target, data, text) {
+    if (!roles.myRole()) throw new Error('Only staff can do that.');
+    if (typeof data !== 'string' || !data) throw new Error('Nothing recorded yet.');
+    const claim = await this.social.lookup(target, true);
+    if (!claim) throw new Error(`${target} has no gamertag, so there's no record to keep it on.`);
+    const id = Date.now().toString(36);
+    this.social.relay.publish(EVID + low(claim.tag) + '-' + id, await this.social.sign({ id, target: claim.tag, clip: data }), { retain: true });
+    return this.act(claim.tag, 'note', { reason: clip(text, 140) || '🎬 Evidence clip', clip: id });
+  }
+
+  fetchEvidence(target, id) {
+    const s = this.social, topic = EVID + low(target) + '-' + id;
+    return new Promise((resolve) => {
+      let raw = null;
+      const off = s.relay.onMessage((t, payload) => { if (t === topic && payload.length) raw = payload.toString(); });
+      s.relay.subscribe(topic);
+      setTimeout(async () => {
+        off();
+        s.relay.unsubscribe(topic);
+        const b = raw ? await this.staffSigned(raw) : null;
+        resolve(b && b.id === id && typeof b.clip === 'string' ? b.clip : null);
       }, 3000);
     });
   }

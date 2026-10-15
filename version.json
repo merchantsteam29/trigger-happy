@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.5",
+  "version": "2026.10.15.6",
   "notes": [
-    "Staff can find and ban alt accounts of banned players"
+    "Staff can save 60 s evidence clips on a player's record"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

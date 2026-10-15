@@ -722,7 +722,9 @@ becomes free again.
 - **In a match:** staff get a **Moderation** section in the pause menu to **warn**, **rename**, **freeze** (they can't
   move or shoot), **mute** or **kick** anyone in that match, even players without a gamertag. Staff can also **end**,
   **restart** or **change the map** of the match, even when someone else is hosting, and **lock chat** or turn on
-  **slow mode** (one message per 5 seconds) for everyone except staff.
+  **slow mode** (one message per 5 seconds) for everyone except staff. **🎬 Clip** next to a player (or **F9** while
+  spectating someone) saves the last 60 seconds of the match as **evidence** on their record: it shows as a staff note
+  with **🎬 Watch**, which opens it in the replay theater.
   - Moderators can act on regular players.
   - The owner can also act on moderators.
   - Nobody can kick the host, whose browser runs the match.

@@ -101,6 +101,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `role/…` | moderator appointments (owner-signed) | roles.js |
 | `modrec/<tag>`, `report/<id>`, `appeal/<tag>`, `announce`, `chatfilter`, `staffchat/…`, `permabans`, `suspects` (the staff's shared watchlist: `moderation.setSuspect`, alerts via `onSuspect` from presence; ban evasion: `altsOf` / `evaders` match the staff directory's claim keys `x` against banned players' keys), `shadowmutes` (staff-signed: hosts send their match chat back to them only, clients drop their party / clan chat), `pres/…` | moderation | moderation.js |
 | `bug/<id>` | bug reports (only the owner reads them) | moderation.js |
+| `evidence/<tag>-<id>` | a staff member's 60 s replay clip kept with a player's record (signed, retained; a record note's `clip` points at it: `moderation.saveEvidence` / `fetchEvidence`) | moderation.js |
 | `approve/<id>` | a trial moderator's ban / unban request (signed, retained; the owner approves or denies, then clears it) | moderation.js |
 | `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |

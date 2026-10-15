@@ -200,7 +200,7 @@ export class ModPanel {
         <div class="mp-sub">Warnings (${warns.length})</div>
         <div class="mp-list">${warns.length ? warns.slice().reverse().map((w) => `<div>⚠ ${esc(w.reason)} <small>— ${esc(w.by)}, ${ago(w.ts)}</small></div>`).join('') : '<small class="muted">None</small>'}</div>
         <div class="mp-sub">Staff notes <small>(the player isn't shown these)</small></div>
-        <div class="mp-list">${notes.length ? notes.slice().reverse().map((n) => `<div>📝 ${esc(n.text)} <small>— ${esc(n.by)}, ${ago(n.ts)}</small></div>`).join('') : '<small class="muted">None</small>'}</div>
+        <div class="mp-list">${notes.length ? notes.slice().reverse().map((n) => `<div>📝 ${esc(n.text)} <small>— ${esc(n.by)}, ${ago(n.ts)}</small>${n.clip ? ` <button class="sm" data-evid="${esc(n.clip)}" data-by="${esc(n.by)}">🎬 Watch</button>` : ''}</div>`).join('') : '<small class="muted">None</small>'}</div>
         ${can ? `
         <div class="mp-sub">Action</div>
         <div class="mp-reason-row"><select id="mp-quick"><option value="">Quick reason…</option>${QUICK_REASONS.map((q) => `<option>${q}</option>`).join('')}</select><input id="mp-reason" maxlength="140" placeholder="Reason / note text"></div>
@@ -238,6 +238,16 @@ export class ModPanel {
         this.say(res && res.pending ? 'Sent to the owner for approval.' : `Banned ${t.tag} as an alt of ${of}.`); this.render();
       } catch (err) { this.say(err.message); }
     };
+    box.querySelectorAll('[data-evid]').forEach((b) => {
+      b.onclick = async () => {
+        b.disabled = true; this.say('Loading the clip…');
+        const clip = await moderation.fetchEvidence(t.tag, b.dataset.evid);
+        b.disabled = false;
+        if (!clip) { this.say('That clip couldn\'t be loaded.'); return; }
+        this.say('');
+        this.watchReplay(clip, { target: t.tag, reason: 'Evidence', from: b.dataset.by });
+      };
+    });
     const susBtn = box.querySelector('[data-suspect]');
     if (susBtn) susBtn.onclick = async () => {
       const on = moderation.isSuspect(t.tag);

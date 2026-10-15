@@ -1621,6 +1621,24 @@ game.onWelcome = async () => {
   if (proof && net) net.send({ t: 'staff', proof });
 };
 
+// Staff: the last 60 s of this match as evidence on a player's record (pause menu 🎬 Clip, or F9
+// for whoever you're spectating).
+async function saveEvidence(p) {
+  if (!p || !p.gt) { toast('They have no gamertag, so there\'s no record to keep a clip on.'); return; }
+  const clip = encodeClip(game.recorder.latest(), 60);
+  if (!clip) { toast('Nothing recorded yet.'); return; }
+  try {
+    await moderation.saveEvidence(p.gt, clip, `🎬 Evidence: last 60 s of match ${net ? net.code : ''}`);
+    toast(`🎬 Saved 60 s of evidence on ${p.gt}'s record`);
+  } catch (e) { toast(e.message); }
+}
+addEventListener('keydown', (e) => {
+  if (e.code !== 'F9' || !game.active || !net || !roles.myRole()) return;
+  e.preventDefault();
+  const t = game.specTarget && game.players.get(game.specTarget.id);
+  if (t) saveEvidence(t); else toast('Spectate someone first (or use 🎬 Clip in the pause menu).');
+});
+
 // Pause-menu moderation: shown once the host has verified you as staff.
 function renderModList() {
   if (net && net.practice) { $('pause-mod').classList.add('hidden'); return; }
@@ -1633,7 +1651,7 @@ function renderModList() {
   $('mod-list').innerHTML = rows.length ? rows.map((p) => {
     const can = rank(mine) > rank(p.role), may = (x) => roles.myCan(x); // moderator permissions (roles.js PERMS)
     return `<div class="mod-row"><span class="mod-name">${esc(p.name)}${badge(p.role, true)}${p.gt && p.gt !== p.name ? ` <small class="gt">@${esc(p.gt)}</small>` : p.gt ? ' <small class="gt">✓</small>' : ' <small class="gt guest">guest</small>'}${p.muted ? ' <em>muted</em>' : ''}</span>
-      ${can ? `${may('warn') ? `<button data-mwarn="${p.id}" title="Pop up a warning on their screen">⚠ Warn</button>` : ''}${may('rename') ? `<button data-mren="${p.id}" title="Change their name in this match">✎ Rename</button>` : ''}${may('tools') ? `<button data-mfreeze="${p.id}">${p.frozen ? '🔥 Unfreeze' : '🧊 Freeze'}</button>` : ''}${may('mute') ? `<button data-mute="${p.id}">${p.muted ? 'Unmute' : 'Mute'}</button>` : ''}${p.id === 'host' ? '<small>host</small>' : may('kick') ? `<button class="danger" data-mkick="${p.id}">Kick</button>` : ''}` : '<small>staff</small>'}</div>`;
+      ${can ? `${may('warn') ? `<button data-mwarn="${p.id}" title="Pop up a warning on their screen">⚠ Warn</button>` : ''}${may('rename') ? `<button data-mren="${p.id}" title="Change their name in this match">✎ Rename</button>` : ''}${may('tools') ? `<button data-mfreeze="${p.id}">${p.frozen ? '🔥 Unfreeze' : '🧊 Freeze'}</button>` : ''}${may('mute') ? `<button data-mute="${p.id}">${p.muted ? 'Unmute' : 'Mute'}</button>` : ''}${p.gt ? `<button data-mclip="${p.id}" title="Save the last 60 seconds as evidence on their record (F9 saves it on whoever you're spectating)">🎬 Clip</button>` : ''}${p.id === 'host' ? '<small>host</small>' : may('kick') ? `<button class="danger" data-mkick="${p.id}">Kick</button>` : ''}` : '<small>staff</small>'}</div>`;
   }).join('') : '<div class="note">No other players here yet.</div>';
   $('mod-list').querySelectorAll('[data-mute]').forEach((b) => { b.onclick = () => net.send({ t: 'modmute', id: b.dataset.mute }); });
   $('mod-list').querySelectorAll('[data-mfreeze]').forEach((b) => { b.onclick = () => net.send({ t: 'modfreeze', id: b.dataset.mfreeze }); });
@@ -1653,6 +1671,7 @@ function renderModList() {
       if (confirm(what)) net.send({ t: 'modmatch', op, map: sel.value });
     };
   });
+  $('mod-list').querySelectorAll('[data-mclip]').forEach((b) => { b.onclick = () => saveEvidence(game.players.get(b.dataset.mclip)); });
   $('mod-list').querySelectorAll('[data-mwarn]').forEach((b) => {
     b.onclick = () => {
       const p = game.players.get(b.dataset.mwarn);
