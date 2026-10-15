@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.10",
+  "version": "2026.10.15.11",
   "notes": [
-    "Reports show a player's past offences"
+    "Staff see report trends by reason"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

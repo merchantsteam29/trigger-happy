@@ -342,7 +342,14 @@ export class ModPanel {
     const me = String(this.social.tag).toLowerCase(), show = this.repShow || 'all';
     const claimer = (r) => { const c = moderation.claimOf(r.id); return c ? c.by : ''; };
     const reports = all.filter((r) => show === 'all' || (show === 'open' ? !claimer(r) : claimer(r).toLowerCase() === me));
-    body.innerHTML = `<div class="card">
+    const tr = moderation.reportTrends(), most = Math.max(1, ...tr.reasons.map((x) => Math.max(x[1], x[2])));
+    body.innerHTML = `<div class="card mp-trends">
+      <h3>This week <span class="muted">(${tr.week} report${tr.week === 1 ? '' : 's'}${tr.last ? `, ${tr.last} the week before` : ''})</span></h3>
+      <div class="mp-trend-grid"><div class="mp-bars">${tr.reasons.map(([why, n, p]) => `<div class="mp-bar" title="${n} this week, ${p} the week before">
+          <span>${esc(why === AUTO_FLAG ? 'Anti-cheat auto-flags' : why)}</span><i style="--w:${(n / most) * 100}%"></i><i class="prev" style="--w:${(p / most) * 100}%"></i><b>${n}${n > p ? ' ▲' : n < p ? ' ▼' : ''}</b></div>`).join('')}</div>
+        <div class="mp-most"><small class="muted">Most reported this week</small>${tr.top.length ? tr.top.map(([tag, n]) => `<button class="mp-rec" data-look="${esc(tag)}"><b>${esc(tag)}</b><em>${n}</em></button>`).join('') : '<div class="note">Nobody.</div>'}</div></div>
+      <div class="note">Counted from every report this device has seen (resolved ones too). The thin bar is the week before.</div>
+    </div><div class="card">
       <h3>Reports <span class="muted">(${all.length})</span></h3>
       <div class="note">Players report each other from the pause menu in a match. Reports older than 7 days disappear on their own. Press ✋ I've got this so other staff know you're handling one.</div>
       <div class="seg mp-repshow">${[['all', `All ${all.length}`], ['open', `Not taken ${all.filter((r) => !claimer(r)).length}`], ['mine', `Mine ${all.filter((r) => claimer(r).toLowerCase() === me).length}`]].map(([id, n]) => `<button data-show="${id}" class="${show === id ? 'sel' : ''}">${n}</button>`).join('')}</div>

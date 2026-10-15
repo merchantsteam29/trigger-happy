@@ -403,6 +403,7 @@ class Moderation {
     if (!b || b.id !== id || Date.now() - (Number(b.ts) || 0) > REPORT_MAX_AGE) return;
     const img = typeof b.img === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(b.img) ? b.img : null;
     this.reports.set(id, { id, from: b.from, target: clip(b.target, 16), lobby: clip(b.lobby, 8), reason: clip(b.reason, 40), details: clip(b.details, 200), ts: Number(b.ts), img, rp: b.rp === 1 });
+    this.tally(this.reports.get(id));
     if (this.onChange) this.onChange(null);
   }
 
@@ -425,6 +426,26 @@ class Moderation {
     await this.receiveClaimMark(id, signed);
   }
   claimOf(id) { return this.claims.get(id) || null; }
+
+  // Report trends (the Reports tab's board): every report this device has seen, even after it was
+  // resolved, kept 15 days on this device: id -> [ts, reason, target].
+  tally(r) {
+    const seen = store.get('repStats', {});
+    if (seen[r.id]) return;
+    seen[r.id] = [r.ts, r.reason, r.target];
+    const cut = Date.now() - 15 * 864e5;
+    for (const [id, v] of Object.entries(seen)) if (!Array.isArray(v) || v[0] < cut) delete seen[id];
+    store.set('repStats', seen);
+  }
+  // { reasons: [[reason, this week, last week]], top: [[tag, count]], week, last } over the last 7 / 7-14 days.
+  reportTrends() {
+    const now = Date.now(), rows = Object.values(store.get('repStats', {})).filter(Array.isArray);
+    const wk = rows.filter((v) => v[0] > now - 7 * 864e5), prev = rows.filter((v) => v[0] <= now - 7 * 864e5 && v[0] > now - 14 * 864e5);
+    const reasons = [...REPORT_REASONS, AUTO_FLAG].map((x) => [x, wk.filter((v) => v[1] === x).length, prev.filter((v) => v[1] === x).length]);
+    const by = new Map();
+    for (const v of wk) by.set(low(v[2]), [v[2], (by.get(low(v[2])) || [0, 0])[1] + 1]);
+    return { reasons, top: [...by.values()].sort((a, b) => b[1] - a[1]).slice(0, 5), week: wk.length, last: prev.length };
+  }
 
   // A player's past trouble, for the repeat-offender badge on reports: open reports about them, and
   // warnings / mutes / bans / kicks from their record's history.
