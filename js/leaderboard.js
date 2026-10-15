@@ -236,7 +236,7 @@ class Leaderboard {
   // ---------- Hide list (staff) ----------
   async receiveHide(text) {
     this.hideRaw = text || null;
-    const body = text ? await moderation.staffSigned(text) : null;
+    const body = text ? await moderation.staffSigned(text, 'tools') : null;
     if (!body || !Array.isArray(body.tags)) return;
     if (this.hideTs && Number(body.ts) < this.hideTs) return;
     this.hideTs = Number(body.ts) || 0;

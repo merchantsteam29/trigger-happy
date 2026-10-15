@@ -1,4 +1,4 @@
-import { roles, rank, verifyWith } from './roles.js';
+import { roles, rank, verifyWith, ACT_PERM } from './roles.js';
 import { store } from './util.js';
 
 // Moderation over the public relays (no server of our own):
@@ -176,11 +176,12 @@ class Moderation {
     if (changed) await this.publishPerma(next);
   }
 
-  // Signed by someone who is staff right now?
-  async staffSigned(text) {
+  // Signed by someone who is staff right now (and, given `perm`, allowed to do it: roles.js PERMS)?
+  async staffSigned(text, perm = '') {
     const p = parse(text);
     if (!p || !p.body.from) return null;
     const pub = roles.pubOf(p.body.from);
+    if (perm && !roles.can(p.body.from, perm, Number(p.body.ts) || 0)) return null;
     return pub && roles.roleOfTag(p.body.from) && (await verifyWith(pub, p.env)) ? p.body : null;
   }
 
@@ -203,6 +204,9 @@ class Moderation {
     if (!p || low(p.body.target) !== k || !p.body.from) return null;
     const role = roles.roleOfTag(p.body.from), pub = roles.pubOf(p.body.from);
     if (!role || !pub || rank(role) <= rank(roles.roleOfTag(p.body.target))) return null;
+    // The latest change must be one the signer is allowed to make (moderator permissions).
+    const last = (Array.isArray(p.body.log) ? p.body.log : []).slice(-1)[0];
+    if (last && low(last.by) === low(p.body.from) && ACT_PERM[last.act] && !roles.can(p.body.from, ACT_PERM[last.act], Number(last.ts) || 0)) return null;
     return (await verifyWith(pub, p.env)) ? p.body : null;
   }
 
@@ -270,6 +274,7 @@ class Moderation {
     const target = claim.tag, k = low(target);
     if (k === low(s.tag)) throw new Error('You can\'t moderate yourself.');
     if (rank(me) <= rank(roles.roleOfTag(target))) throw new Error('You can only act on players ranked below you.');
+    if (ACT_PERM[act] && !roles.myCan(ACT_PERM[act])) throw new Error('The owner hasn\'t given you permission to do that.');
     reason = clip(reason, 140);
     const now = Date.now(), until = hours > 0 ? now + hours * 3600e3 : 0;
     const old = this.records.get(k) || {};
@@ -334,7 +339,7 @@ class Moderation {
 
   async receiveAnnouncement(text) {
     this.annRaw = text || null;
-    const body = text ? await this.staffSigned(text) : null;
+    const body = text ? await this.staffSigned(text, 'announce') : null;
     const a = body && body.text && (!body.until || body.until > Date.now()) ? body : null;
     if (a && this.announcement && this.announcement.ts > a.ts) return;
     this.announcement = a;
@@ -343,7 +348,7 @@ class Moderation {
   }
 
   async announce(text, hours, level = 'info') {
-    if (!roles.myRole()) throw new Error('Only staff can post announcements.');
+    if (!roles.myCan('announce')) throw new Error('You don\'t have permission to post announcements.');
     text = clip(text, 200);
     if (!text) throw new Error('Type the announcement first.');
     const body = { text, level: level === 'warn' ? 'warn' : 'info', until: hours > 0 ? Date.now() + hours * 3600e3 : 0, id: Date.now().toString(36) };
@@ -353,7 +358,7 @@ class Moderation {
   }
 
   async clearAnnouncement() {
-    if (!roles.myRole()) throw new Error('Only staff can do that.');
+    if (!roles.myCan('announce')) throw new Error('You don\'t have permission to do that.');
     const signed = await this.social.sign({ text: '', until: 0, id: 'cleared' });
     this.social.relay.publish(ANN, signed, { retain: true });
     await this.receiveAnnouncement(signed);
@@ -488,7 +493,7 @@ class Moderation {
 
   async receiveFilter(text) {
     this.filterRaw = text || null;
-    const body = text ? await this.staffSigned(text) : null;
+    const body = text ? await this.staffSigned(text, 'tools') : null;
     if (!body) return;
     if (this.filterTs && this.filterTs > body.ts) return;
     this.filterTs = body.ts;
@@ -498,7 +503,7 @@ class Moderation {
   }
 
   async saveFilter(words, defaults) {
-    if (!roles.myRole()) throw new Error('Only staff can change the chat filter.');
+    if (!roles.myCan('tools')) throw new Error('You don\'t have permission to change the chat filter.');
     const list = [...new Set(words.map((w) => clip(w, 30).toLowerCase()).filter((w) => /^[a-z0-9]{2,30}$/.test(w)))].slice(0, 300);
     const signed = await this.social.sign({ defaults: !!defaults, words: list });
     this.social.relay.publish(FILTER, signed, { retain: true });

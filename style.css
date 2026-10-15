@@ -623,6 +623,7 @@ body.tablet #touch .b-chat { left: calc(136px + env(safe-area-inset-left)); top:
 .fr-me b { color: var(--accent); font-size: 18px; letter-spacing: 1px; }
 .fr-add { display: flex; gap: 8px; }
 .fr-add input { flex: 1; min-width: 0; }
+.fr-add select { flex: 0 0 auto; width: auto; }
 .fr-top .note { margin: 0; min-height: 0; }
 .fr-top .note.err { color: var(--danger); }
 .fr-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
@@ -1073,6 +1074,8 @@ body.mobile #death .big { font-size: 20px; }
 .mp-rec em.bad { background: rgba(255,70,70,0.15); color: var(--danger); }
 .mp-rec small { flex-basis: 100%; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mp-staff { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.mp-perms { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: -2px 0 8px 22px; font-size: 12px; opacity: .9; }
+.mp-perms label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
 #nav-mod .ic { color: #4fc3ff; }
 .mod-row button { padding: 4px 8px; }
 @media (max-width: 900px) { .mp-grid { grid-template-columns: 1fr; } }

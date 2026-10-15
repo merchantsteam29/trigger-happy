@@ -740,7 +740,7 @@ export class HostLogic {
         this.checkIdent(p, m.proof);
         break;
       case 'modchat': { // staff: lock lobby chat, or slow mode (one message per 5 s)
-        if (!p.role) break;
+        if (!p.role || !roles.can(p.name, 'tools')) break;
         if (m.op === 'lock') this.chatLock = !this.chatLock;
         else if (m.op === 'slow') this.chatSlow = !this.chatSlow;
         else break;
@@ -761,6 +761,7 @@ export class HostLogic {
         const v = this.players.get(m.id);
         const rank = (q) => (q.role === 'owner' ? 2 : q.role === 'mod' ? 1 : 0);
         if (!v || v === p || !p.role || rank(p) <= rank(v) || v.bot) break;
+        if (!roles.can(p.name, m.t === 'modwarn' ? 'warn' : 'rename')) break; // moderator permissions (roles.js)
         if (m.t === 'modwarn') {
           const reason = String(m.reason || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 140);
           if (reason) this.sendTo(v.id, { t: 'warned', by: p.name, role: p.role, reason });
@@ -777,7 +778,7 @@ export class HostLogic {
       case 'modfreeze': { // stop a player moving / shooting until unfrozen
         const v = this.players.get(m.id);
         const rank = (q) => (q.role === 'owner' ? 2 : q.role === 'mod' ? 1 : 0);
-        if (!v || v === p || !p.role || rank(p) <= rank(v)) break;
+        if (!v || v === p || !p.role || rank(p) <= rank(v) || !roles.can(p.name, 'tools')) break;
         v.frozen = !v.frozen;
         const by = p.role === 'owner' ? 'the owner' : 'a moderator';
         this.sendTo(v.id, { t: 'frozen', on: v.frozen, by });
@@ -786,7 +787,7 @@ export class HostLogic {
         break;
       }
       case 'modmatch': { // any staff member, even when not the host
-        if (!p.role) break;
+        if (!p.role || !roles.can(p.name, 'tools')) break;
         const by = p.role === 'owner' ? 'The owner' : 'A moderator';
         if (m.op === 'end' && this.phase === 'playing') { this.broadcast({ t: 'notice', text: `${by} ended the match` }); this.endMatch(); }
         else if (m.op === 'restart') { this.startMatch(this.s.mode, this.s.map); this.broadcast({ t: 'notice', text: `${by} restarted the match` }); }
@@ -796,6 +797,7 @@ export class HostLogic {
         const v = this.players.get(m.id);
         const rank = (q) => (q.role === 'owner' ? 2 : q.role === 'mod' ? 1 : 0);
         if (!v || v === p || !p.role || rank(p) <= rank(v)) break;
+        if (!roles.can(p.name, m.t === 'modkick' ? 'kick' : 'mute')) break;
         const by = p.role === 'owner' ? 'the owner' : 'a moderator';
         if (m.t === 'modkick') {
           if (v.id === 'host') break; // the host's browser runs the match

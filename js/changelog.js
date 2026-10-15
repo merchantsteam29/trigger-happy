@@ -7,6 +7,9 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.15.1', name: 'Staff Permissions', banner: 'gold', notes: [
+    'The owner can choose what each moderator is allowed to do',
+  ] },
   { v: '2026.10.14.26', name: 'Foundry', banner: 'storm', notes: [
     'New map: Foundry. Ride elevators up to the high decks and moving bridges out to the tower in the middle',
     'Moving platforms carry you (and the bots) along',

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.26",
+  "version": "2026.10.15.1",
   "notes": [
-    "New map: Foundry, with elevators and moving bridges"
+    "The owner can choose what each moderator is allowed to do"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

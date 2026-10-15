@@ -1631,13 +1631,14 @@ function renderModList() {
   const rank = (r) => (r === 'owner' ? 2 : r === 'mod' ? 1 : 0);
   const rows = [...game.players.values()].filter((p) => p.id !== game.myId && !p.bot);
   $('mod-list').innerHTML = rows.length ? rows.map((p) => {
-    const can = rank(mine) > rank(p.role);
+    const can = rank(mine) > rank(p.role), may = (x) => roles.myCan(x); // moderator permissions (roles.js PERMS)
     return `<div class="mod-row"><span class="mod-name">${esc(p.name)}${badge(p.role, true)}${p.gt && p.gt !== p.name ? ` <small class="gt">@${esc(p.gt)}</small>` : p.gt ? ' <small class="gt">✓</small>' : ' <small class="gt guest">guest</small>'}${p.muted ? ' <em>muted</em>' : ''}</span>
-      ${can ? `<button data-mwarn="${p.id}" title="Pop up a warning on their screen">⚠ Warn</button><button data-mren="${p.id}" title="Change their name in this match">✎ Rename</button><button data-mfreeze="${p.id}">${p.frozen ? '🔥 Unfreeze' : '🧊 Freeze'}</button><button data-mute="${p.id}">${p.muted ? 'Unmute' : 'Mute'}</button>${p.id !== 'host' ? `<button class="danger" data-mkick="${p.id}">Kick</button>` : '<small>host</small>'}` : '<small>staff</small>'}</div>`;
+      ${can ? `${may('warn') ? `<button data-mwarn="${p.id}" title="Pop up a warning on their screen">⚠ Warn</button>` : ''}${may('rename') ? `<button data-mren="${p.id}" title="Change their name in this match">✎ Rename</button>` : ''}${may('tools') ? `<button data-mfreeze="${p.id}">${p.frozen ? '🔥 Unfreeze' : '🧊 Freeze'}</button>` : ''}${may('mute') ? `<button data-mute="${p.id}">${p.muted ? 'Unmute' : 'Mute'}</button>` : ''}${p.id === 'host' ? '<small>host</small>' : may('kick') ? `<button class="danger" data-mkick="${p.id}">Kick</button>` : ''}` : '<small>staff</small>'}</div>`;
   }).join('') : '<div class="note">No other players here yet.</div>';
   $('mod-list').querySelectorAll('[data-mute]').forEach((b) => { b.onclick = () => net.send({ t: 'modmute', id: b.dataset.mute }); });
   $('mod-list').querySelectorAll('[data-mfreeze]').forEach((b) => { b.onclick = () => net.send({ t: 'modfreeze', id: b.dataset.mfreeze }); });
   // Match tools work for any staff member, even when someone else is hosting.
+  $('mod-match').classList.toggle('hidden', !roles.myCan('tools'));
   const sel = $('mm-map');
   if (!sel.options.length) sel.innerHTML = MAP_ORDER.map((id) => `<option value="${id}">${esc(MAPS[id].name)}</option>`).join('');
   const cm = game.chatMode || {};

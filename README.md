@@ -668,7 +668,11 @@ becomes free again.
     in lobby and party chat for everyone, and spellings like "sh1t" and "fuuuck" are caught too.
   - **Log:** moderator activity (actions, warns, bans, mutes and kicks per staff member), then every staff action with
     its time, filterable by moderator.
-  - **Staff** (owner only): appoint and remove moderators, permanently or for 1, 7 or 30 days.
+  - **Staff** (owner only): appoint and remove moderators, permanently or for 1, 7 or 30 days, and tick what each one
+    may do: warn, mute, kick, ban / unban, force a new gamertag, announcements, and match tools (freeze, end / restart /
+    change map, chat lock, the chat filter, hiding from the leaderboard or community maps). Buttons they aren't allowed
+    to use are hidden, and everyone's game ignores actions they weren't allowed to take. Taking a permission away doesn't
+    undo what they did before.
   - **Bugs** (owner only): bug reports from players, with their game version, device, match and screenshot. Mark one
     **Done** to remove it; they disappear after 30 days.
   - **Recent:** everyone you've played with lately (on this device), with their verified gamertag when known, so you

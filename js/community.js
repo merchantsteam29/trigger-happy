@@ -58,7 +58,7 @@ class Community {
 
   async receiveHide(text) {
     this.hideRaw = text || null;
-    const b = text ? await moderation.staffSigned(text) : null;
+    const b = text ? await moderation.staffSigned(text, 'tools') : null;
     if (!b || !Array.isArray(b.ids)) return;
     if (this.hideTs && Number(b.ts) < this.hideTs) return;
     this.hideTs = Number(b.ts) || 0;
@@ -140,7 +140,7 @@ export function openCommunity(host, { onPlay, onCopy, toast }) {
   host.appendChild(el);
   const close = () => { el.remove(); community.onChange = null; };
   const render = () => {
-    const rows = community.list(sort), staff = !!roles.myRole();
+    const rows = community.list(sort), staff = roles.myCan('tools');
     el.innerHTML = `<div class="cm-head"><h3>🌍 Community maps</h3>
         <div class="seg"><button data-sort="top" class="${sort === 'top' ? 'sel' : ''}">♥ Top</button><button data-sort="new" class="${sort === 'new' ? 'sel' : ''}">New</button></div>
         <select class="cm-mode">${[['ffa', 'Free For All'], ['tdm', 'Team Deathmatch'], ['ctf', 'Capture the Flag'], ['gungame', 'Gun Game'], ['infection', 'Infection'], ['koth', 'King of the Hill'], ['prophunt', 'Prop Hunt']].map(([id, n]) => `<option value="${id}" ${id === mode ? 'selected' : ''}>${n}</option>`).join('')}</select>

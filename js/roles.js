@@ -33,6 +33,16 @@ export async function verifyWith(pub, env) {
   } catch { return false; }
 }
 
+// What a moderator may do. The owner picks these per moderator in the Staff tab; an appointment
+// without a list (older ones) allows everything. The owner can always do everything.
+export const PERMS = [
+  ['warn', '⚠ Warn'], ['mute', '🔇 Mute'], ['kick', '⏏ Kick'], ['ban', '🚫 Ban / unban'], ['rename', '✎ Force new gamertag'],
+  ['announce', '📣 Announcements'], ['tools', '🛠 Match tools, chat filter, hiding from boards / maps'],
+];
+const PERM_IDS = PERMS.map(([id]) => id);
+// Record actions (moderation.js act) -> the permission they need. Notes need none.
+export const ACT_PERM = { warn: 'warn', clearwarns: 'warn', mute: 'mute', smute: 'mute', unmute: 'mute', kick: 'kick', ban: 'ban', unban: 'ban', denyappeal: 'ban', rename: 'rename' };
+
 // owner > mod > everyone else. Staff can only act on players ranked below them.
 export const rank = (role) => (role === 'owner' ? 2 : role === 'mod' ? 1 : 0);
 
@@ -77,7 +87,8 @@ class Roles {
     if (!(await verifyWith(OWNER.pub, env))) return; // only the owner can appoint
     const prev = this.mods.get(k);
     if (prev && prev.ts > body.ts) return; // the relays may deliver an older copy late
-    if (body.role === 'mod' && body.pub && body.pub.x && body.pub.y) this.mods.set(k, { tag: body.tag, pub: body.pub, ts: body.ts, until: Number(body.until) || 0 });
+    const perms = Array.isArray(body.perms) ? body.perms.filter((p) => PERM_IDS.includes(p)) : null; // null: everything
+    if (body.role === 'mod' && body.pub && body.pub.x && body.pub.y) this.mods.set(k, { tag: body.tag, pub: body.pub, ts: body.ts, until: Number(body.until) || 0, perms });
     else this.mods.delete(k);
     this.changed();
   }
@@ -113,6 +124,21 @@ class Roles {
 
   isOwner() { return this.myRole() === 'owner'; }
 
+  // May this staff member do `perm`? `at`: when they did it. Things done before the owner last changed
+  // their permissions stay valid (so taking a permission away doesn't undo their earlier bans).
+  can(tag, perm, at = 0) {
+    if (low(tag) === low(OWNER.tag)) return true;
+    const m = this.mod(tag);
+    if (!m) return false;
+    return !m.perms || m.perms.includes(perm) || (at > 0 && at < m.ts);
+  }
+
+  // Your own permission on this device.
+  myCan(perm) { const r = this.myRole(); return r === 'owner' || (r === 'mod' && this.can(this.social.tag, perm)); }
+
+  // A moderator's permissions as a list (all of them when the appointment has none).
+  permsOf(tag) { const m = this.mod(tag); return m ? (m.perms || PERM_IDS.slice()) : []; }
+
   // Is this name one only staff may use?
   reserved(name) { return !!this.roleOfTag(String(name || '').trim()); }
 
@@ -137,7 +163,7 @@ class Roles {
   // ---------- Owner tools ----------
 
   // hours: 0 = permanent, otherwise the moderator role ends by itself after that long.
-  async appoint(tag, hours = 0) {
+  async appoint(tag, hours = 0, perms = null) {
     if (!this.isOwner()) throw new Error('Only the owner can appoint moderators.');
     const s = this.social;
     if (low(tag) === low(OWNER.tag)) throw new Error('You are already the owner.');
@@ -145,10 +171,23 @@ class Roles {
     if (!claim) throw new Error(`Nobody has the gamertag "${tag}".`);
     const until = hours > 0 ? Date.now() + hours * 3600e3 : 0;
     const body = { role: 'mod', tag: claim.tag, pub: { x: claim.pub.x, y: claim.pub.y }, until };
+    if (perms) body.perms = perms.filter((p) => PERM_IDS.includes(p));
     s.relay.publish(P + low(claim.tag), await s.sign(body), { retain: true });
-    this.mods.set(low(claim.tag), { tag: claim.tag, pub: body.pub, ts: Date.now(), until });
+    this.mods.set(low(claim.tag), { tag: claim.tag, pub: body.pub, ts: Date.now(), until, perms: body.perms || null });
     this.changed();
     return claim.tag;
+  }
+
+  // Change what a moderator may do (re-signs their appointment; the end time stays).
+  async setPerms(tag, perms) {
+    if (!this.isOwner()) throw new Error('Only the owner can change permissions.');
+    const m = this.mods.get(low(tag));
+    if (!m) throw new Error(`${tag} isn't a moderator.`);
+    const list = perms.filter((p) => PERM_IDS.includes(p));
+    const body = { role: 'mod', tag: m.tag, pub: m.pub, until: m.until || 0, perms: list };
+    this.social.relay.publish(P + low(m.tag), await this.social.sign(body), { retain: true });
+    this.mods.set(low(m.tag), { ...m, ts: Date.now(), perms: list });
+    this.changed();
   }
 
   async remove(tag) {

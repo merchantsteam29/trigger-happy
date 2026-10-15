@@ -127,7 +127,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
   owned cosmetics, `track.*`), `seasons.js` (weekly season pass; season dates live in `ranked.js` `seasonNow` / `seasonDates`), `achievements.js`, `ranked.js`, `shop.js`, `gifts.js`, `invites.js`
 - **Social and online:** `relay.js`, `social.js`, `profiles.js`, `clans.js`, `leaderboard.js`, `servers.js`,
   `gamenight.js`, `voice.js`, `chat.js`
-- **Staff:** `roles.js`, `moderation.js`, `modpanel.js`, `hostpanel.js`
+- **Staff:** `roles.js` (appointments; moderator permissions: `PERMS`, `ACT_PERM`, `roles.can(tag, perm, at)` / `myCan`, an appointment's `perms` list, none = all; checked by `moderation.verify` on a record's latest log entry, `staffSigned(text, perm)`, and the host's in-match `mod*` handlers), `moderation.js`, `modpanel.js`, `hostpanel.js`
 - **Input and settings:** `settings.js` (`opts`, `setOpt`, `onOpts`), `settingsui.js`, `binds.js`, `gamepad.js`
   (rebindable `PAD_ACTIONS`), `touch.js`, `access.js` (colorblind modes), `tutorial.js`
 - **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every
