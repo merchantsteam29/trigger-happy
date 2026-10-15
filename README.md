@@ -648,6 +648,9 @@ becomes free again.
     player, **🚫 Ban as ban evasion** bans them until the original ban ends. Players who never
     claimed a gamertag can't be looked up and show as **guest** in a match's Moderation list. Open anyone to see their
     warnings, staff notes, ban / mute status and full history, then:
+    - **💡 Next step:** what the **punishment ladder** suggests for their next offence (by default: warn, mute 1 day,
+      ban 1 day, ban 7 days, then permanent; offences are warnings, mutes, kicks and bans on their record), with **Do it**.
+      Reports get the same as a quick action. The owner changes the ladder in the **Staff** tab.
     - **Warn:** a pop-up they must acknowledge, shown next time they play if they're offline.
     - **Add note:** staff-only, not shown to the player.
     - **Mute chat** or **Ban:** 1 hour, 1 day, 7 days, 30 days or permanent. A ban kicks them out of matches and

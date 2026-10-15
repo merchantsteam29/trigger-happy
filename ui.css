@@ -936,3 +936,10 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-gchat-now.bad { color: #ff8a8a; } .mp-gchat-now.mute { color: #ffcf7a; } .mp-gchat-now.ok { color: #6fe39a; }
 #mod-find { width: 100%; margin: 6px 0; }
 .mod-row [data-mgo] { margin-right: 8px; }
+/* Punishment ladder */
+.mp-next { margin: 4px 0 8px; padding: 6px 10px; border-radius: 10px; background: #4fc3ff14; border: 1px solid #4fc3ff44; font-size: 13px; }
+.mp-next button { margin-left: 8px; }
+.mp-ladder { margin-top: 12px; }
+.mp-steps { margin: 8px 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.mp-steps li > * { margin-right: 6px; }
+.mp-steps select { width: auto; }

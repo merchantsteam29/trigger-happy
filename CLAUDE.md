@@ -104,6 +104,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `evidence/<tag>-<id>` | a staff member's 60 s replay clip kept with a player's record (signed, retained; a record note's `clip` points at it: `moderation.saveEvidence` / `fetchEvidence`) | moderation.js |
 | `repclaim/<report id>` | which staff member is handling a report (staff-signed, retained; cleared on resolve) | moderation.js |
 | `chatall` | staff-signed chat lock / slow mode for every match (`moderation.setGlobalChat`; hosts check `HostLogic.chatMode()`) | moderation.js, host.js |
+| `ladder` | the owner-signed punishment ladder (`moderation.nextStep(tag)` suggests a player's next punishment) | moderation.js |
 | `approve/<id>` | a trial moderator's ban / unban request (signed, retained; the owner approves or denies, then clears it) | moderation.js |
 | `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |

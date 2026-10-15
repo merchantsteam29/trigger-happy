@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.14",
+  "version": "2026.10.15.15",
   "notes": [
-    "Spectating staff can jump to a player by name"
+    "Staff get a suggested next punishment for each player"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -1,5 +1,5 @@
 import { roles, badge, rank, PERMS } from './roles.js';
-import { moderation, fmtHours, AUTO_FLAG } from './moderation.js';
+import { moderation, fmtHours, AUTO_FLAG, DEFAULT_LADDER } from './moderation.js';
 import { esc } from './util.js';
 import { validTag, TAG_RULES } from './social.js';
 import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './gamenight.js';
@@ -30,6 +30,9 @@ const ago = (ts) => {
   return s < 60 ? 'just now' : s < 3600 ? `${Math.floor(s / 60)}m ago` : s < 86400 ? `${Math.floor(s / 3600)}h ago` : `${Math.floor(s / 86400)}d ago`;
 };
 const when = (ts) => new Date(ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+// "Mute 1 day", "Ban (permanent)" for a punishment ladder step.
+const stepName = (s) => (s.act === 'warn' ? 'Warn' : `${s.act === 'mute' ? 'Mute' : 'Ban'} ${s.h ? fmtHours(s.h) : 'permanently'}`);
+const nth = (n) => n + (n % 100 > 10 && n % 100 < 14 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
 const opts = (list, sel) => list.map(([v, n]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${n}</option>`).join('');
 
 export class ModPanel {
@@ -79,10 +82,10 @@ export class ModPanel {
     else if (this.tab === 'appeals') this.renderAppeals(body, appeals);
     else if (this.tab === 'filter') this.renderFilter(body);
     else if (this.tab === 'log') this.renderLog(body);
-    if (this.tab === 'filter') this.renderGlobalChat(body);
     else if (this.tab === 'staffchat') this.renderStaffChat(body);
     else if (this.tab === 'recent') this.renderRecent(body);
     else this.renderStaff(body);
+    if (this.tab === 'filter') this.renderGlobalChat(body); // chat lock / slow mode for every match, above the filter
     this.el.querySelectorAll('input, textarea').forEach((i) => i.addEventListener('keydown', (e) => e.stopPropagation()));
   }
 
@@ -204,6 +207,7 @@ export class ModPanel {
         <div class="mp-list">${notes.length ? notes.slice().reverse().map((n) => `<div>📝 ${esc(n.text)} <small>— ${esc(n.by)}, ${ago(n.ts)}</small>${n.clip ? ` <button class="sm" data-evid="${esc(n.clip)}" data-by="${esc(n.by)}">🎬 Watch</button>` : ''}</div>`).join('') : '<small class="muted">None</small>'}</div>
         ${can ? `
         <div class="mp-sub">Action</div>
+        ${(() => { const ns = moderation.nextStep(t.tag); return may(ns.act) || (ns.act === 'ban' && trial) ? `<div class="mp-next">💡 Next step for their ${nth(ns.n)} offence: <b>${stepName(ns)}</b> <button class="primary sm" data-next>Do it</button></div>` : ''; })()}
         <div class="mp-reason-row"><select id="mp-quick"><option value="">Quick reason…</option>${QUICK_REASONS.map((q) => `<option>${q}</option>`).join('')}</select><input id="mp-reason" maxlength="140" placeholder="Reason / note text"></div>
         <div class="mp-actions">
           ${may('warn') ? '<button data-act="warn" class="warn">⚠ Warn</button>' : ''}
@@ -249,6 +253,14 @@ export class ModPanel {
         this.watchReplay(clip, { target: t.tag, reason: 'Evidence', from: b.dataset.by });
       };
     });
+    const nextBtn = box.querySelector('[data-next]');
+    if (nextBtn) nextBtn.onclick = async () => {
+      const ns = moderation.nextStep(t.tag), reason = box.querySelector('#mp-reason').value.trim() || box.querySelector('#mp-quick').value;
+      if (!reason) { this.say('Pick a quick reason or type one first.'); return; }
+      if (!confirm(`${stepName(ns)}: ${t.tag}?\nReason: ${reason}`)) return;
+      nextBtn.disabled = true;
+      try { const res = await moderation.act(t.tag, ns.act, { reason, hours: ns.h }); this.say(res && res.pending ? 'Sent to the owner for approval.' : `Done: ${stepName(ns).toLowerCase()} for ${t.tag}.`); this.render(); } catch (err) { this.say(err.message); nextBtn.disabled = false; }
+    };
     const susBtn = box.querySelector('[data-suspect]');
     if (susBtn) susBtn.onclick = async () => {
       const on = moderation.isSuspect(t.tag);
@@ -392,7 +404,7 @@ export class ModPanel {
           <small class="muted">${r.reason === AUTO_FLAG ? `Flagged automatically by ${esc(r.from)}'s game (the host)` : `Reported by ${esc(r.from)}`}${r.lobby ? ` in match ${esc(r.lobby)}` : ''}</small>
           <div class="mp-actions">
             ${validTag(r.target) ? `<button class="primary" data-look="${esc(r.target)}">Look up ${esc(r.target)}</button>` : ''}
-            ${quick ? `<span class="mp-quickacts" title="Uses the report as the reason, then resolves it">${roles.myCan('warn') ? `<button class="warn" data-qact="warn" data-rid="${esc(r.id)}">⚠ Warn</button>` : ''}${roles.myCan('mute') ? `<button data-qact="mute" data-rid="${esc(r.id)}">🔇 Mute 1 day</button>` : ''}${roles.myCan('ban') || roles.myTrial() ? `<button class="danger" data-qact="ban" data-rid="${esc(r.id)}">🚫 ${roles.myTrial() ? 'Ask to ban' : 'Ban'} 1 day</button>` : ''}</span>` : ''}
+            ${quick ? `<span class="mp-quickacts" title="Uses the report as the reason, then resolves it">${(() => { const ns = moderation.nextStep(r.target); return roles.myCan(ns.act) || (ns.act === 'ban' && roles.myTrial()) ? `<button class="primary" data-qact="next" data-rid="${esc(r.id)}" title="Their ${nth(ns.n)} offence (punishment ladder)">💡 ${stepName(ns)}</button>` : ''; })()}${roles.myCan('warn') ? `<button class="warn" data-qact="warn" data-rid="${esc(r.id)}">⚠ Warn</button>` : ''}${roles.myCan('mute') ? `<button data-qact="mute" data-rid="${esc(r.id)}">🔇 Mute 1 day</button>` : ''}${roles.myCan('ban') || roles.myTrial() ? `<button class="danger" data-qact="ban" data-rid="${esc(r.id)}">🚫 ${roles.myTrial() ? 'Ask to ban' : 'Ban'} 1 day</button>` : ''}</span>` : ''}
             ${r.lobby && this.joinLobby ? `<button data-spec="${esc(r.lobby)}">👁 Spectate that match</button><button data-join="${esc(r.lobby)}">▶ Join</button>` : ''}
             ${r.rp && this.watchReplay ? `<button data-replay="${esc(r.id)}" title="The last 30 seconds before they reported, from any angle">🎬 Watch replay</button>` : ''}
             <button data-look="${esc(r.from)}">Look up reporter</button>
@@ -408,13 +420,14 @@ export class ModPanel {
         const r = all.find((x) => x.id === b.dataset.rid), act = b.dataset.qact;
         if (!r) return;
         const reason = `${r.reason === AUTO_FLAG ? 'Anti-cheat' : r.reason}${r.details ? ': ' + r.details : ''}`.slice(0, 140);
-        const what = { warn: 'Warn', mute: 'Mute the chat of (1 day)', ban: 'Ban (1 day)' }[act];
+        const ns = moderation.nextStep(r.target);
+        const what = { warn: 'Warn', mute: 'Mute the chat of (1 day)', ban: 'Ban (1 day)', next: `${stepName(ns)}:` }[act];
         if (!confirm(`${what} ${r.target}?\nReason: ${reason}`)) return;
         b.disabled = true;
         try {
-          const res = await moderation.act(r.target, act, { reason, hours: act === 'warn' ? 0 : 24 });
+          const res = act === 'next' ? await moderation.act(r.target, ns.act, { reason, hours: ns.h }) : await moderation.act(r.target, act, { reason, hours: act === 'warn' ? 0 : 24 });
           await moderation.dismissReport(r.id);
-          this.say(res && res.pending ? 'Sent to the owner for approval, and the report is resolved.' : `${{ warn: 'Warned', mute: 'Muted', ban: 'Banned' }[act]} ${r.target} and resolved the report.`);
+          this.say(res && res.pending ? 'Sent to the owner for approval, and the report is resolved.' : act === 'next' ? `Done (${stepName(ns).toLowerCase()}) and resolved the report.` : `${{ warn: 'Warned', mute: 'Muted', ban: 'Banned' }[act]} ${r.target} and resolved the report.`);
           this.render();
         } catch (err) { this.say(err.message); b.disabled = false; }
       };
@@ -640,6 +653,28 @@ export class ModPanel {
     body.querySelectorAll('[data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.look(a.dataset.look); }; });
   }
 
+  // ---------- Punishment ladder (owner, in the Staff tab) ----------
+  renderLadder(body) {
+    const steps = (this.ladderDraft ||= moderation.ladder.map((s) => ({ ...s })));
+    const card = document.createElement('div');
+    card.className = 'card mp-ladder';
+    const LEN = [[1, '1 hour'], [24, '1 day'], [72, '3 days'], [168, '7 days'], [720, '30 days'], [0, 'Permanent']];
+    card.innerHTML = `<h3>Punishment ladder</h3>
+      <div class="note">What staff are offered as the 💡 next step: a player's 1st offence gets step 1, their 2nd step 2, and so on (the last step repeats). Offences are warnings, mutes, kicks and bans on their record.</div>
+      <ol class="mp-steps">${steps.map((s, i) => `<li><select data-sact="${i}">${[['warn', '⚠ Warn'], ['mute', '🔇 Mute'], ['ban', '🚫 Ban']].map(([v, n]) => `<option value="${v}" ${v === s.act ? 'selected' : ''}>${n}</option>`).join('')}</select>
+        ${s.act === 'warn' ? '' : `<select data-sh="${i}">${opts(LEN, s.h)}</select>`}<button class="ghost sm" data-sdel="${i}" ${steps.length < 2 ? 'disabled' : ''}>✕</button></li>`).join('')}</ol>
+      <div class="mp-actions"><button data-sadd ${steps.length >= 10 ? 'disabled' : ''}>+ Add a step</button><button class="ghost" data-sreset>Reset to default</button><button class="primary" data-ssave>Save for all staff</button></div>`;
+    body.appendChild(card);
+    card.querySelectorAll('[data-sact]').forEach((s) => { s.onchange = () => { const st = steps[s.dataset.sact], was = st.act; st.act = s.value; if (st.act === 'warn') st.h = 0; else if (was === 'warn') st.h = 24; this.render(); }; });
+    card.querySelectorAll('[data-sh]').forEach((s) => { s.onchange = () => { steps[s.dataset.sh].h = Number(s.value); }; });
+    card.querySelectorAll('[data-sdel]').forEach((b) => { b.onclick = () => { steps.splice(Number(b.dataset.sdel), 1); this.render(); }; });
+    card.querySelector('[data-sadd]').onclick = () => { steps.push({ act: 'ban', h: 0 }); this.render(); };
+    card.querySelector('[data-sreset]').onclick = () => { this.ladderDraft = DEFAULT_LADDER.map((s) => ({ ...s })); this.render(); };
+    card.querySelector('[data-ssave]').onclick = async () => {
+      try { await moderation.saveLadder(steps); this.ladderDraft = null; this.say('Punishment ladder saved for all staff.'); this.render(); } catch (err) { this.say(err.message); }
+    };
+  }
+
   // ---------- Staff (owner) ----------
 
   renderStaff(body) {
@@ -674,6 +709,7 @@ export class ModPanel {
       const hours = Number(body.querySelector('#mp-mod-time').value);
       try { const t = await roles.appoint(tag, hours); this.say(`${t} is now a moderator.`); this.render(); } catch (err) { this.say(err.message); }
     };
+    this.renderLadder(body);
     body.querySelectorAll('[data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.tab = 'players'; this.look(a.dataset.look); }; });
     const answer = (id, yes) => async (e) => {
       e.target.disabled = true;

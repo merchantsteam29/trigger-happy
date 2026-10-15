@@ -28,6 +28,7 @@ const SUSPECTS = V + 'suspects'; // staff-signed shared watchlist: [{ t: tag, wh
 const EVID = V + 'evidence/'; // staff-signed replay clips kept with a player's record: evidence/<lower tag>-<id>
 const CLAIM = V + 'repclaim/'; // "I've got this": which staff member is handling a report (staff-signed, retained)
 const GCHAT = V + 'chatall'; // staff-signed lock / slow mode for match chat in EVERY match: { lock, slow, until }
+const LADDER = V + 'ladder'; // owner-signed punishment ladder: [{ act: 'warn' | 'mute' | 'ban', h: hours (0 = permanent) }]
 const APPROVE = V + 'approve/'; // trial moderators' ban / unban requests, waiting for the owner (signed, retained)
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -37,7 +38,9 @@ const clip = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '').tri
 const parse = (text) => { try { const env = JSON.parse(text); return { env, body: JSON.parse(env.b) }; } catch { return null; } };
 
 export const REPORT_REASONS = ['Cheating / hacking', 'Abusive chat', 'Offensive name', 'Griefing / team killing', 'Spamming', 'Other'];
-export const AUTO_FLAG = 'Auto-flag: suspicious stats'; // filed by the host's game, not offered to players
+export const AUTO_FLAG = 'Auto-flag: suspicious stats';
+// Punishment ladder: step N is suggested for someone's Nth offence (the owner can change it in Mod Panel → Staff).
+export const DEFAULT_LADDER = [{ act: 'warn', h: 0 }, { act: 'mute', h: 24 }, { act: 'ban', h: 24 }, { act: 'ban', h: 168 }, { act: 'ban', h: 0 }]; // filed by the host's game, not offered to players
 
 // Starred out in chat for everyone (staff can turn this list off and add their own words).
 const DEFAULT_WORDS = ['fuck', 'fucking', 'shit', 'bitch', 'cunt', 'dick', 'pussy', 'asshole', 'bastard', 'slut', 'whore',
@@ -56,6 +59,7 @@ class Moderation {
     this.bugs = new Map(); // bug id -> { id, from, text, info, img, ts } (owner only)
     this.gchat = { lock: false, slow: false, until: 0, ts: 0 }; // chat lock / slow mode in every match
     this.onGlobalChat = null; // (state) it changed (hosts tell their match)
+    this.ladder = DEFAULT_LADDER;
     this.claims = new Map(); // (staff) report id -> { by, ts }
     this.approvals = new Map(); // (owner) request id -> { id, from, target, act, reason, hours, ts }
     this.online = new Map(); // lower tag -> { tag, mode, lobby, at }
@@ -102,6 +106,7 @@ class Moderation {
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
     else if (t === SUSPECTS && roles.myRole()) this.receiveSuspects(text);
     else if (t === GCHAT) this.receiveGlobalChat(text);
+    else if (t === LADDER && roles.myRole()) this.receiveLadder(text);
     else if (t.startsWith(CLAIM) && roles.myRole()) this.receiveClaimMark(t.slice(CLAIM.length), text);
     else if (t.startsWith(APPROVE) && roles.isOwner()) this.receiveApproval(t.slice(APPROVE.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
@@ -119,7 +124,7 @@ class Moderation {
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
     if (roles.isOwner()) { want.add(BUG + '+'); want.add(APPROVE + '+'); }
     for (const r of this.myReports()) if (r.status === 'sent') want.add(REPDONE + r.id); // has staff looked at mine?
-    if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+', SUSPECTS, CLAIM + '+']) want.add(t);
+    if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+', SUSPECTS, CLAIM + '+', LADDER]) want.add(t);
     for (const w of this.watching) if (!want.has(w)) s.relay.unsubscribe(w);
     for (const w of want) if (!this.watching.has(w)) s.relay.subscribe(w);
     this.watching = want;
@@ -470,6 +475,29 @@ class Moderation {
     const by = new Map();
     for (const v of wk) by.set(low(v[2]), [v[2], (by.get(low(v[2])) || [0, 0])[1] + 1]);
     return { reasons, top: [...by.values()].sort((a, b) => b[1] - a[1]).slice(0, 5), week: wk.length, last: prev.length };
+  }
+
+  // ---------- Punishment ladder ----------
+  async receiveLadder(text) {
+    const b = text ? await this.staffSigned(text) : null;
+    if (!b || roles.roleOfTag(b.from) !== 'owner' || !Array.isArray(b.steps)) return; // only the owner sets it
+    if (this.ladderTs && Number(b.ts) < this.ladderTs) return;
+    this.ladderTs = Number(b.ts) || 0;
+    const steps = b.steps.filter((x) => x && ['warn', 'mute', 'ban'].includes(x.act)).slice(0, 10).map((x) => ({ act: x.act, h: x.act === 'warn' ? 0 : Math.max(0, Math.min(24 * 365, Number(x.h) || 0)) }));
+    this.ladder = steps.length ? steps : DEFAULT_LADDER;
+    if (this.onChange) this.onChange(null);
+  }
+  async saveLadder(steps) {
+    if (!roles.isOwner()) throw new Error('Only the owner can change the punishment ladder.');
+    const signed = await this.social.sign({ steps });
+    this.social.relay.publish(LADDER, signed, { retain: true });
+    await this.receiveLadder(signed);
+  }
+  // The suggested next punishment for a player: { n: their offence number, act, h }.
+  nextStep(tag) {
+    const log = (this.records.get(low(tag)) || {}).log || [];
+    const n = log.filter((l) => ['warn', 'mute', 'smute', 'ban', 'kick'].includes(l.act)).length;
+    return { n: n + 1, ...this.ladder[Math.min(n, this.ladder.length - 1)] };
   }
 
   // A player's past trouble, for the repeat-offender badge on reports: open reports about them, and
