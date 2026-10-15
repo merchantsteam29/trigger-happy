@@ -976,3 +976,11 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-spot-items { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .mp-spot-items .chip button { padding: 0 6px; }
 .mp-spot select { width: auto; flex: 1; }
+/* Maintenance countdown (main.js liveEvent.onMaint) */
+#maint-bar { position: fixed; top: calc(6px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 70; padding: 7px 16px; border-radius: 999px;
+  background: #3a2400f0; border: 1px solid #ffb020; color: #ffe2a0; font-size: 13px; box-shadow: 0 6px 20px #0008; pointer-events: none; white-space: nowrap; }
+#maint-bar small { opacity: .75; margin-left: 6px; }
+#maint-pop { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: #0009; }
+#maint-pop .card { max-width: 420px; text-align: center; }
+.mp-maint input { flex: 1; }
+.mp-maint select { width: auto; }

@@ -546,7 +546,7 @@ export class ModPanel {
     };
     const clear = body.querySelector('#mp-ann-clear');
     if (clear) clear.onclick = async () => { try { await moderation.clearAnnouncement(); this.say('Announcement cleared.'); this.render(); } catch (err) { this.say(err.message); } };
-    if (roles.myRole() === 'owner') { this.renderMotd(body); this.renderSpot(body); this.renderEvent(body); this.renderGameNight(body); }
+    if (roles.myRole() === 'owner') { this.renderMaint(body); this.renderMotd(body); this.renderSpot(body); this.renderEvent(body); this.renderGameNight(body); }
   }
 
   // Owner: the message of the day pinned on everyone's Play screen (liveevent.js).
@@ -572,6 +572,27 @@ export class ModPanel {
     };
     const clr = card.querySelector('#mp-motd-clear');
     if (clr) clr.onclick = async () => { try { await liveEvent.clearMotd(); this.say('Message of the day cleared.'); this.render(); } catch (err) { this.say(err.message); } };
+  }
+
+  // Owner: maintenance countdown (liveevent.js) — "update in N minutes", then a refresh prompt for everyone.
+  renderMaint(body) {
+    const m = liveEvent.maint;
+    const card = document.createElement('div');
+    card.className = 'card mp-gap mp-maint';
+    card.innerHTML = `<h3>🔧 Maintenance</h3>
+      <div class="note">Before you push an update: everyone gets a countdown bar (in menus and matches, with chat lines at 5 and 1 minutes), then a "please refresh" prompt when it hits zero.</div>
+      ${m ? `<div class="mp-ann warn"><b>🔧 Update at ${new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</b><small>${esc(m.msg || '')}</small><button class="danger" id="mp-maint-cancel">Cancel</button></div>` : ''}
+      <div class="mp-actions"><select id="mp-maint-min">${[[1, '1 minute'], [2, '2 minutes'], [5, '5 minutes'], [10, '10 minutes'], [15, '15 minutes']].map(([v, n]) => `<option value="${v}" ${v === 5 ? 'selected' : ''}>${n}</option>`).join('')}</select>
+        <input id="mp-maint-msg" maxlength="120" placeholder="Message (optional), e.g. New maps coming!"><button class="primary" id="mp-maint-go">Start countdown</button></div>`;
+    body.appendChild(card);
+    card.querySelectorAll('input').forEach((i) => i.addEventListener('keydown', (ev) => ev.stopPropagation()));
+    card.querySelector('#mp-maint-go').onclick = async () => {
+      const min = Number(card.querySelector('#mp-maint-min').value);
+      if (!confirm(`Tell everyone the game updates in ${min} minute${min > 1 ? 's' : ''}?`)) return;
+      try { await liveEvent.startMaint(min, card.querySelector('#mp-maint-msg').value.trim()); this.say('Countdown started for everyone.'); this.render(); } catch (err) { this.say(err.message); }
+    };
+    const c = card.querySelector('#mp-maint-cancel');
+    if (c) c.onclick = async () => { try { await liveEvent.cancelMaint(); this.say('Countdown cancelled.'); this.render(); } catch (err) { this.say(err.message); } };
   }
 
   // Owner: the shop spotlight (liveevent.js) — items shown first in the Shop. Nothing rotates or leaves.

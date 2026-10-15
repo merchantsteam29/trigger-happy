@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.25",
+  "version": "2026.10.15.26",
   "notes": [
-    "The owner can put shop items in the spotlight"
+    "Before an update, everyone gets a countdown and a refresh prompt"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

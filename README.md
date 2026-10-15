@@ -691,7 +691,9 @@ becomes free again.
     shows how many reports came in for each reason (cheating, chat, names, griefing, spam, anti-cheat flags) with ▲ / ▼
     against the week before, and the most reported players. It counts every report your device has seen, resolved ones too. The reporter sees their reports in **Friends → 🚩 Your reports**: waiting,
     looked at by staff (with a thank-you pop-up when it happens), or not looked at within 7 days. They're never told what was done.
-  - **Announce:** (owner) **📌 Message of the day**: a title, a message and an optional button (Quick Play, the Shop,
+  - **Announce:** (owner) **🔧 Maintenance**: before pushing an update, start a 1 to 15 minute countdown with an optional
+    message. Everyone gets a countdown bar on top (menus and matches, plus chat lines at 5 and 1 minutes), then a
+    **please refresh** prompt with **↻ Refresh now**; **Cancel** stops it. (owner) **📌 Message of the day**: a title, a message and an optional button (Quick Play, the Shop,
     Missions, Leaderboard, Friends, Character, or an https web link), pinned on top of everyone's Play screen until it's
     changed or cleared (players can hide it with ✕ until a new one comes). (owner) **✨ Shop spotlight**: up to 8 shop items shown first in everyone's Shop (Everything) under
     a title; it only changes the order, every item stays at the same price with no timer. (owner) **🎉 Run an event**: a name, **2x or 3x tokens** on everything players earn (not gifts), and / or

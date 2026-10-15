@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.25', name: 'Staff HQ Update', banner: 'staffhq', notes: [
+  { v: '2026.10.15.26', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
     'Updates are now one big log each, with a heading for every new feature',
     '## 4 New Banners',
@@ -62,6 +62,8 @@ export const UPDATES = [
     "The owner can pin a message on top of everyone's Play screen, with a button to a page or a link",
     '## Shop Spotlight',
     'The owner can pick items to show first in the Shop (everything stays in the shop at the same price)',
+    '## Update Countdown',
+    'Before an update, everyone sees a countdown and then a Refresh button',
   ] },
   { v: '2026.10.14.26', name: 'The Mega Update', banner: 'mega', notes: [
     '## Smoother Replays',

@@ -6,6 +6,7 @@ import { OWNER, roles, verifyWith } from './roles.js';
 // message at whffa/v1/event, signed with the owner's key; it ends by itself at `until`.
 
 const T = 'whffa/v1/event';
+const MAINT = 'whffa/v1/maint'; // the owner's maintenance countdown: { at, msg } (owner-signed, retained)
 const SPOT = 'whffa/v1/spotlight'; // the owner's shop spotlight: { title, items: [{ slot, id }] } (owner-signed, retained)
 export const SPOT_MAX = 8;
 const MOTD = 'whffa/v1/motd'; // the owner's message of the day: { id, title, text, btn, go } (owner-signed, retained)
@@ -20,16 +21,18 @@ class LiveEvent {
     this.onChange = null;
     this.motd = null; // { id, title, text, btn, go, url, ts }
     this.onMotd = null;
+    this.maint = null; // { at, msg, ts }
+    this.onMaint = null;
     this.spot = null; // { title, items, ts }
     this.onSpot = null;
   }
 
   init(social) {
     this.social = social;
-    social.relay.onMessage((t, payload) => { if (t === T) this.receive(payload.toString()); else if (t === MOTD) this.receiveMotd(payload.toString()); else if (t === SPOT) this.receiveSpot(payload.toString()); });
-    for (const t of [T, MOTD, SPOT]) social.relay.subscribe(t);
+    social.relay.onMessage((t, payload) => { if (t === T) this.receive(payload.toString()); else if (t === MOTD) this.receiveMotd(payload.toString()); else if (t === SPOT) this.receiveSpot(payload.toString()); else if (t === MAINT) this.receiveMaint(payload.toString()); });
+    for (const t of [T, MOTD, SPOT, MAINT]) social.relay.subscribe(t);
     const prev = social.relay.onConnect;
-    social.relay.onConnect = () => { if (prev) prev(); for (const t of [T, MOTD, SPOT]) social.relay.subscribe(t); };
+    social.relay.onConnect = () => { if (prev) prev(); for (const t of [T, MOTD, SPOT, MAINT]) social.relay.subscribe(t); };
   }
 
   async receive(text) {
@@ -97,6 +100,31 @@ class LiveEvent {
     this.social.relay.publish(MOTD, signed, { retain: true });
     await this.receiveMotd(signed);
   }
+  // ---------- Maintenance countdown ----------
+  // "Update in 5 minutes": everyone gets a countdown bar (menus and matches), then a "please refresh"
+  // prompt at the time. Leftovers older than 15 minutes past the time are ignored.
+  async receiveMaint(text) {
+    let env, b;
+    try { env = JSON.parse(text); b = JSON.parse(env.b); } catch { return; }
+    if (!b || low(b.from) !== low(OWNER.tag) || !(await verifyWith(OWNER.pub, env))) return;
+    if (this.maint && this.maint.ts > Number(b.ts)) return;
+    const at = Number(b.at) || 0;
+    this.maint = b.off || !at || Date.now() - at > 15 * 60000 ? null : { at, msg: String(b.msg || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 120), ts: Number(b.ts) || 0 };
+    if (this.onMaint) this.onMaint(this.maint);
+  }
+  async startMaint(minutes, msg = '') {
+    if (!roles.isOwner()) throw new Error('Only the owner can do that.');
+    const signed = await this.social.sign({ at: Date.now() + minutes * 60000, msg });
+    this.social.relay.publish(MAINT, signed, { retain: true });
+    await this.receiveMaint(signed);
+  }
+  async cancelMaint() {
+    if (!roles.isOwner()) throw new Error('Only the owner can do that.');
+    const signed = await this.social.sign({ off: 1 });
+    this.social.relay.publish(MAINT, signed, { retain: true });
+    await this.receiveMaint(signed);
+  }
+
   // ---------- Shop spotlight ----------
   // The owner picks a few shop items to show first in the Shop. It only reorders what's shown:
   // nothing is added, removed or timed (the shop never rotates).

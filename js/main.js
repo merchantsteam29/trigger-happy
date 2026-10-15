@@ -1848,6 +1848,40 @@ setInterval(() => {
 gameNight.init(social);
 liveEvent.init(social);
 setTokenBoost(() => liveEvent.tokenBoost()); // owner events: double / triple tokens
+// Maintenance countdown (liveevent.js): a bar on top of everything, chat lines in a match at 5 / 1
+// minutes, then a "please refresh" prompt.
+let maintT = null;
+liveEvent.onMaint = (m) => {
+  clearInterval(maintT);
+  let bar = $('maint-bar');
+  if (!m) { if (bar) bar.remove(); $('maint-pop')?.remove(); return; }
+  if (!bar) { bar = document.createElement('div'); bar.id = 'maint-bar'; document.body.appendChild(bar); }
+  const said = new Set();
+  const tick = () => {
+    const left = m.at - Date.now();
+    if (left <= 0) {
+      clearInterval(maintT);
+      bar.remove();
+      if ($('maint-pop')) return;
+      const pop = document.createElement('div');
+      pop.id = 'maint-pop';
+      pop.innerHTML = `<div class="card"><h3>🔧 Update time!</h3><p>${esc(m.msg || 'The game is being updated.')}</p><p class="note">Refresh to get the new version (your progress is saved).</p>
+        <div class="mp-actions"><button class="primary" id="maint-reload">↻ Refresh now</button><button class="ghost" id="maint-later">Later</button></div></div>`;
+      document.body.appendChild(pop);
+      if (game.active && document.exitPointerLock) document.exitPointerLock();
+      $('maint-reload').onclick = () => location.reload();
+      $('maint-later').onclick = () => pop.remove();
+      return;
+    }
+    const s = Math.ceil(left / 1000), txt = s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
+    bar.innerHTML = `🔧 <b>Update in ${txt}</b>${m.msg ? ` · ${esc(m.msg)}` : ''} <small>Finish up: you'll be asked to refresh</small>`;
+    for (const [at, line] of [[300, '5 minutes'], [60, '1 minute'], [10, '10 seconds']]) {
+      if (s <= at && s > at - 2 && !said.has(at)) { said.add(at); if (game.active) chat.system(`🔧 Update in ${line}${m.msg ? ': ' + m.msg : ''}`); }
+    }
+  };
+  tick();
+  maintT = setInterval(tick, 500);
+};
 liveEvent.onSpot = () => { if (!game.active && menuPane === 'shop') shop.render(); };
 liveEvent.onMotd = () => { if (!game.active && menuPane === 'play') showPane('play'); };
 liveEvent.onChange = (e, started) => {
