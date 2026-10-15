@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.16', name: 'Match History', banner: 'galaxy', notes: [
+    'Match history: your last 20 matches with your place, kills, deaths, K/D and score',
+    'Watch the replay of any of your last 5 right from the list',
+  ] },
   { v: '2026.10.14.15', name: 'Your Reports', banner: 'matrix', notes: [
     'Friends → Your reports shows the players you reported and whether the staff have looked at it yet',
     'You get a thank-you pop-up when they do',

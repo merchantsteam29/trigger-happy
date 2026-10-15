@@ -1026,6 +1026,7 @@ export class Game {
         break;
       }
       case 'end':
+        this.lastRecAt = this.recorder.cur ? this.recorder.cur.at : 0; // match history links to its replay
         this.recorder.end();
         if (opts.streamer) { m = { ...m, title: this.unalias(m.title), scores: (m.scores || []).map((s) => ({ ...s, name: this.players.get(s.id) ? this.players.get(s.id).name : s.name })), mvp: m.mvp ? { ...m.mvp, name: this.players.get(m.mvp.id) ? this.players.get(m.mvp.id).name : m.mvp.name } : m.mvp }; }
         if (!this.matchOver && this.playedThisMatch) this.trackMatchEnd(m);
@@ -1291,6 +1292,12 @@ export class Game {
     else won = !!m.scores && m.scores[0] && m.scores[0].id === this.myId;
     const mine = (m.scores || []).find((s) => s.id === this.myId);
     if (this.onMatchTracked) this.onMatchTracked();
+    // Match history (this device, last 20): result, place, score and the replay it links to.
+    if (!this.spectating && mine) {
+      const place = m.scores.indexOf(mine) + 1, hist = store.get('matchHistory', []);
+      hist.unshift({ at: Date.now(), mode, map: this.mapId, won: !!won, place, of: m.scores.length, k: mine.k || 0, d: mine.d || 0, sc: mine.sc || 0, title: String(m.title || '').slice(0, 60), rec: this.lastRecAt || 0, ranked: this.rules.ranked ? 1 : 0 });
+      store.set('matchHistory', hist.slice(0, 20));
+    }
     this.rankRes = this.rules.ranked && !this.spectating ? rateMatch(m.scores, this.myId) : null;
     if (this.rankRes && this.rankRes.counted && this.onRanked) this.onRanked(this.rankRes);
     // Event stats (achievements.js)

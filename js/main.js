@@ -269,7 +269,7 @@ function renderHome() {
     </div>
     ${(() => { const w = motwNow(), p = motwProgress(); return `<div class="hs-tile banner-row hs-motw"><span class="hs-ic">${w.icon}</span><span class="hs-txt"><b>Mode of the week: ${esc(w.name)}</b><small>${esc(w.desc)} · ${p.paid ? '✓ reward earned' : `play ${MOTW_MATCHES} matches: ${p.n}/${MOTW_MATCHES} · 🪙 ${MOTW_TOKENS}`} · new mode in ${fmtDuration(motwEnds() - Date.now())}</small></span><button class="primary sm" data-motw>Play</button></div>`; })()}
     ${holidayRow()}
-    ${replayCount ? `<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Replays</b><small>Your last ${replayCount === 1 ? 'match' : `${replayCount} matches`} from any angle: follow a player, their view or a free camera</small></span><span class="hm-arrow">›</span></button>` : ''}
+    ${replayCount || store.get('matchHistory', []).length ? `<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Match history & replays</b><small>Your last matches: results, scores, and replays from any angle</small></span><span class="hm-arrow">›</span></button>` : ''}
     ${!tutorialDone() ? '<button class="hs-tile hs-tutorial banner-row" data-tutorial><span class="hs-ic">🎓</span><span class="hs-txt"><b>New here? Take the 1-minute tutorial</b><small>Learn the controls in the Practice Range · 🪙 ' + TUTORIAL_TOKENS + '</small></span><span class="hm-arrow">›</span></button>' : ''}
     ${canInstall() ? '<button class="hs-tile hs-install banner-row" data-install><span class="hs-ic">📲</span><span class="hs-txt"><b>Install the app</b><small>Trigger Happy on your home screen, full screen</small></span><span class="hm-arrow">›</span></button>' : ''}
     <div class="today-row">
@@ -2015,13 +2015,24 @@ moderation.onRename = (r) => {
 var replayCount = 0; // var: the home screen renders before this line runs
 const countReplays = () => listReplays().then((l) => { const n = Math.max(l.length, game.recorder.last ? 1 : 0); if (n !== replayCount) { replayCount = n; renderHome(); } });
 setTimeout(countReplays, 1500);
+// Match history (game.js trackMatchEnd, last 20) with the replays still saved (the last 5); replays of
+// matches you only watched are listed too.
 async function openReplays() {
-  const list = await listReplays();
-  if (!list.length && game.recorder.last) { openTheater(game.recorder.last, 'Your last match'); return; }
+  const list = await listReplays(), saved = new Set(list.map((r) => r.at)), hist = store.get('matchHistory', []);
+  if (!list.length && !hist.length && game.recorder.last) { openTheater(game.recorder.last, 'Your last match'); return; }
+  const nm = (mode, map) => `${esc(MODES[mode] ? MODES[mode].name : mode)} · ${esc(MAPS[map] ? MAPS[map].name : map)}`;
+  const when = (t) => new Date(t).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const linked = new Set(hist.map((h) => h.rec));
+  const watched = list.filter((r) => !linked.has(r.at));
+  const kd = (h) => (h.k / Math.max(1, h.d)).toFixed(2);
   const pop = document.createElement('div');
   pop.className = 'overlay th-list';
-  pop.innerHTML = `<div class="panel"><div class="hp-head"><h2>🎬 REPLAYS</h2><small>Your last ${list.length} matches, kept on this device</small></div>
-    ${list.map((r) => `<button class="th-item" data-at="${r.at}"><b>${esc(MODES[r.mode] ? MODES[r.mode].name : r.mode)} · ${esc(MAPS[r.map] ? MAPS[r.map].name : r.map)}</b><small>${new Date(r.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })} · ${Math.floor(r.secs / 60)}:${String(r.secs % 60).padStart(2, '0')} · ${r.players} players</small><span class="hm-arrow">▶</span></button>`).join('')}
+  pop.innerHTML = `<div class="panel"><div class="hp-head"><h2>🎬 MATCH HISTORY</h2><small>Your last ${hist.length} matches on this device · replays are kept for the last 5</small></div>
+    ${hist.length ? `<div class="mh-sum"><span><b>${hist.filter((h) => h.won).length}</b> wins</span><span><b>${hist.reduce((n, h) => n + h.k, 0)}</b> kills</span><span><b>${(hist.reduce((n, h) => n + h.k, 0) / Math.max(1, hist.reduce((n, h) => n + h.d, 0))).toFixed(2)}</b> K/D</span></div>` : ''}
+    <div class="mh-list">${hist.map((h) => `<div class="mh-row ${h.won ? 'won' : ''}"><span class="mh-res">${h.won ? '🏆' : `#${h.place}`}<small>${h.won ? 'Won' : `of ${h.of}`}</small></span>
+      <span class="mh-txt"><b>${nm(h.mode, h.map)}${h.ranked ? ' · ♛ Ranked' : ''}</b><small>${when(h.at)} · ${h.k} kills · ${h.d} deaths · K/D ${kd(h)}${h.sc && h.sc !== h.k ? ` · ${h.sc} pts` : ''}</small></span>
+      ${h.rec && saved.has(h.rec) ? `<button class="primary sm" data-at="${h.rec}">▶ Watch</button>` : '<small class="mh-none">no replay</small>'}</div>`).join('')}
+    ${watched.map((r) => `<div class="mh-row"><span class="mh-res">👁<small>Watched</small></span><span class="mh-txt"><b>${nm(r.mode, r.map)}</b><small>${when(r.at)} · ${Math.floor(r.secs / 60)}:${String(r.secs % 60).padStart(2, '0')} · ${r.players} players</small></span><button class="primary sm" data-at="${r.at}">▶ Watch</button></div>`).join('')}</div>
     <button class="ghost" data-x>Close</button></div>`;
   document.body.appendChild(pop);
   pop.querySelector('[data-x]').onclick = () => pop.remove();

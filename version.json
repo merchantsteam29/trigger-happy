@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.15",
+  "version": "2026.10.14.16",
   "notes": [
-    "Your reports: see when the staff have looked at a player you reported"
+    "Match history: your last 20 matches, with replays for the last 5"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
