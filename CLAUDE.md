@@ -163,7 +163,8 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Map:** `maps.js` (`MAPS`, `MAP_ORDER`, `MAP_BLURB`).
 - **Costume:** an entry in `COSTUME_ITEMS` and a builder in `BUILD` (`costumes.js`): parts for the `hips` / `spine` / `head` bones
   plus limb materials; keep the normal size and use `team` (the player's color) somewhere. `handout: true` = owner giveaways
-  (`gifts.grant`), `rank` = ranked armor (`grantRankArmor` in main.js), `owner` = shown only on the verified owner.
+  (`gifts.grant`), `rank` = ranked armor (`grantRankArmor` in main.js), `owner` = shown only on the verified owner. A builder may return `anim(dt, player)` (run each frame by `RemotePlayer.update`) for
+  moving parts: put them in their own `Group` so `mergeStatic` doesn't merge them away.
 - **Cosmetic or banner:** `COSMETICS` in `missions.js` (`price`, or `reward` with `how`), with its look in `cosmetics.js` /
   `banners.js`. Earn-only items use `grantItem` / `grantWrap`.
 - **Achievement:** `ACHIEVEMENTS` in `achievements.js` (stat-based; event stats come in via `track.stat`).

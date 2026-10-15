@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.29",
+  "version": "2026.10.15.30",
   "notes": [
-    "Small fixes"
+    "10 new costumes"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

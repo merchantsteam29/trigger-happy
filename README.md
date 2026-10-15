@@ -299,9 +299,10 @@ hair, face and back items (your banner, kill effect, name tag and charm stay), a
 modes) always shows on it somewhere. Pick one in **Character → Costumes**, or try them on in the **Shop** (Costumes).
 
 - **In the shop:** Skeleton (glows a little in the dark), Cyber Samurai, Astronaut Cat, Party Llama, Junk Robot, Lava
-  Golem, Ice Golem, Banana, Ninja, Mummy and Deep Sea Diver (🪙 800 to 1,200). Friends can gift these.
-- **Giveaways only:** Impostor, Bug Knight, Cube Hero, Blood Machine and Hellwalker can't be bought: only the owner
-  hands them out.
+  Golem, Ice Golem, Banana, Ninja, Mummy, Deep Sea Diver, Dino, Shark, Astronaut, Chicken (flaps its wings when you
+  emote), Toaster Bot (toast pops up when you emote) and Ice Cream Cone (🪙 800 to 1,200). Friends can gift these.
+- **Giveaways only:** Impostor, Bug Knight, Cube Hero, Blood Machine, Hellwalker, Spartan, Freddy Bear, Bounty Hunter
+  and Creeper Suit can't be bought: only the owner hands them out.
 - **Ranked armor:** Contender, Veteran, Elite, Master and Legend Armor, each yours once your best rating reaches that
   division. The higher the division, the fancier it is.
 - Zombies, the Juggernaut and the bounty target keep their own look, and Prop Hunt props are still props.

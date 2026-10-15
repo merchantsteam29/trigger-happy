@@ -272,6 +272,7 @@ export class RemotePlayer {
       }
       this.costumeParts = [costume.hips, costume.spine, costume.head];
     }
+    this.costumeAnim = costume && costume.mats.anim ? costume.mats.anim : null;
     // A costume replaces the hat, hair, face and back items (banner, kill effect, charm and the rest stay).
     const { head, back, hat } = buildCosmetics(costume ? { ...cos, hat: 'none', hair: 'none', face: 'none', back: 'none' } : cos, this.bodyMat);
     this.hat = hat;
@@ -431,6 +432,7 @@ export class RemotePlayer {
 
   update(dt) {
     if (!this.hasState) return;
+    if (this.costumeAnim && this.alive) this.costumeAnim(dt, this); // costumes.js (wings, pop-up toast…)
     this.stepped = false;
     this.prev.copy(this.pos);
     if (this.alive && !this.replay) {
