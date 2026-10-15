@@ -1013,6 +1013,7 @@ export class Game {
         if (!b) break;
         setBroken(b, true);
         const pos = new THREE.Vector3(...boardCenter(b));
+        if (b.mat === 'glass') { this.fx.burst(pos, null, '#d8f2ff', 26, 5, 0.06, 0.8); this.fx.burst(pos, null, '#ffffff', 10, 3, 0.04, 0.5); this.posSound(sfx.shatter, pos, 1); break; }
         this.fx.burst(pos, null, '#8b5a2b', 22, 6, 0.1, 0.9);
         this.fx.burst(pos, null, '#5e3b1a', 12, 4, 0.07, 0.6);
         this.posSound(sfx.bounce, pos, 1);

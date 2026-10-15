@@ -123,7 +123,7 @@ export class Bot {
     const dx = tx - eye.x, dy = ty - eye.y, dz = tz - eye.z;
     const dist = Math.hypot(dx, dy, dz);
     if (dist > this.d.see || dist < 0.01) return false;
-    return !raycast(eye.x, eye.y, eye.z, dx / dist, dy / dist, dz / dist, dist - 0.3);
+    return !raycast(eye.x, eye.y, eye.z, dx / dist, dy / dist, dz / dist, dist - 0.3, true); // bots see through glass, like players
   }
 
   update(dt) {
@@ -532,6 +532,7 @@ export class Bot {
           if (t >= 0 && t < maxT) { maxT = t; hit = { e, head: hb[6] }; }
         }
       }
+      if (!hit && wh && wh.box && wh.box.brk && maxT >= wh.t - 1e-6) L.damageWall(wh.box.brk, w.dmg, this.p); // shatters glass / splinters boards
       ends.push([eye.x + dx * maxT, eye.y + dy * maxT, eye.z + dz * maxT].map((v) => Math.round(v * 100) / 100));
       if (hit) {
         let dmg = w.dmg * (hit.head ? w.head || 1 : 1);

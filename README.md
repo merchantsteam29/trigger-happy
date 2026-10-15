@@ -117,8 +117,9 @@ sets off barrels and crates nearby. You get the kill, you take half damage from 
 safe. They block shots behind them but you can walk through them.
 
 **Breakable walls:** on maps with buildings (Desert Town, Snow Outpost, Harbor Docks, Military Compound, Castle, Shopping Mall, Arctic Base,
-Neon Streets and Haunted Manor), windows and some doorways are boarded up with wooden planks. Shoot them (about 10 rifle
-shots) or blow them up with a grenade or rocket to open a new path or sight line. Bots barge straight through them.
+Neon Streets and Haunted Manor), windows have **glass** and some doorways are boarded up with wooden planks. You can see
+through glass, but it stops bullets and players until one shot shatters it. Boards take about 10 rifle shots or a
+grenade or rocket. Both open a new path or sight line. Bots see through glass, and barge or shoot their way through.
 Every board is back at the start of the next match. The host can turn them off (Host panel → **Breakable walls**).
 
 ## Host panel

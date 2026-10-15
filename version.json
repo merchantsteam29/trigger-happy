@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.24",
+  "version": "2026.10.14.25",
   "notes": [
-    "Day and night: outdoor maps now have a sunset, night and sunrise during a match"
+    "Glass windows you can see through and shoot out"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

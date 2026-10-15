@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { boxes, breakables } from './maps.js';
 
-// Breakable walls: wooden boards across building windows and some doorways (maps.js marks them
+// Breakable walls: glass in building windows and wooden boards across some doorways (maps.js marks them
 // with mat 'boards' and numbers them `brk` in build order, so every player has the same ids).
 // The host keeps their health (HostLogic.damageWall: bullets, explosions, bots barging through)
 // and lists the broken ones in each snapshot (`wb`). Clients take a broken board out of the
 // collision boxes and hide its mesh; boards come back when the next match starts.
 
-export const BOARD_HP = 220;
+export const BOARD_HP = 220, GLASS_HP = 1; // glass: one shot shatters it
+export const boardHp = (b) => (b.mat === 'glass' ? GLASS_HP : BOARD_HP);
 const meshes = new Map(); // brk id -> mesh in this map's scene
-let woodMat = null, darkMat = null;
+let woodMat = null, darkMat = null, glassMat = null, frameMat = null;
 
 export const boardById = (id) => breakables.find((b) => b.brk === id) || null;
 export const boardCenter = (b) => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2];
@@ -20,10 +21,24 @@ export function buildBoards(group) {
   if (!woodMat) {
     woodMat = new THREE.MeshStandardMaterial({ color: '#8b5a2b', roughness: 0.85 });
     darkMat = new THREE.MeshStandardMaterial({ color: '#5e3b1a', roughness: 0.9 });
-    woodMat.userData.shared = darkMat.userData.shared = true; // kept when the map changes
+    glassMat = new THREE.MeshStandardMaterial({ color: '#bfe6ff', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.28, depthWrite: false });
+    frameMat = new THREE.MeshStandardMaterial({ color: '#d8dde4', roughness: 0.6 });
+    woodMat.userData.shared = darkMat.userData.shared = glassMat.userData.shared = frameMat.userData.shared = true; // kept when the map changes
   }
   for (const b of breakables) {
     const g = new THREE.Group();
+    if (b.mat === 'glass') { // a pane in a thin frame
+      const w = b.x1 - b.x0, h = b.y1 - b.y0, d = b.z1 - b.z0, alongX = w >= d, len = alongX ? w : d;
+      const pane = new THREE.Mesh(new THREE.BoxGeometry(alongX ? len : 0.03, h, alongX ? 0.03 : len), glassMat);
+      pane.renderOrder = 2;
+      g.add(pane);
+      for (const y of [-h / 2, h / 2]) { const f = new THREE.Mesh(new THREE.BoxGeometry(alongX ? len : 0.06, 0.06, alongX ? 0.06 : len), frameMat); f.position.y = y; g.add(f); }
+      g.position.set(...boardCenter(b));
+      g.visible = !b.broken;
+      group.add(g);
+      meshes.set(b.brk, g);
+      continue;
+    }
     const w = b.x1 - b.x0, h = b.y1 - b.y0, d = b.z1 - b.z0, alongX = w >= d;
     const len = alongX ? w : d, thick = (alongX ? d : w) * 0.7;
     const n = Math.max(1, Math.round(h / 0.3)), ph = h / n;

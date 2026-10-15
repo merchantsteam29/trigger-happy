@@ -114,6 +114,7 @@ export const sfx = {
   mpistol: play((o) => { nz(o, { dur: 0.08, f0: 4200, f1: 800, gain: 0.6 }); tone(o, { dur: 0.04, f0: 240, f1: 80, gain: 0.3 }); }),
   axe: play((o) => { nz(o, { dur: 0.3, f0: 600, f1: 2500, type: 'bandpass', q: 2, gain: 0.6, attack: 0.1 }); }),
   beep: play((o) => { tone(o, { dur: 0.06, f0: 1800, type: 'square', gain: 0.15 }); }),
+  shatter: play((o) => { nz(o, { dur: 0.35, f0: 9000, f1: 3000, type: 'highpass', gain: 0.6 }); tone(o, { dur: 0.12, f0: 3200, f1: 2400, type: 'triangle', gain: 0.18 }); tone(o, { dur: 0.18, f0: 4100, f1: 3600, type: 'sine', gain: 0.12 }); }),
   hiss: play((o) => { nz(o, { dur: 2.5, f0: 5000, f1: 1500, type: 'highpass', gain: 0.35, attack: 0.2 }); }),
   step: play((o) => { nz(o, { dur: 0.07, f0: 500, f1: 150, gain: 0.35 }); }),
   land: play((o) => { nz(o, { dur: 0.12, f0: 400, f1: 80, gain: 0.6 }); tone(o, { dur: 0.08, f0: 90, f1: 40, gain: 0.4 }); }),

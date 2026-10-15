@@ -97,10 +97,12 @@ export function rayAABB(ox, oy, oz, dx, dy, dz, x0, y0, z0, x1, y1, z1, maxT) {
   return tmin;
 }
 
-// Ray vs world. dir must be normalized. Returns {t, x,y,z, nx,ny,nz} or null.
-export function raycast(ox, oy, oz, dx, dy, dz, maxT) {
+// Ray vs world. dir must be normalized. Returns {t, x,y,z, nx,ny,nz, box} or null.
+// seeThrough: ignore glass (sight lines; bullets still hit it).
+export function raycast(ox, oy, oz, dx, dy, dz, maxT, seeThrough = false) {
   let best = maxT, hit = null;
   for (const b of boxes) {
+    if (seeThrough && b.mat === 'glass') continue;
     const t = rayAABB(ox, oy, oz, dx, dy, dz, b.x0, b.y0, b.z0, b.x1, b.y1, b.z1, best);
     if (t >= 0 && t < best) { best = t; hit = b; }
   }

@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.25', name: 'Glass', banner: 'storm', notes: [
+    'Building windows now have glass: see through it, then shoot it out. One shot shatters a pane',
+    'Bots see through glass too, and shoot or barge their way through',
+  ] },
   { v: '2026.10.14.24', name: 'Day and Night', banner: 'sunset', notes: [
     'Outdoor maps now have a day / night cycle: the sun sets, night falls and the sun comes back up during a match',
     'Hosts can turn it off in the Host panel',

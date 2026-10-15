@@ -4,7 +4,7 @@ import { WEAPONS, GUNGAME_LADDER, SLOTS } from './weapons.js';
 import { WEAPON_RULES, ruleLoadout, cleanRules } from './rulesets.js';
 import { NavGrid } from './nav.js';
 import { breakables } from './maps.js';
-import { BOARD_HP, boardById, boardCenter, withoutBoards } from './walls.js';
+import { boardHp, boardById, boardCenter, withoutBoards } from './walls.js';
 import { isFighter, bracketKill, bracketTick, bracketLeave, bracketSnap } from './bracket.js';
 import { Bot, BOT_NAMES, BOT_DIFFS } from './bot.js';
 import { WEATHER, rollWeather, DAY_MAPS } from './weather.js';
@@ -233,7 +233,7 @@ export class HostLogic {
   // ---------- Breakable walls (walls.js) ----------
   // Health per board id; all of them stand again each match (or are gone with the walls rule off).
   resetWalls() {
-    this.wallHp = new Map(breakables.map((b) => [b.brk, this.s && this.s.walls === false ? 0 : BOARD_HP]));
+    this.wallHp = new Map(breakables.map((b) => [b.brk, this.s && this.s.walls === false ? 0 : boardHp(b)]));
   }
   damageWall(id, dmg, by) {
     const hp = this.wallHp && this.wallHp.get(id);

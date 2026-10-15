@@ -65,8 +65,8 @@ function makeApi() {
   };
   // Hollow building with door/window openings and a flat roof.
   // openings: {side: 'n'|'s'|'e'|'w', at, w, y0 = 0, h = 2.3}
-  // Windows are boarded up, and so is the last door of a building with more than one (breakable,
-  // walls.js); opts.boards: false keeps them all open.
+  // Windows get glass and the last door of a building with more than one is boarded up (both
+  // breakable, walls.js); opts.boards: false keeps them all open.
   const building = (x0, z0, x1, z1, h, openings = [], opts = {}, fn = add2) => {
     const t = 0.3, mat = opts.mat || 'adobe';
     const walls = {
@@ -91,7 +91,7 @@ function makeApi() {
         seg(w, cur, o0, 0, h);
         seg(w, o0, o1, 0, o.y0);
         seg(w, o0, o1, o.y0 + o.h, h);
-        if (boarded(openings.find((x) => x.side === side && x.at === o.at) || o)) seg(w, o0, o1, o.y0, o.y0 + o.h, 'boards');
+        if (boarded(openings.find((x) => x.side === side && x.at === o.at) || o)) seg(w, o0, o1, o.y0, o.y0 + o.h, o.y0 > 0 ? 'glass' : 'boards'); // windows: glass
         cur = o1;
       }
       seg(w, cur, w.a1, 0, h);
@@ -1493,7 +1493,7 @@ export function setMapData(id) {
   spawns.length = 0;
   map.build(makeApi());
   breakables.length = 0;
-  for (const b of boxes) if (b.mat === 'boards') { b.brk = breakables.length + 1; breakables.push(b); }
+  for (const b of boxes) if (b.mat === 'boards' || b.mat === 'glass') { b.brk = breakables.length + 1; breakables.push(b); }
   // Drop any spawn that ended up inside geometry.
   for (let i = spawns.length - 1; i >= 0; i--) {
     const s = spawns[i];
@@ -1886,7 +1886,7 @@ export function buildMapScene(scene, id) {
   const byMat = {};
   for (const b of boxes) (byMat[b.mat] ||= []).push(b);
   for (const [name, list] of Object.entries(byMat)) {
-    if (name === 'invisible' || name === 'boards') continue; // collision only (e.g. walls that stop you falling overboard); boards: walls.js
+    if (name === 'invisible' || name === 'boards' || name === 'glass') continue; // collision only (e.g. walls that stop you falling overboard); boards: walls.js
     const def = M[name] || { color: '#ff00ff' };
     const mat = new THREE.MeshStandardMaterial({
       map: def.map || null, color: def.color || '#ffffff',
