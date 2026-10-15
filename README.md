@@ -705,8 +705,9 @@ becomes free again.
   this. Unbanning undoes it.
 
   **Anti-cheat:** the host's game drops shots fired faster than a gun can fire, refuses hits right after a teleport or
-  impossible speed, refuses melee hits from out of reach, and counts gun hits that went through solid walls. Repeat
-  offenders (3 strikes, or 10+ wall hits making up 30% of their hits) are auto-reported to the Mod Panel, and the host
+  impossible speed, refuses melee hits from out of reach, counts gun hits that went through solid walls, and watches for
+  **aim snaps** (the view jumping 40°+ in one update with a headshot right after). Repeat offenders (3 strikes, 10+ wall
+  hits making up 30% of their hits, or 5+ snaps making up 40% of their headshots) are auto-reported to the Mod Panel, and the host
   panel shows a ⚠ next to them. Limits are generous so lag never gets normal players flagged.
 
   **Gamertag filter:** gamertags containing filtered words can't be claimed, even hidden inside a name ("xX_Sh1t_Xx").

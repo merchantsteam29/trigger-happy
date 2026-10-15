@@ -68,7 +68,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
   locally and relays between clients (lobby code = PeerJS id `whffa-v1-<CODE>`).
 - `host.js` (`HostLogic`) holds the true game state: players, health, kills, scores, modes,
   bots, pickups, barrels/crates, zombies waves, the Battle Royale storm, the tournament, map votes,
-  and anti-cheat (`AC`, `checkMove` / `checkRate` / `checkHit`, auto-flags to staff). It ticks at 20 Hz
+  and anti-cheat (`AC`, `checkMove` / `checkRate` / `checkHit`, aim snaps `trackAim` / `checkSnap`, auto-flags to staff). It ticks at 20 Hz
   in a Worker timer, so background tabs keep running, and broadcasts a `snap` each tick.
 - Clients (`game.js`) simulate their own movement and shooting (hitscan raycasts) and send intents.
   The host validates, applies damage and broadcasts the results.

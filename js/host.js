@@ -124,6 +124,13 @@ const AC = {
   teleport: 16,        // m in a single position update
   meleeExtra: 2.5,     // m beyond a melee weapon's reach
   strikes: 3,          // strikes before staff get a report
+  // Aim snaps: the view jumps a long way in one position update and a headshot lands right after it.
+  // Good players flick too, so it takes a lot of them, and a big share of their headshots.
+  snapDeg: 40,         // degrees turned in one update...
+  snapMs: 80,          // ...that came this soon after the one before
+  snapHitMs: 150,      // headshot within this long of the snap
+  snapCount: 5,        // snaps before staff get a report
+  snapShare: 0.4,      // of their headshots
 };
 function rayBlocked(ax, ay, az, bx, by, bz) {
   const dx = bx - ax, dy = by - ay, dz = bz - az, len = Math.hypot(dx, dy, dz);
@@ -639,7 +646,7 @@ export class HostLogic {
       case 'st':
         // q is a counter: the position channel is unordered, so ignore anything older than we have.
         if (typeof m.q === 'number') { if (m.q <= (p.lastQ || 0)) break; p.lastQ = m.q; }
-        if (p.alive && Array.isArray(m.p)) { this.checkMove(p, m.p); p.st = [m.p[0], m.p[1], m.p[2], m.y, m.pi, m.w, m.c ? 1 : 0, m.a | 0]; }
+        if (p.alive && Array.isArray(m.p)) { this.checkMove(p, m.p); p.st = [m.p[0], m.p[1], m.p[2], m.y, m.pi, m.w, m.c ? 1 : 0, m.a | 0]; this.trackAim(p, m.y, m.pi); }
         break;
       case 'use': // Search & Destroy: holding Use (plant / defuse)
         p.using = !!m.on;
@@ -953,6 +960,30 @@ export class HostLogic {
     p.acWin = { x: pos[0], z: pos[2], t: now };
   }
 
+  // Aim snaps (see AC.snapDeg): remembers the last big, fast turn of the view.
+  trackAim(p, yaw, pitch) {
+    if (p.bot || typeof yaw !== 'number' || typeof pitch !== 'number') return;
+    const now = Date.now(), last = p.acAim;
+    p.acAim = { y: yaw, p: pitch, t: now };
+    if (!last || now - last.t > AC.snapMs) return;
+    let dy = (yaw - last.y) % (Math.PI * 2);
+    if (dy > Math.PI) dy -= Math.PI * 2; else if (dy < -Math.PI) dy += Math.PI * 2;
+    const deg = Math.hypot(dy, pitch - last.p) * 180 / Math.PI;
+    if (deg >= AC.snapDeg) p.acSnapAt = now;
+  }
+  // A headshot: count it, and count it as a snap if one just happened. Reported once per match.
+  checkSnap(a, v, now) {
+    if (a.role || v.dummy) return;
+    a.acHeads = (a.acHeads || 0) + 1;
+    if (!a.acSnapAt || now - a.acSnapAt > AC.snapHitMs) return;
+    a.acSnapAt = 0; // one headshot per snap
+    a.acSnaps = (a.acSnaps || 0) + 1;
+    if (a.acSnaps >= AC.snapCount && a.acSnaps / a.acHeads >= AC.snapShare && !a.acSnapFlagged) {
+      a.acSnapFlagged = true;
+      if (this.onFlag) this.onFlag(a, `Anti-cheat: aim snapped onto heads ${a.acSnaps} times (${a.acSnaps} of ${a.acHeads} headshots) · ${MODES[this.s.mode].name} on ${MAPS[this.s.map].name}`);
+    }
+  }
+
   // Shots: no faster than the gun's fire rate (burst guns: their burst gap), with slack.
   checkRate(p, wid) {
     const w = WEAPONS[wid];
@@ -980,6 +1011,7 @@ export class HostLogic {
     if (w.type === 'melee' && d > (w.range || 2.5) + AC.meleeExtra) { this.strike(a, `melee hit from ${d.toFixed(1)} m`); return false; }
     if (w.type === 'gun' && !explosive) {
       a.acGunHits = (a.acGunHits || 0) + 1;
+      if (m.head) this.checkSnap(a, v, now);
       const ey = a.st[1] + (a.st[6] ? 1.1 : 1.55);
       const walls = rayBlocked(a.st[0], ey, a.st[2], v.st[0], v.st[1] + 1.1, v.st[2]) && rayBlocked(a.st[0], ey, a.st[2], v.st[0], v.st[1] + 1.6, v.st[2]);
       if (walls) {
