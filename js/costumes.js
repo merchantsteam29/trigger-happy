@@ -286,23 +286,30 @@ const BUILD = {
     return { arm: skin, leg: suit, hand: skin, foot: boot };
   },
   bloodmachine({ hips, spine, head }, team) {
-    // ULTRAKILL vibe: slim steel-blue machine, one yellow lamp for a face, a blue arm, wing panels with glowing edges, blood.
-    const blue = mat('#3a5aa8', { metalness: 0.65, roughness: 0.35 }), steel = mat('#1c2433', { metalness: 0.6, roughness: 0.4 }), blood = mat('#8a0a12', { roughness: 0.4 }), eye = glow('#ffd23f', 2.6), edge = glow('#ffcf3a', 1.4);
-    torso(spine, steel, 0.42, 0.56, 0.24);
-    box(spine, blue, 0.36, 0.26, 0.02, 0, 0.38, -0.13);
-    box(spine, team, 0.08, 0.08, 0.02, 0.1, 0.12, -0.13);
-    for (const [x, y, r] of [[-0.12, 0.2, 0.4], [0.14, 0.44, -0.3], [-0.05, 0.5, 0.2], [0.02, 0.08, 0.9]]) box(spine, blood, 0.1, 0.05, 0.01, x, y, -0.145, 0, 0, r);
-    const wing = mat('#b4bfd0', { metalness: 0.55, roughness: 0.35 });
+    // ULTRAKILL vibe: bright blue armor over a grey frame, a rounded head with one yellow eye, a yellow core,
+    // four blade wings sweeping out and down from the back with glowing edges, and blood.
+    const blue = mat('#2f6fe0', { metalness: 0.3, roughness: 0.35 }), frame = mat('#4a5262', { metalness: 0.3, roughness: 0.5 }), dark = mat('#20242c', { roughness: 0.6 });
+    const blood = mat('#9a0a14', { roughness: 0.35 }), eye = glow('#ffd23f', 2.6), edge = glow('#ffcf3a', 1.6), wing = mat('#c4ccd8', { metalness: 0.3, roughness: 0.3 });
+    torso(spine, frame, 0.42, 0.56, 0.24);
+    box(spine, blue, 0.46, 0.24, 0.27, 0, 0.42, 0); // chest armor
+    for (let i = 0; i < 3; i++) box(spine, blue, 0.3 - i * 0.03, 0.05, 0.25, 0, 0.24 - i * 0.07, 0); // ab segments
+    cyl(spine, eye, 0.035, 0.035, 0.02, 0, 0.42, -0.142, Math.PI / 2); // yellow core
+    box(spine, team, 0.08, 0.035, 0.02, 0, 0.06, -0.125); // your color
+    for (const [x, y, r] of [[-0.14, 0.46, 0.4], [0.12, 0.3, -0.3], [-0.06, 0.18, 0.9]]) box(spine, blood, 0.1, 0.05, 0.01, x, y, -0.142, 0, 0, r);
+    for (const s of [-1, 1]) box(spine, blue, 0.18, 0.12, 0.26, s * 0.27, 0.54, 0); // shoulder plates
+    box(spine, dark, 0.3, 0.2, 0.06, 0, 0.42, 0.15); // wing mount
     for (const s of [-1, 1]) for (let i = 0; i < 4; i++) {
-      const w = new THREE.Group(); w.position.set(s * 0.08, 0.5, 0.14); w.rotation.set(0.15, 0, s * (0.9 + i * 0.22)); spine.add(w);
-      box(w, wing, 0.07, 0.4 - i * 0.05, 0.015, 0, 0.2 - i * 0.025, 0); box(w, edge, 0.012, 0.4 - i * 0.05, 0.017, s * 0.035, 0.2 - i * 0.025, 0); // wing panel, glowing edge
+      const w = new THREE.Group(); w.position.set(s * 0.13, 0.52 - i * 0.07, 0.18); w.rotation.set(-0.25, s * 0.35, s * (1.45 + i * 0.22)); spine.add(w);
+      const len = 0.62 - i * 0.07;
+      box(w, wing, 0.08, len, 0.016, 0, len / 2, 0); // blade
+      box(w, edge, 0.014, len, 0.019, s * 0.045, len / 2, 0); // glowing edge
+      cone(w, wing, 0.04, 0.1, 0, len + 0.04, 0, 0, 0, 0, 4); // pointed tip
     }
-    shoulders(spine, blue, 0.14, 0.09, 0.2);
-    pelvis(hips, steel); belt(hips, blue);
-    cyl(head, steel, 0.12, 0.13, 0.26, 0, 0.14, 0, 0, 0, 0, 12);
-    box(head, blue, 0.18, 0.08, 0.04, 0, 0.26, -0.06);
-    cyl(head, eye, 0.045, 0.045, 0.03, 0, 0.15, -0.125, Math.PI / 2); // the one yellow lamp
-    return { arm: blue, leg: steel, hand: steel, foot: steel };
+    pelvis(hips, frame); belt(hips, blue);
+    ball(head, blue, 0.15, 0, 0.16, 0).scale.set(0.95, 1.1, 1); // rounded head
+    box(head, dark, 0.15, 0.17, 0.04, 0, 0.15, -0.125); // face plate
+    cyl(head, eye, 0.04, 0.04, 0.03, 0, 0.17, -0.148, Math.PI / 2); // the one yellow eye
+    return { arm: blue, leg: blue, hand: frame, foot: dark };
   },
   hellwalker({ hips, spine, head }, team) {
     // DOOM vibe: green armor plates, a rounded helmet with a gold visor, a spiked shield saw and a chain.

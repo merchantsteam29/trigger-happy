@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.30', name: 'Costume Party', banner: 'masquerade', notes: [
+  { v: '2026.10.15.31', name: 'Costume Party', banner: 'masquerade', notes: [
     '## Costumes',
     'A whole new look for your character, same size and hitbox: pick one in Character → Costumes',
     'In the shop: Skeleton, Cyber Samurai, Astronaut Cat, Party Llama, Junk Robot, Lava Golem, Ice Golem, Banana, Ninja, Mummy and Deep Sea Diver',
@@ -24,6 +24,8 @@ export const UPDATES = [
     'New in the shop: Dino, Shark, Astronaut, Chicken (flaps its wings when you emote), Toaster Bot (toast pops up) and Ice Cream Cone',
     'New giveaways: Spartan, Freddy Bear, Bounty Hunter and Creeper Suit',
     'Impostor, Bug Knight, Cube Hero, Blood Machine and Hellwalker got more detail',
+    '## Blood Machine Remake',
+    'Blood Machine got a new look: blue armor, a round head with one yellow eye, and long blade wings',
   ] },
   { v: '2026.10.15.27', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
