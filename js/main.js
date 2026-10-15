@@ -55,7 +55,7 @@ import { MODS, MOD_SLOTS, MOD_SLOT_NAMES, modOptions, hasMods, cleanMods, cleanM
 import { COURSES, COURSE_IDS, fmtScore, trainBests, saveBest } from './training.js';
 import { community, openCommunity } from './community.js';
 import { clanPoints, clanStandings, CLAN_POINTS, CLAN_REWARDS } from './clanseason.js';
-import { Theater, encodeClip, decodeClip } from './replay.js';
+import { Theater, encodeClip, decodeClip, listReplays, loadReplay } from './replay.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -264,7 +264,7 @@ function renderHome() {
     </div>
     ${(() => { const w = motwNow(), p = motwProgress(); return `<div class="hs-tile banner-row hs-motw"><span class="hs-ic">${w.icon}</span><span class="hs-txt"><b>Mode of the week: ${esc(w.name)}</b><small>${esc(w.desc)} · ${p.paid ? '✓ reward earned' : `play ${MOTW_MATCHES} matches: ${p.n}/${MOTW_MATCHES} · 🪙 ${MOTW_TOKENS}`} · new mode in ${fmtDuration(motwEnds() - Date.now())}</small></span><button class="primary sm" data-motw>Play</button></div>`; })()}
     ${holidayRow()}
-    ${game.recorder.last ? '<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Watch your last match</b><small>Replay it from any angle: follow a player, their view or a free camera</small></span><span class="hm-arrow">›</span></button>' : ''}
+    ${replayCount ? `<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Replays</b><small>Your last ${replayCount === 1 ? 'match' : `${replayCount} matches`} from any angle: follow a player, their view or a free camera</small></span><span class="hm-arrow">›</span></button>` : ''}
     ${!tutorialDone() ? '<button class="hs-tile hs-tutorial banner-row" data-tutorial><span class="hs-ic">🎓</span><span class="hs-txt"><b>New here? Take the 1-minute tutorial</b><small>Learn the controls in the Practice Range · 🪙 ' + TUTORIAL_TOKENS + '</small></span><span class="hm-arrow">›</span></button>' : ''}
     ${canInstall() ? '<button class="hs-tile hs-install banner-row" data-install><span class="hs-ic">📲</span><span class="hs-txt"><b>Install the app</b><small>Trigger Happy on your home screen, full screen</small></span><span class="hm-arrow">›</span></button>' : ''}
     <div class="today-row">
@@ -287,7 +287,7 @@ function renderHome() {
   if (c) c.onclick = doClaim;
   el.querySelector('[data-quick]').onclick = quickPlay;
   const lr = el.querySelector('[data-lastreplay]');
-  if (lr) lr.onclick = () => openTheater(game.recorder.last, 'Your last match');
+  if (lr) lr.onclick = () => openReplays();
   const tu = el.querySelector('[data-tutorial]');
   if (tu) tu.onclick = () => startPractice(true);
   el.querySelector('[data-ranked]').onclick = playRanked;
@@ -1977,9 +1977,27 @@ moderation.onRename = (r) => {
 };
 
 // ---------- Replay theater (replay.js) ----------
+// Saved matches (the last 5, on this device): the home screen tile opens the list.
+var replayCount = 0; // var: the home screen renders before this line runs
+const countReplays = () => listReplays().then((l) => { const n = Math.max(l.length, game.recorder.last ? 1 : 0); if (n !== replayCount) { replayCount = n; renderHome(); } });
+setTimeout(countReplays, 1500);
+async function openReplays() {
+  const list = await listReplays();
+  if (!list.length && game.recorder.last) { openTheater(game.recorder.last, 'Your last match'); return; }
+  const pop = document.createElement('div');
+  pop.className = 'overlay th-list';
+  pop.innerHTML = `<div class="panel"><div class="hp-head"><h2>🎬 REPLAYS</h2><small>Your last ${list.length} matches, kept on this device</small></div>
+    ${list.map((r) => `<button class="th-item" data-at="${r.at}"><b>${esc(MODES[r.mode] ? MODES[r.mode].name : r.mode)} · ${esc(MAPS[r.map] ? MAPS[r.map].name : r.map)}</b><small>${new Date(r.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })} · ${Math.floor(r.secs / 60)}:${String(r.secs % 60).padStart(2, '0')} · ${r.players} players</small><span class="hm-arrow">▶</span></button>`).join('')}
+    <button class="ghost" data-x>Close</button></div>`;
+  document.body.appendChild(pop);
+  pop.querySelector('[data-x]').onclick = () => pop.remove();
+  pop.querySelectorAll('[data-at]').forEach((b) => {
+    b.onclick = async () => { const rec = await loadReplay(Number(b.dataset.at)); pop.remove(); if (rec) openTheater(rec, new Date(rec.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })); else toast('That replay is gone.'); };
+  });
+}
 function openTheater(rec, title) {
   if (!rec || game.active || game.theater) return;
-  const th = new Theater(game, rec, { title, onClose: () => { $('menu').classList.remove('hidden'); renderHome(); } });
+  const th = new Theater(game, rec, { title, onClose: () => { $('menu').classList.remove('hidden'); countReplays(); renderHome(); } });
   if (!th.open()) { toast('Could not open that replay.'); return; }
   $('menu').classList.add('hidden');
 }
@@ -2150,6 +2168,7 @@ function leave(reason) {
   if (tutorial.active || !$('tutorial').classList.contains('hidden')) tutorial.stop();
   if (hosting) { announcer.stop(); hosting = null; }
   if (net) { net.destroy(); net = null; }
+  setTimeout(countReplays, 800); // the match just ended may be a new replay
   chat.setLobby(false);
   chat.setPaused(false);
   touch.show(false);

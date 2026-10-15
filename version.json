@@ -1,8 +1,7 @@
 {
-  "version": "2026.10.14.9",
+  "version": "2026.10.14.10",
   "notes": [
-    "Replay theater: watch your last match from any angle",
-    "Reports include a 30 second replay for the staff"
+    "Smoother replays with gunfire and explosions; your last 5 matches are kept, and clips can be saved as video"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

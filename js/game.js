@@ -993,9 +993,10 @@ export class Game {
         this.hud.hit(m.kill ? 'kill' : m.head ? 'head' : null, !!m.head);
         break;
       case 'kill': this.onKill(m); this.recorder.kill(m); break;
-      case 'shot': this.remoteShot(m); break;
+      case 'shot': this.remoteShot(m); this.recorder.event(m); break;
       case 'fx': this.remoteFx(m); break;
       case 'proj': {
+        this.recorder.event(m);
         const p = new THREE.Vector3(...m.p);
         this.spawnProjectile(m.k, p, new THREE.Vector3(...m.v), false, m.id, m.pid);
         const W = WEAPONS[m.k];
@@ -1004,7 +1005,7 @@ export class Game {
         if (r && W) { if (W.type === 'proj') r.fire(); else r.throwAnim(); }
         break;
       }
-      case 'boom': this.remoteBoom(m); break;
+      case 'boom': this.remoteBoom(m); this.recorder.event(m); break;
       case 'spray': this.addSpray(m); break;
       case 'wallbreak': { // a wooden board broke (walls.js)
         const b = boardById(m.id);
@@ -1516,6 +1517,9 @@ export class Game {
       } else {
         _c.set(r.pos.x, r.pos.y + 1.5, r.pos.z);
         cam.position.set(_c.x + Math.sin(me.yaw) * cp * d, _c.y - Math.sin(me.pitch) * d + 0.4, _c.z + Math.cos(me.yaw) * cp * d);
+        _d.subVectors(cam.position, _c); // a wall behind them: the camera comes in closer instead of going through it
+        const len = _d.length(), wall = len > 0.01 && raycast(_c.x, _c.y, _c.z, _d.x / len, _d.y / len, _d.z / len, len);
+        if (wall) cam.position.copy(_c).addScaledVector(_d, Math.max(0.3, wall.t - 0.3) / len);
         cam.lookAt(_c);
       }
       this.specTarget = r;
@@ -2047,7 +2051,13 @@ export class Game {
     if (this.rules.mode === 'prophunt' && this.myTeam === 2 && !hits.size) this.net.send({ t: 'miss' }); // misses cost hunters health
     for (const [pid, dmg] of propHits) this.net.send({ t: 'prop', id: pid, dmg: Math.round(dmg) });
     for (const [bid, dmg] of wallHits) this.net.send({ t: 'wall', id: bid, dmg: Math.round(dmg) });
-    this.net.send({ t: 'shot', w: id, o: arr(muzzle), e: ends, q: w.quiet ? 1 : 0 });
+    this.sendRec({ t: 'shot', w: id, o: arr(muzzle), e: ends, q: w.quiet ? 1 : 0 });
+  }
+
+  // Sends a shot / projectile / explosion, and puts it on the replay recording (replay.js).
+  sendRec(m) {
+    this.net.send(m);
+    this.recorder.event({ ...m, id: this.myId });
   }
 
   // Halloween: a jack-o'-lantern was shot.
@@ -2365,7 +2375,7 @@ export class Game {
     v.normalize().multiplyScalar(w.projSpeed);
     const pid = ++this.pid;
     this.spawnProjectile(id, p, v, true, this.myId, pid);
-    this.net.send({ t: 'proj', pid, k: id, p: arr(p), v: arr(v) });
+    this.sendRec({ t: 'proj', pid, k: id, p: arr(p), v: arr(v) });
   }
 
   throwUtil(quick) {
@@ -2390,7 +2400,7 @@ export class Game {
     v.addScaledVector(this.me.vel, 0.5);
     const pid = ++this.pid;
     this.spawnProjectile(id, p, v, true, this.myId, pid);
-    this.net.send({ t: 'proj', pid, k: id, p: arr(p), v: arr(v) });
+    this.sendRec({ t: 'proj', pid, k: id, p: arr(p), v: arr(v) });
   }
 
   // ---------- Projectiles ----------
@@ -2454,7 +2464,7 @@ export class Game {
             this.showHit(victim.id, dmg, head);
             this.hud.hit(head || dmg >= 100 ? 'head' : null);
             hitSound(!!head, 0.8);
-            if (W.bolt) { if (W.snow) this.snowPuff(p.pos); else this.fx.blood(p.pos); this.net.send({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind }); this.removeProjectile(p); }
+            if (W.bolt) { if (W.snow) this.snowPuff(p.pos); else this.fx.blood(p.pos); this.sendRec({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind }); this.removeProjectile(p); }
             else this.explode(p, victim.id);
             continue;
           }
@@ -2564,7 +2574,7 @@ export class Game {
     if (p.dead) return;
     this.removeProjectile(p);
     const W = WEAPONS[p.kind], R = W.radius;
-    this.net.send({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind });
+    this.sendRec({ t: 'boom', pid: p.pid, p: arr(p.pos), k: p.kind });
     if (W.smoke) { this.smokeFx(p.pos); return; }
     if (W.flash) { this.flashFx(p.pos); return; }
     this.boomFx(p.pos, R, W);

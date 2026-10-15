@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.10', name: 'Smoother Replays', banner: 'galaxy', notes: [
+    'Replays are smooth now, and show every shot with tracers and sounds, grenades and explosions',
+    'Replays on the home screen keeps your last 5 matches, even after closing the game',
+    'Save clip records what you\'re watching as a video. The follow camera no longer goes inside walls',
+  ] },
   { v: '2026.10.14.9', name: 'Replay Theater', banner: 'galaxy', notes: [
     'Watch your last match from the home screen: follow any player, see through their eyes or fly a free camera',
     'Timeline, pause and speeds from 0.25× to 4×, with the kill feed',

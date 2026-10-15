@@ -295,11 +295,13 @@ Levitate are in the **Shop** (🪙 200 to 500). Pick yours in **Character → Vi
 
 ## Replay theater
 
-Your game records every match you play or watch. Afterwards, **🎬 Watch your last match** on the home screen plays it
-back on its map: **follow** any player (Q / E to switch, **R** for their own view) or press **F** for a **free camera**
-(WASD, Space / C, mouse wheel for speed). The timeline jumps anywhere, the speed goes from 0.25× to 4×, **P** pauses,
-**H** hides the controls, and the kill feed shows who got whom. Click the view to look around; Esc frees the mouse.
-Only your last match is kept, until you reload the game.
+Your game records every match you play or watch: every movement update, every shot (with tracers and sounds),
+grenades, rockets and explosions, and the kills. **🎬 Replays** on the home screen lists your **last 5 matches** (kept on
+this device) and plays one back on its map, smoothly: **follow** any player (Q / E to switch, **R** for their own view;
+the camera stays out of walls) or press **F** for a **free camera** (WASD, Space / C, mouse wheel for speed). The
+timeline jumps anywhere, the speed goes from 0.25× to 4×, **P** pauses, **H** hides the controls, and the kill feed shows
+who got whom. **⏺ Save clip** records what you're watching (up to 60 s) and downloads it as a video. Click the view to
+look around; Esc frees the mouse.
 
 ## Spectating
 
