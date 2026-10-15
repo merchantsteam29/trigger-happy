@@ -3,6 +3,7 @@ import { onStats, addTokens, grantWrap, allStats } from './missions.js';
 import { onProgress, myLevel } from './progress.js';
 import { moderation } from './moderation.js';
 import { COURSES, COURSE_IDS, cleanScore, trainBests } from './training.js';
+import { myRanked, divisionOf, PLACEMENTS } from './ranked.js';
 
 // Weekly leaderboard: kills, wins and headshots (XP is still counted but not shown or ranked) from Monday 00:00 UTC to the next Monday.
 // Every player with a gamertag posts their own week's totals, signed, as a retained message at
@@ -129,6 +130,7 @@ class Leaderboard {
     const caps = which === 'all' ? CAPS_ALL : CAPS;
     for (const b of BOARDS) e[b.id] = Math.max(0, Math.min(caps[b.id], Math.round(Number(body[b.id]) || 0)));
     e.m = cleanModes(body.m, caps);
+    if (which === 'all') { e.sr = Math.max(0, Math.min(5000, Math.round(Number(body.sr) || 0))); e.srp = Math.max(0, Math.min(1e6, Math.round(Number(body.srp) || 0))); }
     this.entries[which].set(tag, e);
     this.changed(which);
   }
@@ -153,6 +155,8 @@ class Leaderboard {
     // All-time totals
     const all = this.lifetime(), ab = { week: 'all', m: cleanModes(this.modesAll, CAPS_ALL) };
     for (const b of BOARDS) ab[b.id] = Math.min(CAPS_ALL[b.id], all[b.id] || 0);
+    const rk = myRanked();
+    if (rk.played) { ab.sr = rk.sr; ab.srp = rk.played; } // the Ranked board
     const sa = await s.sign(ab);
     s.relay.publish(V + 'all/' + low(s.tag), sa, { retain: true });
     this.receive('all/' + low(s.tag), sa);
@@ -190,6 +194,13 @@ class Leaderboard {
     const me = this.social && low(this.social.tag), up = COURSES[course].higher;
     return [...this.aim.values()].map((e) => ({ tag: e.tag, value: e.sc[course] || 0 })).filter((e) => e.value > 0 && !this.hidden.has(low(e.tag)) && !moderation.isGone(e.tag))
       .sort((a, b) => (up ? b.value - a.value : a.value - b.value) || a.tag.localeCompare(b.tag)).map((e, i) => ({ ...e, rank: i + 1, me: low(e.tag) === me }));
+  }
+
+  // Ranked board: the top 100 by SR (placed players), optionally one division.
+  rankedRows(div = '') {
+    const me = this.social && low(this.social.tag);
+    return [...this.entries.all.values()].filter((e) => e.srp >= PLACEMENTS && e.sr > 0 && (!div || divisionOf(e.sr).id === div) && !this.hidden.has(low(e.tag)) && !moderation.isGone(e.tag))
+      .sort((a, b) => b.sr - a.sr || a.tag.localeCompare(b.tag)).slice(0, 100).map((e, i) => ({ tag: e.tag, value: e.sr, rank: i + 1, me: low(e.tag) === me }));
   }
 
   // Sorted rows for a board: [{ tag, value, rank, me }]. which: 'cur' | 'prev' | 'all'; mode: one game mode, or all of them.

@@ -98,7 +98,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `role/…` | moderator appointments (owner-signed) | roles.js |
 | `modrec/<tag>`, `report/<id>`, `appeal/<tag>`, `announce`, `chatfilter`, `staffchat/…`, `permabans`, `pres/…` | moderation | moderation.js |
 | `bug/<id>` | bug reports (only the owner reads them) | moderation.js |
-| `lb/<week>/<tag>`, `lb/all/<tag>`, `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
+| `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |
 | `clan/<TAG>`, `clanreq/…`, `clanleave/…`, `clanchat/…`, `clanwar/…`, `clanwarok/…`, `clanwargo/<TAG>` | clans, clan wars | clans.js |
 | `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver) | gifts.js |

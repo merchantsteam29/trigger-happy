@@ -210,6 +210,9 @@ button.hero-mini:hover, button.banner-row:hover, .today-row button.hs-tile:hover
 .hm-arrow { margin-left: auto; font-size: 22px; color: var(--muted); }
 .hero-mini.hs-ranked { border-color: color-mix(in srgb, var(--dv) 45%, transparent); background: linear-gradient(90deg, color-mix(in srgb, var(--dv) 18%, transparent), var(--surface-1) 60%); }
 .hero-mini.hs-ranked b { font-size: 15px; text-transform: none; color: var(--text); }
+.hs-ranked .rk-line { display: block; opacity: 0.85; font-size: 11px; }
+.hero-mini.hs-ranked.live { animation: rk-pulse 1.6s ease-in-out infinite; }
+@keyframes rk-pulse { 50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--dv) 70%, transparent), 0 0 18px color-mix(in srgb, var(--dv) 45%, transparent); } }
 .hero-mini.hs-feat { border-color: rgba(255,210,58,0.32); background: linear-gradient(90deg, rgba(255,210,58,0.12), var(--surface-1) 60%); }
 .hero-mini.hs-gn { border-color: rgba(140,110,255,0.32); background: linear-gradient(90deg, rgba(120,90,255,0.16), var(--surface-1) 60%); }
 .hero-mini.hs-gn.live { border-color: #a08cff; }

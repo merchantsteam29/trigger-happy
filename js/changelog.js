@@ -7,6 +7,12 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.11', name: 'Ranked Revival', banner: 'blood', notes: [
+    'Ranked now puts everyone on the busiest ranked server, so you play real people instead of waiting with bots',
+    'The Ranked tile shows how many are playing ranked right now',
+    'Weekly reward: 5 ranked matches = 300 tokens. Ranked Hour every day: +50 tokens per ranked match',
+    'New ♛ Ranked leaderboard: the top 100 by SR, for everyone or one division',
+  ] },
   { v: '2026.10.14.10', name: 'Smoother Replays', banner: 'galaxy', notes: [
     'Replays are smooth now, and show every shot with tracers and sounds, grenades and explosions',
     'Replays on the home screen keeps your last 5 matches, even after closing the game',

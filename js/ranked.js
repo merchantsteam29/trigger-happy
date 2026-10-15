@@ -28,6 +28,16 @@ export const RANKED_BANNERS = Object.fromEntries(DIVISIONS.slice(1).map((d) => [
 export const RANKED_BANNER_ITEMS = DIVISIONS.slice(1).map((d) => ({ id: 'rks_' + d.id, name: `Ranked ${d.name}`, reward: true, how: `Finish a ranked season at ${d.name} or higher` }));
 export const divisionOf = (sr) => DIVISIONS.reduce((d, x) => (sr >= x.min ? x : d), DIVISIONS[0]);
 export const RANKED_MATCH = { mode: 'ffa', max: 8, bots: 4 };
+// Bringing people together: a weekly reward for playing ranked, and a daily Ranked Hour (22:00-23:00
+// UTC, just before Game Night, shown in the player's own time) when every counted match pays a bonus.
+export const RANKED_WEEKLY = { matches: 5, tokens: 300 }, RANKED_HOUR_BONUS = 50;
+export function rankedHour(t = Date.now()) {
+  const d = new Date(t), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 22), end = start + 3600e3;
+  return t >= end ? { live: false, start: start + 864e5, end: end + 864e5 } : { live: t >= start, start, end };
+}
+const weekStart = (t = Date.now()) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); };
+// This week's counted ranked matches: { id (week start), n, paid }
+export function rankedWeek() { const w = load().wk, id = weekStart(); return w && w.id === id ? w : { id, n: 0, paid: false }; }
 
 const load = () => ({ sr: START_SR, played: 0, best: START_SR, wins: 0, ...store.get('ranked', {}) });
 export const myRanked = () => { const r = load(); return { ...r, placing: r.played < PLACEMENTS, div: divisionOf(r.sr) }; };
@@ -82,11 +92,16 @@ export function rateMatch(scores, myId) {
   r.played++;
   if (meIdx === 0) r.wins++;
   r.best = Math.max(r.best, r.sr);
+  const wk = { ...rankedWeek() };
+  wk.n++;
+  const weeklyDone = !wk.paid && wk.n >= RANKED_WEEKLY.matches;
+  if (weeklyDone) wk.paid = true;
+  r.wk = wk;
   // Best division this season (rewarded when the season ends).
   const n = seasonNow(), di = DIVISIONS.indexOf(divisionOf(r.sr));
   r.peaks = { ...(r.peaks || {}) };
   r.peaks[n] = Math.max(r.peaks[n] || 0, di);
   store.set('ranked', r);
   const div = divisionOf(r.sr);
-  return { counted: true, delta, sr: r.sr, div, newDiv: div.id !== before.id ? div : null, placing: r.played < PLACEMENTS, played: r.played };
+  return { counted: true, delta, sr: r.sr, div, newDiv: div.id !== before.id ? div : null, placing: r.played < PLACEMENTS, played: r.played, weeklyDone, hourBonus: rankedHour().live, week: wk.n };
 }

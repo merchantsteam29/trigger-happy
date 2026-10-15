@@ -343,11 +343,17 @@ the Play screen (or at the bottom of the menu). On iPhone / iPad: Safari → Sha
 
 ## Ranked
 
-**Play Ranked** (Servers screen) finds a ranked Free For All server near your skill rating (SR), or starts one.
+**Ranked** (home screen) puts everyone on the busiest ranked Free For All server (whatever their skill rating, SR), or
+starts one, so players meet instead of waiting alone. The Ranked tile shows how many people are playing ranked right now.
 You start at 1,000 SR; after each ranked match your SR moves by where you finished among the real players (bots
 don't count, and it needs at least 2 players). The first 5 matches are placements and move it faster. Divisions:
 Rookie, Contender (1,100), Veteran (1,250), Elite (1,400), Master (1,550) and Legend (1,700). Ranked servers use the
 standard rules, show their rating in the server list, and your division shows on your profile.
+
+- **Weekly reward:** play 5 ranked matches in a week (that count, with 2+ real players) for 🪙 300.
+- **Ranked Hour:** every day 22:00-23:00 UTC (shown in your own time, just before Game Night), every ranked match that
+  counts pays 🪙 50 extra. Everyone in the menu gets a heads-up when it starts.
+- **Ranked board:** Leaderboard → **♛ Ranked** lists the top 100 by SR (after placements), for everyone or one division.
 
 **Season rewards:** ranked seasons follow the season pass (a new one every Monday). Your best division each season is remembered. When the season ends you get the **Ranked**
 banner for that division and every one below it (Contender, Veteran, Elite, Master, Legend).

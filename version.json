@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.10",
+  "version": "2026.10.14.11",
   "notes": [
-    "Smoother replays with gunfire and explosions; your last 5 matches are kept, and clips can be saved as video"
+    "Ranked revival: everyone meets on the busiest ranked server, weekly reward, daily Ranked Hour and a Ranked leaderboard"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

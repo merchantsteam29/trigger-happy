@@ -43,7 +43,7 @@ import { seasons, TIERS, tierXp, tierTokens } from './seasons.js';
 import { bannerOf, bannerHtml } from './banners.js';
 import { invites, INVITE_TOKENS, MAX_INVITES } from './invites.js';
 import { RULE_PRESETS, presetRules, savedPresets, WEAPON_RULES } from './rulesets.js';
-import { myRanked, srBadge, RANKED_MATCH, PLACEMENTS, divisionOf } from './ranked.js';
+import { myRanked, srBadge, RANKED_MATCH, PLACEMENTS, divisionOf, DIVISIONS, RANKED_WEEKLY, RANKED_HOUR_BONUS, rankedHour, rankedWeek } from './ranked.js';
 import { tutorial, tutorialDone, TUTORIAL_TOKENS } from './tutorial.js';
 import { highlights } from './highlights.js';
 import { addTokens, grantItem, track } from './missions.js';
@@ -236,6 +236,11 @@ function renderHome() {
   const gn = gameNight.window(), gnLive = !!(gn && gn.live);
   const gnServers = browser.list().filter((s) => s.gn), gnPlayers = gnServers.reduce((n, s) => n + s.players, 0);
   const rk = myRanked(), open = browser.list().filter((x) => x.players < x.max), playing = browser.list().reduce((n, x) => n + x.players, 0);
+  const rkNow = browser.list().filter((s) => s.ranked).reduce((n, s) => n + s.players, 0), rkHour = rankedHour(), rkWeek = rankedWeek();
+  const rkLine = rkHour.live ? `🔴 Ranked Hour · +${RANKED_HOUR_BONUS} tokens a match${rkNow ? ` · ${rkNow} playing` : ''}`
+    : rkNow ? `🔴 ${rkNow} playing ranked now · join them!`
+      : rkWeek.paid ? `Weekly reward earned ✓ · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+        : `This week ${rkWeek.n}/${RANKED_WEEKLY.matches} matches · 🪙 ${RANKED_WEEKLY.tokens} · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
   el.innerHTML = `
     <div class="play-hero">
       <button class="hero-quick hs-tile" data-quick title="Joins the busiest public server, or starts one with bots if there are none">
@@ -245,8 +250,8 @@ function renderHome() {
         <span class="hq-go">Play now ▶</span>
       </button>
       <div class="hero-side">
-        <button class="hero-mini hs-tile hs-ranked" data-ranked style="--dv:${rk.div.color}" title="Ranked Free For All: your rating moves with where you finish among real players">
-          <span class="hs-ic">🏆</span><span class="hs-txt"><b>Ranked</b><small>${rk.placing ? `Placement ${rk.played}/${PLACEMENTS}` : `${rk.div.icon} ${rk.div.name} · ${rk.sr} SR`}</small></span><span class="hm-arrow">›</span>
+        <button class="hero-mini hs-tile hs-ranked ${rkHour.live || rkNow ? 'live' : ''}" data-ranked style="--dv:${rk.div.color}" title="Ranked Free For All: your rating moves with where you finish among real players. Everyone joins the same ranked server.">
+          <span class="hs-ic">🏆</span><span class="hs-txt"><b>Ranked</b><small>${rk.placing ? `Placement ${rk.played}/${PLACEMENTS}` : `${rk.div.icon} ${rk.div.name} · ${rk.sr} SR`}</small><small class="rk-line">${rkLine}</small></span><span class="hm-arrow">›</span>
         </button>
         <div class="hero-mini hs-tile hs-feat">
           <span class="hs-ic">⭐</span>
@@ -336,7 +341,9 @@ async function playRanked() {
   if (busy) return;
   const me = myRanked();
   status('Finding a ranked match…');
-  const open = (await freshServers()).filter((s) => s.ranked && Math.abs((s.sr || 1000) - me.sr) <= 350)
+  // Everyone goes to the busiest ranked server (any rating: the SR maths handles the gap), so
+  // players meet instead of each sitting alone with bots.
+  const open = (await freshServers()).filter((s) => s.ranked && s.players < s.max)
     .sort((a, b) => b.players - a.players || Math.abs(a.sr - me.sr) - Math.abs(b.sr - me.sr));
   if (open[0]) return joinCode(open[0].code);
   status('');
@@ -437,8 +444,9 @@ function holidayRow() {
 }
 
 // ---------- Weekly leaderboard ----------
-let lbBoard = ['kills', 'wins', 'heads', 'clans', 'aim'].includes(store.get('lbBoard', 'kills')) ? store.get('lbBoard', 'kills') : 'kills', lbWhich = 'cur', lbMode = '', lbT = 0;
+let lbBoard = ['kills', 'wins', 'heads', 'clans', 'aim', 'ranked'].includes(store.get('lbBoard', 'kills')) ? store.get('lbBoard', 'kills') : 'kills', lbWhich = 'cur', lbMode = '', lbT = 0;
 let lbCourse = COURSES[store.get('lbCourse', 'grid')] ? store.get('lbCourse', 'grid') : 'grid'; // Training board: which course
+let lbDiv = ''; // Ranked board: one division, or all
 function updateLbNav() {
   const r = leaderboard.rows('kills').find((x) => x.me);
   $('nav-lb-rank').textContent = r ? '#' + r.rank : '';
@@ -449,10 +457,10 @@ function renderLeaderboard() {
   const el = $('menu-lb');
   if (!el) return;
   // XP and clans aren't split by mode; clans are weekly only.
-  if (lbMode && (lbBoard === 'clans' || lbBoard === 'aim')) lbBoard = 'kills';
+  if (lbMode && (lbBoard === 'clans' || lbBoard === 'aim' || lbBoard === 'ranked')) lbBoard = 'kills';
   if (lbWhich === 'all' && lbBoard === 'clans') lbBoard = 'kills';
   if (lbBoard === 'clans') clans.loadAll();
-  const rows = lbBoard === 'aim' ? leaderboard.aimRows(lbCourse) : lbBoard === 'clans' ? clanRows(lbWhich) : leaderboard.rows(lbBoard, lbWhich, lbMode || null), b = lbBoard === 'aim' ? { name: '' } : lbBoard === 'clans' ? { name: 'pts' } : BOARDS.find((x) => x.id === lbBoard) || BOARDS[0];
+  const rows = lbBoard === 'ranked' ? leaderboard.rankedRows(lbDiv) : lbBoard === 'aim' ? leaderboard.aimRows(lbCourse) : lbBoard === 'clans' ? clanRows(lbWhich) : leaderboard.rows(lbBoard, lbWhich, lbMode || null), b = lbBoard === 'ranked' ? { name: 'SR' } : lbBoard === 'aim' ? { name: '' } : lbBoard === 'clans' ? { name: 'pts' } : BOARDS.find((x) => x.id === lbBoard) || BOARDS[0];
   const me = rows.find((r) => r.me), top = rows.slice(0, 50);
   const all = lbWhich === 'all', life = leaderboard.lifetime();
   const mineSrc = all ? life : leaderboard.mine;
@@ -460,7 +468,7 @@ function renderLeaderboard() {
   const shownBoards = lbMode ? BOARDS.filter((x) => MODE_BOARDS.includes(x.id)) : BOARDS;
   const modeName = lbMode && MODES[lbMode] ? MODES[lbMode].name : '';
   const champs = BOARDS.map((x) => ({ b: x, top: leaderboard.rows(x.id, 'prev')[0] })).filter((c) => c.top);
-  const fmt = (n) => (lbBoard === 'aim' ? fmtScore(lbCourse, n) : Number(n).toLocaleString());
+  const fmt = (n) => (lbBoard === 'aim' ? fmtScore(lbCourse, n) : lbBoard === 'ranked' ? `${divisionOf(n).icon} ${Number(n).toLocaleString()}` : Number(n).toLocaleString());
   el.innerHTML = `<div class="lb">
     <div class="card lb-main">
       <div class="lb-head">
@@ -468,11 +476,12 @@ function renderLeaderboard() {
         <select id="lb-mode" class="lb-mode" title="Show one game mode"><option value="">All modes</option>${MODE_ORDER.filter((id) => MODES[id] && id !== 'practice').map((id) => `<option value="${id}" ${id === lbMode ? 'selected' : ''}>${esc(MODES[id].name)}</option>`).join('')}</select>
         <small>${all ? 'Lifetime totals' : lbWhich === 'cur' ? `Resets in ${fmtDuration(weekEnds() - Date.now())} (${new Date(weekEnds()).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' })} your time)` : 'Final results'}</small>
       </div>
-      <div class="lb-tabs">${shownBoards.map((x) => `<button data-board="${x.id}" class="${x.id === lbBoard ? 'sel' : ''}">${x.icon} ${x.name}</button>`).join('')}${lbMode || all ? '' : `<button data-board="clans" class="${lbBoard === 'clans' ? 'sel' : ''}">🛡 Clans</button>`}${lbMode ? '' : `<button data-board="aim" class="${lbBoard === 'aim' ? 'sel' : ''}" title="Best training course scores (Practice Range), all time">🎯 Training</button>`}</div>
+      <div class="lb-tabs">${shownBoards.map((x) => `<button data-board="${x.id}" class="${x.id === lbBoard ? 'sel' : ''}">${x.icon} ${x.name}</button>`).join('')}${lbMode || all ? '' : `<button data-board="clans" class="${lbBoard === 'clans' ? 'sel' : ''}">🛡 Clans</button>`}${lbMode ? '' : `<button data-board="aim" class="${lbBoard === 'aim' ? 'sel' : ''}" title="Best training course scores (Practice Range), all time">🎯 Training</button><button data-board="ranked" class="${lbBoard === 'ranked' ? 'sel' : ''}" title="Top 100 ranked players by SR (after their placement matches)">♛ Ranked</button>`}</div>
+      ${lbBoard === 'ranked' ? `<div class="seg lb-courses"><button data-div="" class="${!lbDiv ? 'sel' : ''}">All</button>${DIVISIONS.map((d) => `<button data-div="${d.id}" class="${lbDiv === d.id ? 'sel' : ''}" style="color:${d.color}">${d.icon} ${d.name}</button>`).join('')}</div>` : ''}
       ${lbBoard === 'aim' ? `<div class="seg lb-courses">${COURSE_IDS.map((id) => `<button data-course="${id}" class="${id === lbCourse ? 'sel' : ''}">${COURSES[id].icon} ${COURSES[id].name}</button>`).join('')}</div>` : ''}
       ${lbBoard === 'clans' ? clanSeasonHtml() : ''}
       <table class="lb-table"><tbody>${top.length ? top.map((r) => `<tr class="${r.me ? 'me' : ''} ${r.rank <= 3 ? 'top' + r.rank : ''}"><td class="rk">${r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</td><td ${r.clan ? '' : `class="pf-link" data-profile="${esc(r.tag)}"`}>${esc(r.tag)}${leaderboard.isChamp(r.tag) ? ' <span class="trophy" title="#1 last week">🏆</span>' : ''}</td><td class="sc">${fmt(r.value)} <small>${esc(b.name)}</small></td></tr>`).join('')
-        : `<tr><td class="lb-empty">${lbBoard === 'aim' ? `No ${esc(COURSES[lbCourse].name)} scores yet. Try it in the Practice Range (pause menu → 🎯 Practice)!` : lbMode ? `Nobody on the ${esc(modeName)} board yet. Play some ${esc(modeName)} to be first!` : all ? 'Nobody on the all-time board yet.' : lbWhich === 'cur' ? 'Nobody on the board yet this week. Play a match to be first!' : 'No results from last week.'}</td></tr>`}</tbody></table>
+        : `<tr><td class="lb-empty">${lbBoard === 'ranked' ? `Nobody ranked here yet. Play ranked (home screen) to get on the board: ${PLACEMENTS} placement matches first.` : lbBoard === 'aim' ? `No ${esc(COURSES[lbCourse].name)} scores yet. Try it in the Practice Range (pause menu → 🎯 Practice)!` : lbMode ? `Nobody on the ${esc(modeName)} board yet. Play some ${esc(modeName)} to be first!` : all ? 'Nobody on the all-time board yet.' : lbWhich === 'cur' ? 'Nobody on the board yet this week. Play a match to be first!' : 'No results from last week.'}</td></tr>`}</tbody></table>
       ${me && me.rank > 50 ? `<div class="lb-you">You: #${me.rank} · ${fmt(me.value)} ${esc(b.name)}</div>` : ''}
     </div>
     <div class="lb-side">
@@ -486,6 +495,7 @@ function renderLeaderboard() {
   el.querySelectorAll('[data-board]').forEach((x) => { x.onclick = () => { lbBoard = x.dataset.board; store.set('lbBoard', lbBoard); renderLeaderboard(); }; });
   el.querySelectorAll('[data-which]').forEach((x) => { x.onclick = () => { lbWhich = x.dataset.which; renderLeaderboard(); }; });
   el.querySelectorAll('[data-course]').forEach((x) => { x.onclick = () => { lbCourse = x.dataset.course; store.set('lbCourse', lbCourse); renderLeaderboard(); }; });
+  el.querySelectorAll('[data-div]').forEach((x) => { x.onclick = () => { lbDiv = x.dataset.div; renderLeaderboard(); }; });
   $('lb-mode').onchange = (e) => { lbMode = e.target.value; renderLeaderboard(); };
 }
 
@@ -1682,7 +1692,20 @@ invites.onReward = (e) => {
   renderChip();
 };
 if (invites.pending()) setTimeout(() => toast(`${invites.pending()} invited you: finish your first match and you both get 🪙 ${INVITE_TOKENS}!`), 1500);
-game.onRanked = (r) => { if (r.newDiv) game.hud.mission(r.delta >= 0 ? `Promoted to ${r.newDiv.name}` : `Dropped to ${r.newDiv.name}`, `${r.sr} SR`, 'RANKED'); };
+game.onRanked = (r) => {
+  if (r.newDiv) game.hud.mission(r.delta >= 0 ? `Promoted to ${r.newDiv.name}` : `Dropped to ${r.newDiv.name}`, `${r.sr} SR`, 'RANKED');
+  if (r.hourBonus) { addTokens(RANKED_HOUR_BONUS); chat.system(`🏆 Ranked Hour bonus: +${RANKED_HOUR_BONUS} tokens.`); }
+  if (r.weeklyDone) { addTokens(RANKED_WEEKLY.tokens); game.hud.mission(`Weekly ranked reward: +${RANKED_WEEKLY.tokens} tokens`, `${RANKED_WEEKLY.matches} ranked matches this week`, 'RANKED'); }
+  else if (r.week < RANKED_WEEKLY.matches) chat.system(`🏆 Ranked this week: ${r.week}/${RANKED_WEEKLY.matches} matches for 🪙 ${RANKED_WEEKLY.tokens}.`);
+  renderChip();
+};
+// Ranked Hour starting: a heads-up for everyone in the menu.
+let rkHourWas = rankedHour().live;
+setInterval(() => {
+  const live = rankedHour().live;
+  if (live && !rkHourWas && !game.active) toast(`🏆 Ranked Hour is live! +${RANKED_HOUR_BONUS} tokens for every ranked match for the next hour.`);
+  rkHourWas = live;
+}, 30000);
 gameNight.init(social);
 leaderboard.init(social);
 // Linked devices: merged progress reloads the page, so never mid-match. A gamertag released by
