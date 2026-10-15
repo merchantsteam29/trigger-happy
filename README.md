@@ -673,6 +673,9 @@ becomes free again.
     change map, chat lock, the chat filter, hiding from the leaderboard or community maps). Buttons they aren't allowed
     to use are hidden, and everyone's game ignores actions they weren't allowed to take. Taking a permission away doesn't
     undo what they did before.
+    - **🎓 Trial:** a tick per moderator. Their **Ban** button becomes **Ask to ban** (and unbans / appeal answers work the
+      same way): the request waits under **Waiting for your approval** at the top of the Staff tab (the tab shows how
+      many). **Approve** bans them for the moderator (with "asked by" in the reason) or **Deny**; staff chat is told either way.
   - **Bugs** (owner only): bug reports from players, with their game version, device, match and screenshot. Mark one
     **Done** to remove it; they disappear after 30 days.
   - **Recent:** everyone you've played with lately (on this device), with their verified gamertag when known, so you

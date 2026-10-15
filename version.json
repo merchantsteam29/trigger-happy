@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.1",
+  "version": "2026.10.15.2",
   "notes": [
-    "The owner can choose what each moderator is allowed to do"
+    "New moderators can start on trial: the owner approves their bans"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

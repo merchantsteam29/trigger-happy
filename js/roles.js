@@ -88,7 +88,7 @@ class Roles {
     const prev = this.mods.get(k);
     if (prev && prev.ts > body.ts) return; // the relays may deliver an older copy late
     const perms = Array.isArray(body.perms) ? body.perms.filter((p) => PERM_IDS.includes(p)) : null; // null: everything
-    if (body.role === 'mod' && body.pub && body.pub.x && body.pub.y) this.mods.set(k, { tag: body.tag, pub: body.pub, ts: body.ts, until: Number(body.until) || 0, perms });
+    if (body.role === 'mod' && body.pub && body.pub.x && body.pub.y) this.mods.set(k, { tag: body.tag, pub: body.pub, ts: body.ts, until: Number(body.until) || 0, perms, trial: !!body.trial });
     else this.mods.delete(k);
     this.changed();
   }
@@ -130,8 +130,14 @@ class Roles {
     if (low(tag) === low(OWNER.tag)) return true;
     const m = this.mod(tag);
     if (!m) return false;
-    return !m.perms || m.perms.includes(perm) || (at > 0 && at < m.ts);
+    if (at > 0 && at < m.ts) return true;
+    if (perm === 'ban' && m.trial) return false; // trial mode: the owner approves their bans (moderation.js requestApproval)
+    return !m.perms || m.perms.includes(perm);
   }
+
+  // Trial mode: this moderator's bans / unbans go to the owner for approval first.
+  onTrial(tag) { const m = this.mod(tag); return !!(m && m.trial); }
+  myTrial() { return this.myRole() === 'mod' && this.onTrial(this.social.tag); }
 
   // Your own permission on this device.
   myCan(perm) { const r = this.myRole(); return r === 'owner' || (r === 'mod' && this.can(this.social.tag, perm)); }
@@ -178,15 +184,17 @@ class Roles {
     return claim.tag;
   }
 
-  // Change what a moderator may do (re-signs their appointment; the end time stays).
-  async setPerms(tag, perms) {
+  // Change what a moderator may do, or put them on trial (re-signs their appointment; the end time stays).
+  async setPerms(tag, perms, trial) {
     if (!this.isOwner()) throw new Error('Only the owner can change permissions.');
     const m = this.mods.get(low(tag));
     if (!m) throw new Error(`${tag} isn't a moderator.`);
-    const list = perms.filter((p) => PERM_IDS.includes(p));
+    const list = (perms || m.perms || PERM_IDS).filter((p) => PERM_IDS.includes(p));
+    const t = trial === undefined ? !!m.trial : !!trial;
     const body = { role: 'mod', tag: m.tag, pub: m.pub, until: m.until || 0, perms: list };
+    if (t) body.trial = 1;
     this.social.relay.publish(P + low(m.tag), await this.social.sign(body), { retain: true });
-    this.mods.set(low(m.tag), { ...m, ts: Date.now(), perms: list });
+    this.mods.set(low(m.tag), { ...m, ts: Date.now(), perms: list, trial: t });
     this.changed();
   }
 

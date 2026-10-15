@@ -56,7 +56,7 @@ export class ModPanel {
     const bans = [...moderation.records.values()].filter((r) => moderation.activeBan(r)).length;
     const appeals = moderation.openAppeals();
     const tabs = [['players', '👤 Players'], ['online', `🟢 Online <b>${online.length}</b>`], ['reports', `🚩 Reports ${reports.length ? `<b class="alert">${reports.length}</b>` : ''}`], ...(roles.isOwner() ? [['bugs', `🐞 Bugs ${moderation.bugs.size ? `<b class="alert">${moderation.bugs.size}</b>` : ''}`]] : []), ['appeals', `⚖ Appeals ${appeals.length ? `<b class="alert">${appeals.length}</b>` : ''}`], ...(roles.myCan('announce') ? [['announce', '📣 Announce']] : []), ['recent', '🕘 Recent'], ['staffchat', `💬 Staff chat ${this.unread ? `<b class="alert">${this.unread}</b>` : ''}`], ...(roles.myCan('tools') ? [['filter', '🤐 Chat filter']] : []), ['log', '📜 Log']];
-    if (owner) tabs.push(['staff', '🛡 Staff']);
+    if (owner) tabs.push(['staff', `🛡 Staff ${moderation.approvals.size ? `<b class="alert">${moderation.approvals.size}</b>` : ''}`]);
     if (!tabs.some(([id]) => id === this.tab)) this.tab = 'players';
     this.el.innerHTML = `
       <div class="mp-stats">
@@ -165,7 +165,8 @@ export class ModPanel {
     const on = moderation.online.get(k);
     const can = rank(roles.myRole()) > rank(role) && k !== String(this.social.tag).toLowerCase();
     const warns = rec.warns || [], log = rec.log || [], notes = rec.notes || [];
-    const may = (p) => roles.myCan(p); // moderator permissions (roles.js PERMS)
+    const trial = roles.myTrial(); // trial mode: bans go to the owner first
+    const may = (p) => roles.myCan(p) || (p === 'ban' && trial && roles.permsOf(this.social.tag).includes('ban')); // moderator permissions (roles.js PERMS)
     const until = (x) => (x.until ? `until ${when(x.until)}` : 'permanently');
     box.innerHTML = `
       <div class="mp-player">
@@ -188,8 +189,8 @@ export class ModPanel {
           <button data-act="note">📝 Add note</button>
           ${may('rename') ? '<button data-act="rename">✎ Force new gamertag</button>' : ''}
           ${may('mute') || may('ban') ? `<span class="mp-timed"><select id="mp-time">${opts(TIMES, 24)}</select>
-            ${may('mute') ? '<button data-act="mute">🔇 Mute chat</button><button data-act="smute" title="They can still type and see their own messages, but nobody else does. They aren\'t told.">👻 Shadow mute</button>' : ''}${may('ban') ? '<button data-act="ban" class="danger">🚫 Ban</button>' : ''}</span>` : ''}
-          ${ban && may('ban') ? '<button data-act="unban">Unban</button>' : ''}
+            ${may('mute') ? '<button data-act="mute">🔇 Mute chat</button><button data-act="smute" title="They can still type and see their own messages, but nobody else does. They aren\'t told.">👻 Shadow mute</button>' : ''}${may('ban') ? `<button data-act="ban" class="danger">${trial ? '🚫 Ask to ban' : '🚫 Ban'}</button>` : ''}</span>` : ''}
+          ${ban && may('ban') ? `<button data-act="unban">${trial ? 'Ask to unban' : 'Unban'}</button>` : ''}
           ${mute && may('mute') ? '<button data-act="unmute">Unmute</button>' : ''}
           ${warns.length && may('warn') ? '<button data-act="clearwarns" class="ghost">Clear warnings</button>' : ''}
           ${may('tools') ? `<button data-lb title="Take them off (or put them back on) the weekly leaderboard, e.g. for faked stats">${leaderboard.isHidden(t.tag) ? '🏆 Show on leaderboard' : '🏆 Hide from leaderboard'}</button>` : ''}
@@ -226,7 +227,8 @@ export class ModPanel {
         if (act !== 'note' && !confirm(`${what[0].toUpperCase() + what.slice(1)} ${t.tag}?`)) return;
         b.disabled = true;
         try {
-          await moderation.act(t.tag, act, { reason, hours });
+          const res = await moderation.act(t.tag, act, { reason, hours });
+          if (res && res.pending) { this.say('Sent to the owner for approval.'); this.render(); return; }
           this.say({
             warn: `Warned ${t.tag}.`, note: 'Note added.', rename: `${t.tag} will have to pick a new gamertag.`, ban: `Banned ${t.tag}.`,
             mute: `Muted ${t.tag}'s chat.`, smute: `Shadow-muted ${t.tag}. Their messages now only reach themselves.`, unban: `Unbanned ${t.tag}.`, unmute: `Unmuted ${t.tag}.`, clearwarns: 'Warnings cleared.', kick: `${t.tag} will be removed from their match.`,
@@ -411,7 +413,10 @@ export class ModPanel {
     body.querySelectorAll('[data-look]').forEach((b) => { b.onclick = () => this.look(b.dataset.look); });
     const answer = (tag, act) => async () => {
       if (!confirm(`${act === 'unban' ? 'Unban' : 'Deny the appeal of'} ${tag}?`)) return;
-      try { await moderation.act(tag, act, { reason: act === 'unban' ? 'Appeal accepted' : 'Appeal denied' }); this.say(act === 'unban' ? `Unbanned ${tag}.` : 'Appeal denied.'); this.render(); } catch (err) { this.say(err.message); }
+      try {
+        const res = await moderation.act(tag, act, { reason: act === 'unban' ? 'Appeal accepted' : 'Appeal denied' });
+        this.say(res && res.pending ? 'Sent to the owner for approval.' : act === 'unban' ? `Unbanned ${tag}.` : 'Appeal denied.'); this.render();
+      } catch (err) { this.say(err.message); }
     };
     body.querySelectorAll('[data-unban]').forEach((b) => { b.onclick = answer(b.dataset.unban, 'unban'); });
     body.querySelectorAll('[data-deny]').forEach((b) => { b.onclick = answer(b.dataset.deny, 'denyappeal'); });
@@ -508,7 +513,16 @@ export class ModPanel {
 
   renderStaff(body) {
     const mods = [...roles.mods.values()].sort((a, b) => a.tag.localeCompare(b.tag));
-    body.innerHTML = `<div class="card">
+    const waiting = [...moderation.approvals.values()].sort((a, b) => a.ts - b.ts);
+    const actName = { ban: '🚫 Ban', unban: 'Unban', denyappeal: 'Deny the appeal of' };
+    body.innerHTML = `${waiting.length ? `<div class="card">
+      <h3>Waiting for your approval <span class="muted">(${waiting.length})</span></h3>
+      <div class="note">Moderators on trial can't ban or unban by themselves. Approve to do it for them (their name goes in the reason), or deny.</div>
+      <div class="mp-reports">${waiting.map((a) => `<div class="mp-report">
+        <div class="mp-report-head"><b>${esc(a.from)}</b><em>${actName[a.act]} <a href="#" data-look="${esc(a.target)}">${esc(a.target)}</a>${a.act === 'ban' ? ` · ${a.hours ? fmtHours(a.hours) : 'permanent'}` : ''}</em><small>${ago(a.ts)}</small></div>
+        ${a.reason ? `<div class="mp-report-text">“${esc(a.reason)}”</div>` : ''}
+        <div class="mp-actions"><button class="primary" data-approve="${esc(a.id)}">✓ Approve</button><button class="danger" data-deny-req="${esc(a.id)}">✕ Deny</button></div></div>`).join('')}</div>
+    </div>` : ''}<div class="card">
       <h3>Moderators</h3>
       <div class="note">Moderators can see players, reports and staff chat. Tick what each one may do; it changes for them straight away. Only you can manage them.</div>
       <div class="mp-staff">${mods.map((m) => {
@@ -517,7 +531,8 @@ export class ModPanel {
         const have = m.perms || PERMS.map(([id]) => id);
         return `<div class="fr-row ${m.until && m.until <= Date.now() ? 'expired' : ''}"><i class="fr-dot ${on ? 'on' : ''}"></i><span class="fr-name">${esc(m.tag)}</span>${badge('mod', true)}<small>${on ? 'Online · ' : ''}${left}</small>
           <button class="ghost fr-x" data-unmod="${esc(m.tag)}" title="Remove moderator">✕</button></div>
-          <div class="mp-perms" data-perms="${esc(m.tag)}">${PERMS.map(([id, label]) => `<label><input type="checkbox" value="${id}" ${have.includes(id) ? 'checked' : ''}> ${label}</label>`).join('')}</div>`;
+          <div class="mp-perms" data-perms="${esc(m.tag)}">${PERMS.map(([id, label]) => `<label><input type="checkbox" value="${id}" ${have.includes(id) ? 'checked' : ''}> ${label}</label>`).join('')}
+            <label class="mp-trial" title="Their bans and unbans wait for your approval"><input type="checkbox" data-trial ${m.trial ? 'checked' : ''}> 🎓 Trial: bans need my approval</label></div>`;
       }).join('') || '<div class="note">No moderators yet.</div>'}</div>
       <form id="mp-appoint" class="fr-add" autocomplete="off"><input id="mp-mod-tag" maxlength="16" placeholder="Gamertag to make a moderator" spellcheck="false" autocapitalize="off"><select id="mp-mod-time" title="How long they stay a moderator">${opts(MOD_TIMES, 0)}</select><button class="primary" type="submit">Make moderator</button></form>
     </div>`;
@@ -528,12 +543,21 @@ export class ModPanel {
       const hours = Number(body.querySelector('#mp-mod-time').value);
       try { const t = await roles.appoint(tag, hours); this.say(`${t} is now a moderator.`); this.render(); } catch (err) { this.say(err.message); }
     };
+    body.querySelectorAll('[data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.tab = 'players'; this.look(a.dataset.look); }; });
+    const answer = (id, yes) => async (e) => {
+      e.target.disabled = true;
+      try { await moderation.answerApproval(id, yes); this.say(yes ? 'Approved.' : 'Denied.'); } catch (err) { this.say(err.message); }
+      this.render();
+    };
+    body.querySelectorAll('[data-approve]').forEach((b) => { b.onclick = answer(b.dataset.approve, true); });
+    body.querySelectorAll('[data-deny-req]').forEach((b) => { b.onclick = answer(b.dataset.denyReq, false); });
     body.querySelectorAll('[data-perms] input').forEach((c) => {
       c.onchange = async () => {
         const box = c.closest('[data-perms]'), tag = box.dataset.perms;
-        const list = [...box.querySelectorAll('input:checked')].map((x) => x.value);
+        const list = [...box.querySelectorAll('input:checked:not([data-trial])')].map((x) => x.value);
+        const trial = box.querySelector('[data-trial]').checked;
         box.querySelectorAll('input').forEach((x) => { x.disabled = true; });
-        try { await roles.setPerms(tag, list); this.say(`Saved what ${tag} can do.`); } catch (err) { this.say(err.message); }
+        try { await roles.setPerms(tag, list, trial); this.say(`Saved what ${tag} can do.`); } catch (err) { this.say(err.message); }
         this.render();
       };
     });

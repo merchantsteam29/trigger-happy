@@ -99,6 +99,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `role/…` | moderator appointments (owner-signed) | roles.js |
 | `modrec/<tag>`, `report/<id>`, `appeal/<tag>`, `announce`, `chatfilter`, `staffchat/…`, `permabans`, `shadowmutes` (staff-signed: hosts send their match chat back to them only, clients drop their party / clan chat), `pres/…` | moderation | moderation.js |
 | `bug/<id>` | bug reports (only the owner reads them) | moderation.js |
+| `approve/<id>` | a trial moderator's ban / unban request (signed, retained; the owner approves or denies, then clears it) | moderation.js |
 | `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |
 | `clan/<TAG>`, `clanreq/…`, `clanleave/…`, `clanchat/…`, `clanwar/…`, `clanwarok/…`, `clanwargo/<TAG>` | clans, clan wars | clans.js |
@@ -127,7 +128,7 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
   owned cosmetics, `track.*`), `seasons.js` (weekly season pass; season dates live in `ranked.js` `seasonNow` / `seasonDates`), `achievements.js`, `ranked.js`, `shop.js`, `gifts.js`, `invites.js`
 - **Social and online:** `relay.js`, `social.js`, `profiles.js`, `clans.js`, `leaderboard.js`, `servers.js`,
   `gamenight.js`, `voice.js`, `chat.js`
-- **Staff:** `roles.js` (appointments; moderator permissions: `PERMS`, `ACT_PERM`, `roles.can(tag, perm, at)` / `myCan`, an appointment's `perms` list, none = all; checked by `moderation.verify` on a record's latest log entry, `staffSigned(text, perm)`, and the host's in-match `mod*` handlers), `moderation.js`, `modpanel.js`, `hostpanel.js`
+- **Staff:** `roles.js` (appointments; moderator permissions: `PERMS`, `ACT_PERM`, `roles.can(tag, perm, at)` / `myCan`, an appointment's `perms` list, none = all, and `trial` (`onTrial` / `myTrial`: their ban / unban / appeal answers become owner-signed requests at `approve/<id>`, `moderation.requestApproval` / `answerApproval`); checked by `moderation.verify` on a record's latest log entry, `staffSigned(text, perm)`, and the host's in-match `mod*` handlers), `moderation.js`, `modpanel.js`, `hostpanel.js`
 - **Input and settings:** `settings.js` (`opts`, `setOpt`, `onOpts`), `settingsui.js`, `binds.js`, `gamepad.js`
   (rebindable `PAD_ACTIONS`), `touch.js`, `access.js` (colorblind modes), `tutorial.js`
 - **Look:** `style.css` (base layout, HUD positions) with `ui.css` loaded after it (UI v3: tokens, menu shell, every

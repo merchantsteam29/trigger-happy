@@ -1076,6 +1076,8 @@ body.mobile #death .big { font-size: 20px; }
 .mp-staff { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
 .mp-perms { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: -2px 0 8px 22px; font-size: 12px; opacity: .9; }
 .mp-perms label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.mp-trial { color: #ffd23f; }
+.mp-report-head em a { color: inherit; font-weight: 700; text-decoration: underline; }
 #nav-mod .ic { color: #4fc3ff; }
 .mod-row button { padding: 4px 8px; }
 @media (max-width: 900px) { .mp-grid { grid-template-columns: 1fr; } }

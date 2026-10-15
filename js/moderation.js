@@ -24,6 +24,7 @@ const LOG_MAX = 30;
 const REPLAY = 'whffa/v1/replay/'; // report replay clips (replay.js)
 const REPDONE = 'whffa/v1/repdone/'; // "reviewed" notes for reporters (staff-signed, cleared by the reporter once seen)
 const REPORT_MAX_AGE = 7 * 864e5;
+const APPROVE = V + 'approve/'; // trial moderators' ban / unban requests, waiting for the owner (signed, retained)
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
 const ONLINE_MS = 75000;
@@ -49,6 +50,7 @@ class Moderation {
     this.annRaw = null;
     this.reports = new Map(); // report id -> { id, from, target, lobby, reason, details, ts }
     this.bugs = new Map(); // bug id -> { id, from, text, info, img, ts } (owner only)
+    this.approvals = new Map(); // (owner) request id -> { id, from, target, act, reason, hours, ts }
     this.online = new Map(); // lower tag -> { tag, mode, lobby, at }
     this.appeals = new Map(); // lower tag -> { tag, banTs, text, ts }
     this.filter = { defaults: true, words: [] }; // staff-signed chat filter settings
@@ -89,6 +91,7 @@ class Moderation {
     else if (t.startsWith(REPDONE)) this.receiveReviewed(t.slice(REPDONE.length), text);
     else if (t.startsWith(REP)) this.receiveReport(t.slice(REP.length), text);
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
+    else if (t.startsWith(APPROVE) && roles.isOwner()) this.receiveApproval(t.slice(APPROVE.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
     else if (t === FILTER) this.receiveFilter(text);
     else if (t.startsWith(APPEAL)) this.receiveAppeal(t.slice(APPEAL.length), text);
@@ -102,14 +105,14 @@ class Moderation {
     if (!s) return;
     const want = new Set([ANN, FILTER, PERMA, SHADOW]);
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
-    if (roles.isOwner()) want.add(BUG + '+');
+    if (roles.isOwner()) { want.add(BUG + '+'); want.add(APPROVE + '+'); }
     for (const r of this.myReports()) if (r.status === 'sent') want.add(REPDONE + r.id); // has staff looked at mine?
     if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+']) want.add(t);
     for (const w of this.watching) if (!want.has(w)) s.relay.unsubscribe(w);
     for (const w of want) if (!this.watching.has(w)) s.relay.subscribe(w);
     this.watching = want;
     if (!roles.myRole()) { this.reports.clear(); this.online.clear(); }
-    if (!roles.isOwner()) this.bugs.clear();
+    if (!roles.isOwner()) { this.bugs.clear(); this.approvals.clear(); }
     this.reverify();
     if (this.filterRaw) this.receiveFilter(this.filterRaw);
     if (this.permaRaw) this.receivePerma(this.permaRaw);
@@ -274,6 +277,7 @@ class Moderation {
     const target = claim.tag, k = low(target);
     if (k === low(s.tag)) throw new Error('You can\'t moderate yourself.');
     if (rank(me) <= rank(roles.roleOfTag(target))) throw new Error('You can only act on players ranked below you.');
+    if (ACT_PERM[act] === 'ban' && roles.myTrial()) return this.requestApproval(target, act, reason, hours); // trial mode
     if (ACT_PERM[act] && !roles.myCan(ACT_PERM[act])) throw new Error('The owner hasn\'t given you permission to do that.');
     reason = clip(reason, 140);
     const now = Date.now(), until = hours > 0 ? now + hours * 3600e3 : 0;
@@ -567,6 +571,39 @@ class Moderation {
     const hasClip = typeof replay === 'string' && replay.length < 150000;
     if (hasClip) s.relay.publish(REPLAY + id, await s.sign({ id, clip: replay }), { retain: true });
     s.relay.publish(REP + id, await s.sign({ id, target: clip(target, 16), lobby: clip(lobby, 8), reason: AUTO_FLAG, details: clip(details, 200), rp: hasClip ? 1 : 0 }), { retain: true });
+  }
+
+  // ---------- Trial moderators: owner approval ----------
+  // A moderator on trial (roles.js) can't sign bans / unbans themselves: they send a request the
+  // owner approves (the owner then makes the change, noting who asked) or denies. Either way the
+  // answer goes to staff chat.
+
+  async requestApproval(target, act, reason, hours) {
+    const s = this.social;
+    const id = `${low(s.tag)}-${Date.now().toString(36)}`;
+    s.relay.publish(APPROVE + id, await s.sign({ id, target: clip(target, 16), act, reason: clip(reason, 140), hours: Math.max(0, Number(hours) || 0) }), { retain: true });
+    return { pending: true };
+  }
+
+  async receiveApproval(id, text) {
+    if (!text) { if (this.approvals.delete(id) && this.onChange) this.onChange(null); return; }
+    const b = await this.staffSigned(text);
+    if (!b || !b.target || !['ban', 'unban', 'denyappeal'].includes(b.act)) return;
+    if (Date.now() - (Number(b.ts) || 0) > 14 * 864e5) { this.social.relay.publish(APPROVE + id, '', { retain: true }); return; }
+    this.approvals.set(id, { id, from: b.from, target: clip(b.target, 16), act: b.act, reason: clip(b.reason, 140), hours: Math.max(0, Number(b.hours) || 0), ts: Number(b.ts) });
+    if (this.onChange) this.onChange(null);
+  }
+
+  // Owner: answer a request.
+  async answerApproval(id, yes) {
+    const a = this.approvals.get(id);
+    if (!a || !roles.isOwner()) return;
+    const what = a.act === 'ban' ? `ban ${a.target} (${a.hours ? fmtHours(a.hours) : 'permanent'})` : a.act === 'unban' ? `unban ${a.target}` : `deny ${a.target}'s appeal`;
+    if (yes) await this.act(a.target, a.act, { reason: `${a.reason}${a.reason ? ' ' : ''}(asked by ${a.from})`.trim(), hours: a.hours });
+    this.social.relay.publish(APPROVE + id, '', { retain: true });
+    this.approvals.delete(id);
+    await this.sayStaff(`${yes ? '✓ Approved' : '✕ Denied'} ${a.from}'s request to ${what}.`).catch(() => {});
+    if (this.onChange) this.onChange(null);
   }
 
   // ---------- Staff chat ----------
