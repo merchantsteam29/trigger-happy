@@ -289,6 +289,12 @@ A **kill effect** plays where your victim stood when you get a kill, and everyon
 **Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
 Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
 
+## Weapon charms
+
+A little keychain hanging off the side of every gun you hold, for you (in first person) and everyone else to see. It swings
+as you move and jumps when you shoot. Lucky Die, 8-Ball, Heart, Rubber Duck, Pumpkin, Gold Star, Golden Bullet, Skull
+and Diamond, 🪙 100 to 300 in the **Shop** (Weapon charms). Pick yours in **Character → Weapon charms**.
+
 ## Name tags
 
 Style the name above your head: Gold, Ice, Toxic, Neon, Fire (flickers), Galaxy, Royal and Rainbow (cycles through the

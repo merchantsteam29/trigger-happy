@@ -16,6 +16,7 @@ import { EMOTES, EMOTE_TIME, emoteHand, emoteBubble } from './emotes.js';
 import { angLerp } from './util.js';
 import { Limb, solveIK } from './rig.js';
 import { drawName, animateTag, tagAnim } from './nametags.js';
+import { attachCharm, swingCharm } from './charms.js';
 
 const legMat = new THREE.MeshStandardMaterial({ color: '#2b2f36', roughness: 0.9 });
 const skinMat = new THREE.MeshStandardMaterial({ color: '#d6a682', roughness: 0.8 });
@@ -223,6 +224,7 @@ export class RemotePlayer {
     const tagWas = this.cos && this.cos.nametag;
     this.cos = cos;
     if (this.tag && tagWas !== cos.nametag) this.rebuildTag();
+    if (this.guns) for (const g of Object.values(this.guns)) if ((g.userData.charm ? g.userData.charmId : 'none') !== (cos.charm || 'none')) { attachCharm(g, cos.charm); g.userData.charmId = cos.charm; }
     for (const g of [this.cosHead, this.cosBack, this.hatFly && this.hat]) {
       if (!g) continue;
       if (g.parent) g.parent.remove(g);
@@ -245,6 +247,8 @@ export class RemotePlayer {
     if (this.weapon && this.guns[this.weapon]) this.guns[this.weapon].visible = false;
     if (!this.guns[id]) {
       const g = buildGun(id, this.mods[id]);
+      attachCharm(g, this.cos && this.cos.charm);
+      g.userData.charmId = this.cos && this.cos.charm;
       g.scale.setScalar(1.25);
       if (!modelQuality.remoteShadows) g.traverse((o) => { o.castShadow = false; });
       this.gunHolder.add(g);
@@ -325,7 +329,7 @@ export class RemotePlayer {
     this.pitch = c.pitch;
   }
 
-  fire() { this.recoil = 1; }
+  fire() { this.recoil = 1; this.charmKick = 1.4; }
   melee(style) { this.swingT = 1; this.swingStyle = style || 'slash'; }
   throwAnim() { this.throwT = 1; }
 
@@ -578,6 +582,8 @@ export class RemotePlayer {
     }
     this.updateHat(dt);
     if (this.tagAnimId && this.tag.visible) animateTag(this.tag, this.tagAnimId, performance.now() / 1000);
+    const cg = this.weapon && this.guns[this.weapon];
+    if (cg && cg.userData.charm && this.root.visible) { swingCharm(cg.userData.charm, dt, Math.sin(this.phase * 2) * 0.05, this.charmKick || 0); this.charmKick = 0; }
   }
 
   // Emotes (emotes.js): wave, dance, salute or laugh, with an emoji over the head.

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { buildGun } from './models.js';
 import { WEAPONS } from './weapons.js';
 import { Limb, solveIK, seg, bump, keyBlend } from './rig.js';
+import { attachCharm, swingCharm } from './charms.js';
 
 const S = 0.8; // model scale in first person
 const HIP = {
@@ -180,6 +181,7 @@ export class Viewmodel {
     const holder = new THREE.Group();
     holder.scale.setScalar(S);
     const gun = buildGun(id, this.mods ? this.mods[id] : null);
+    attachCharm(gun, this.charm); // weapon charm (charms.js)
     holder.add(gun);
     holder.visible = false;
     this.root.add(holder);
@@ -189,6 +191,12 @@ export class Viewmodel {
   }
 
   get model() { return this.models[this.quick || this.cur]; }
+
+  // Your weapon charm (charms.js): hung on every gun built so far, and the ones built later.
+  setCharm(id) {
+    this.charm = id;
+    for (const m of Object.values(this.builtModels)) attachCharm(m.gun, id);
+  }
 
   setColor(c) { this.sleeveMat.color.set(c); }
   setVisible(v) { this.root.visible = v; }
@@ -225,6 +233,7 @@ export class Viewmodel {
 
   fire(w) {
     this.inspectT = -1;
+    this.charmKick = (this.charmKick || 0) + 0.7; // the charm jumps
     const big = w.type === 'proj' || ['shotgun', 'sniper', 'revolver', 'sawedoff', 'handcannon', 'dmr', 'doublebarrel', 'railgun', 'amr', 'autoshot', 'slug', 'autorev', 'p_railcannon', 'p_thunder'].includes(w.id);
     this.kick = Math.min(1.4, this.kick + (big ? 1 : 0.45));
     this.kickYaw = (Math.random() - 0.5) * (big ? 0.12 : 0.05);
@@ -288,6 +297,11 @@ export class Viewmodel {
   update(dt, s) {
     if (!this.cur) return;
     this.t += dt;
+    const cm = this.model;
+    if (cm && cm.gun && cm.gun.userData.charm) { // it swings with your strafing, jumps and shots
+      swingCharm(cm.gun.userData.charm, dt, -(s.strafe || 0) * 5 * dt + Math.sin(this.t * 7) * (s.speed || 0) * 0.04 * dt, ((s.vy || 0) * 0.35 * dt) + (this.charmKick || 0));
+      this.charmKick = 0;
+    }
     let lower = 0;
     if (this.next) {
       this.dropT -= dt;

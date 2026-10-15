@@ -1377,6 +1377,8 @@ export class Game {
 
   update(dt, now) {
     if (this.onTick) this.onTick(dt);
+    const charm = getCos().charm || 'none';
+    if (this.vm.charm !== charm) this.vm.setCharm(charm); // weapon charm changed (charms.js)
     const me = this.me;
     const cam = this.camera;
     const w = this.W(this.curW);
