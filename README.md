@@ -602,6 +602,10 @@ whatever capitals they use) and you only get one. In **Friends**:
   by starting a message with `/p`. When the leader starts or joins a match, party members in the menu **follow them in
   automatically** (turn it off in Settings → **Follow my party leader**; there's still a **Join** button). In team modes the
   host keeps a party on the **same team**.
+- **⚔ Friend challenges** (Friends): dare a friend to a race this week: first to 25 / 50 / 100 kills, 10 / 25 / 50
+  headshot kills, 3 / 5 / 10 wins, 5 / 10 / 20 matches, or 10 / 25 / 50 kills on real players. Once they accept you both
+  count from zero and see both progress bars. The first to the goal wins 🪙 100 (for up to 3 challenges a week); up to 5
+  at once, and they end with the leaderboard week.
 - **Voice chat:** in the party card press **🎤 Join voice** (allow the microphone). Everyone in the party who joined voice
   can hear each other, in the menu and in matches. Mute any time; turn on **Push to talk** (hold **V**) and set the voice
   volume in Settings → HUD & Audio. In matches, the top-left shows who's talking. Voice goes straight between players

@@ -57,6 +57,7 @@ import { community, openCommunity } from './community.js';
 import { clanPoints, clanStandings, CLAN_POINTS, CLAN_REWARDS } from './clanseason.js';
 import { Theater, encodeClip, decodeClip, listReplays, loadReplay } from './replay.js';
 import { Lobby3D } from './lobby.js';
+import { challenges, renderChallenges } from './challenges.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -1106,6 +1107,7 @@ function renderFriends() {
   renderInvite();
   devices.render($('devices-card'));
   renderClan();
+  renderChallenges($('fchal-card'), social, toast);
   renderMyReports();
   const n = social.pendingCount;
   $('nav-friends-count').textContent = n ? String(n) : '';
@@ -1233,6 +1235,7 @@ $('pt-follow').onclick = () => { if ($('pt-follow').dataset.code) { $('join-code
 
 social.onChange = () => {
   invites.watch();
+  challenges.sync();
   clans.sync();
   renderFriends();
   applyGamertag();
@@ -1739,6 +1742,9 @@ setInterval(() => {
 }, 30000);
 gameNight.init(social);
 leaderboard.init(social);
+challenges.init(social);
+challenges.onNotice = (t) => toast(t);
+challenges.onChange = () => { if (menuPane === 'friends' && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#fchal-card'))) renderChallenges($('fchal-card'), social, toast); };
 // Linked devices: merged progress reloads the page, so never mid-match. A gamertag released by
 // linking also drops its profile and board entries.
 devices.init(social, {

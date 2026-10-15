@@ -753,6 +753,19 @@ body.mobile:not(.tablet) .rep-guns { display: none; }
 .tag-prev { width: 100%; max-width: 160px; height: auto; display: block; margin: 0 auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
 .cz-icon .tag-prev, .shop-icon .tag-prev { max-width: 140px; }
 .mr-list { display: flex; flex-direction: column; gap: 4px; }
+.fc-new { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0 10px; }
+.fc-new select { width: auto; }
+.fc-list { display: flex; flex-direction: column; gap: 6px; }
+.fc-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,0.04); }
+.fc-row small { opacity: 0.75; }
+.fc-row.in { box-shadow: inset 3px 0 0 #ff4f9a; }
+.fc-row.won { box-shadow: inset 3px 0 0 #ffd23a; }
+.fc-row.off { opacity: 0.55; }
+.fc-row span { display: flex; gap: 6px; }
+.fc-bar { position: relative; height: 16px; border-radius: 8px; background: rgba(255,255,255,0.08); overflow: hidden; font-size: 11px; }
+.fc-bar i { position: absolute; inset: 0 auto 0 0; background: #4da3ff; }
+.fc-bar.mine i { background: #4dff9a; }
+.fc-bar span { position: relative; padding-left: 8px; line-height: 16px; font-weight: 700; color: #fff; }
 .cz-3d { width: 200px; height: 262px; cursor: grab; touch-action: none; }
 .cz-3d:active { cursor: grabbing; }
 body.mobile:not(.tablet) .cz-3d { width: 120px; height: 157px; }

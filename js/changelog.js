@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.22', name: 'Friend Challenges', banner: 'blood', notes: [
+    'Challenge a friend to a race this week: first to so many kills, headshots, wins, matches or kills on real players',
+    'You both see both progress bars, and the winner gets 100 tokens',
+  ] },
   { v: '2026.10.14.21', name: 'Party Up', banner: 'neon', notes: [
     'Parties play together: when your party leader starts or joins a match, you follow them in automatically',
     'In team modes your party is always on the same team',
