@@ -885,3 +885,17 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .pc-form { flex: 0 1 240px; display: flex; flex-direction: column; gap: 10px; }
 #pf-body .pf-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 #pf-body .pf-foot small { flex: 1; }
+
+/* Suspect alerts for staff (main.js moderation.onSuspect) */
+.sus-alert { position: fixed; right: 16px; top: calc(70px + env(safe-area-inset-top)); z-index: 60; width: 290px; padding: 12px 14px; border-radius: 12px;
+  background: #1a1030f2; border: 1px solid #ff3b3b88; border-left: 4px solid #ff3b3b; box-shadow: 0 10px 30px #0008; display: flex; flex-direction: column; gap: 6px;
+  animation: ui-toast 0.32s var(--ease-back); }
+.sus-alert + .sus-alert { top: calc(190px + env(safe-area-inset-top)); }
+.sus-alert b { color: #ff7a7a; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+.sus-alert > div { display: flex; gap: 6px; }
+.sus-alert button { padding: 6px 10px; font-size: 12px; }
+.mp-sus.on { color: #ff7a7a; border-color: #ff3b3b88; }
+.mp-flag.sus { color: #ff9a9a; border-color: #ff3b3b66; }
+.mp-sus-row { display: flex; gap: 6px; align-items: stretch; }
+.mp-sus-row .mp-rec { flex: 1; }
+.mp-rec em.on { color: #3bd16f; font-style: normal; }

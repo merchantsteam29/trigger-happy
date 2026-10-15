@@ -639,7 +639,10 @@ becomes free again.
   and these tabs:
   - **Players:** a searchable directory of every claimed gamertag. Type any part of a name (case doesn't matter) and
     each result shows online status, last seen, and banned / muted / warning flags. **NAME** marks a gamertag that breaks
-    the filter. **☆ Watch** a player to get a pop-up when they come online (saved on your device). Players who never
+    the filter. **☆ Watch** a player to get a pop-up when they come online (saved on your device).
+    **🎯 Mark suspect** puts them on the staff's shared list (with the reason box as the reason, shown in a 🎯 Suspects
+    card next to the search): every staff member gets a pop-up when a suspect comes online or joins a match, with
+    **👁 Spectate** (invisible) and **Look up**. Players who never
     claimed a gamertag can't be looked up and show as **guest** in a match's Moderation list. Open anyone to see their
     warnings, staff notes, ban / mute status and full history, then:
     - **Warn:** a pop-up they must acknowledge, shown next time they play if they're offline.

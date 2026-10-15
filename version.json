@@ -1,8 +1,7 @@
 {
-  "version": "2026.10.15.3",
+  "version": "2026.10.15.4",
   "notes": [
-    "Updates are now one big log each, with a heading for every new feature",
-    "4 new banners in the shop"
+    "Staff can mark suspects and get a pop-up when they play"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

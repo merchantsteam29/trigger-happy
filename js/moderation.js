@@ -24,6 +24,7 @@ const LOG_MAX = 30;
 const REPLAY = 'whffa/v1/replay/'; // report replay clips (replay.js)
 const REPDONE = 'whffa/v1/repdone/'; // "reviewed" notes for reporters (staff-signed, cleared by the reporter once seen)
 const REPORT_MAX_AGE = 7 * 864e5;
+const SUSPECTS = V + 'suspects'; // staff-signed shared watchlist: [{ t: tag, why, by, ts }]; every staff member is alerted
 const APPROVE = V + 'approve/'; // trial moderators' ban / unban requests, waiting for the owner (signed, retained)
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -68,6 +69,8 @@ class Moderation {
     this.directory = new Map(); // (staff) lower tag -> { tag, since, seen }: every claimed gamertag
     this.watch = new Set(store.get('watchlist', [])); // (staff, this device) gamertags to be told about
     this.onWatched = null; // (tag) a watched player just came online
+    this.suspects = new Map(); // (staff) lower tag -> { tag, why, by, ts }: the shared watchlist
+    this.onSuspect = null; // (suspect, presence) a suspect came online or joined a match
     this.onAnnounce = null; // (announcement | null)
     this.lastBan = null;
     this.lastMute = null;
@@ -91,6 +94,7 @@ class Moderation {
     else if (t.startsWith(REPDONE)) this.receiveReviewed(t.slice(REPDONE.length), text);
     else if (t.startsWith(REP)) this.receiveReport(t.slice(REP.length), text);
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
+    else if (t === SUSPECTS && roles.myRole()) this.receiveSuspects(text);
     else if (t.startsWith(APPROVE) && roles.isOwner()) this.receiveApproval(t.slice(APPROVE.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
     else if (t === FILTER) this.receiveFilter(text);
@@ -107,11 +111,12 @@ class Moderation {
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
     if (roles.isOwner()) { want.add(BUG + '+'); want.add(APPROVE + '+'); }
     for (const r of this.myReports()) if (r.status === 'sent') want.add(REPDONE + r.id); // has staff looked at mine?
-    if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+']) want.add(t);
+    if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+', SUSPECTS]) want.add(t);
     for (const w of this.watching) if (!want.has(w)) s.relay.unsubscribe(w);
     for (const w of want) if (!this.watching.has(w)) s.relay.subscribe(w);
     this.watching = want;
-    if (!roles.myRole()) { this.reports.clear(); this.online.clear(); }
+    if (!roles.myRole()) { this.reports.clear(); this.online.clear(); this.suspects.clear(); }
+    else if (this.suspectsRaw) this.receiveSuspects(this.suspectsRaw);
     if (!roles.isOwner()) { this.bugs.clear(); this.approvals.clear(); }
     this.reverify();
     if (this.filterRaw) this.receiveFilter(this.filterRaw);
@@ -667,6 +672,29 @@ class Moderation {
   recentPlayers() { return store.get('recentPlayers', []).filter((p) => !this.isGone(p.gt)); }
 
   // ---------- Watchlist (staff, saved on this device) ----------
+  // ---------- Suspects (shared watchlist) ----------
+
+  async receiveSuspects(text) {
+    this.suspectsRaw = text || null;
+    const body = text ? await this.staffSigned(text) : null;
+    if (!body || !Array.isArray(body.list)) return;
+    if (this.suspectsTs && Number(body.ts) < this.suspectsTs) return;
+    this.suspectsTs = Number(body.ts) || 0;
+    this.suspects = new Map(body.list.filter((x) => x && typeof x.t === 'string').slice(0, 300)
+      .map((x) => [low(x.t), { tag: clip(x.t, 16), why: clip(x.why, 140), by: clip(x.by, 16), ts: Number(x.ts) || 0 }]));
+    if (this.onChange) this.onChange(null);
+  }
+  isSuspect(tag) { return !!tag && this.suspects.has(low(tag)); }
+  // why: null to take them off the list.
+  async setSuspect(tag, why) {
+    if (!roles.myRole()) throw new Error('Only staff can do that.');
+    const next = new Map(this.suspects);
+    if (why === null) next.delete(low(tag)); else next.set(low(tag), { tag: clip(tag, 16), why: clip(why, 140), by: this.social.tag, ts: Date.now() });
+    const signed = await this.social.sign({ list: [...next.values()].map((x) => ({ t: x.tag, why: x.why, by: x.by, ts: x.ts })) });
+    this.social.relay.publish(SUSPECTS, signed, { retain: true });
+    await this.receiveSuspects(signed);
+  }
+
   isWatched(tag) { return this.watch.has(low(tag)); }
   toggleWatch(tag) {
     const k = low(tag);
@@ -717,6 +745,9 @@ class Moderation {
     const fresh = !(packet && packet.retain) || Math.abs(Date.now() - (Number(b.ts) || 0)) < ONLINE_MS;
     if (b.on && fresh) {
       if (!this.online.has(k) && this.watch.has(k) && this.onWatched) this.onWatched(b.from, b);
+      // Suspects: tell every staff member when they come online or move into another match.
+      const prev = this.online.get(k), sus = this.suspects.get(k);
+      if (sus && this.onSuspect && (!prev || (b.mode === 'lobby' && b.lobby && prev.lobby !== b.lobby))) this.onSuspect(sus, b);
       this.online.set(k, { tag: b.from, mode: b.mode, lobby: b.lobby, at: Date.now() });
     }
     else this.online.delete(k);

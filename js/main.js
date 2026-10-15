@@ -1922,6 +1922,23 @@ moderation.onKick = (k) => { if (net && !net.practice) leave(`You were removed f
 // Watchlist: a pop-up when a watched player comes online.
 moderation.onWatched = (tag, pres) => toast(`★ ${tag} is online${pres && pres.mode === 'lobby' ? ' (in a match)' : ''}`);
 
+// Suspects (the staff's shared watchlist): a pop-up with Spectate / Look up buttons.
+moderation.onSuspect = (s, pres) => {
+  const inMatch = pres.mode === 'lobby' && pres.lobby;
+  if (inMatch && net && net.code === pres.lobby) return; // already here
+  const el = document.createElement('div');
+  el.className = 'sus-alert';
+  el.innerHTML = `<b>🎯 Suspect ${inMatch ? 'joined a match' : 'is online'}</b><span>${esc(s.tag)}${s.why ? ` · <small>${esc(s.why)}</small>` : ''}</span>
+    <div>${inMatch ? '<button class="primary" data-a="spec">👁 Spectate</button>' : ''}<button data-a="look">Look up</button><button class="ghost" data-a="x">✕</button></div>`;
+  const close = () => el.remove();
+  el.querySelector('[data-a="x"]').onclick = close;
+  const spec = el.querySelector('[data-a="spec"]');
+  if (spec) spec.onclick = () => { close(); const was = game.active; if (was) leave(); setTimeout(() => modPanel.joinLobby(pres.lobby, true), was ? 400 : 0); };
+  el.querySelector('[data-a="look"]').onclick = () => { close(); if (!game.active) { showPane('mod'); modPanel.tab = 'players'; modPanel.render(); modPanel.look(s.tag); } else toast('Leave the match to look them up.'); };
+  document.body.appendChild(el);
+  setTimeout(close, 25000);
+};
+
 // Staff chat: a ping for new messages from other staff while you're not looking at it.
 moderation.onStaffChat = (m) => {
   if (m.from.toLowerCase() === String(social.tag).toLowerCase()) return;

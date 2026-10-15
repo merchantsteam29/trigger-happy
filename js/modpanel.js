@@ -101,7 +101,14 @@ export class ModPanel {
           <div id="mp-player"></div>
         </div>
         <div class="card">
-          <h3>Recent actions</h3>
+          <h3>🎯 Suspects <span class="muted">(${moderation.suspects.size})</span></h3>
+          <div class="note">Shared by all staff. Everyone gets a pop-up when one comes online or joins a match.</div>
+          <div class="mp-recent">${[...moderation.suspects.values()].sort((a, b) => b.ts - a.ts).map((s) => {
+            const on = moderation.online.get(s.tag.toLowerCase());
+            return `<div class="mp-sus-row"><button class="mp-rec" data-look="${esc(s.tag)}"><b>${esc(s.tag)}</b>${on ? `<em class="on">● ${on.mode === 'lobby' ? 'in a match' : 'online'}</em>` : ''}
+              <small>${esc(s.by)} · ${ago(s.ts)}${s.why ? ' · ' + esc(s.why) : ''}</small></button>${on && on.lobby && this.joinLobby ? `<button data-spec-sus="${esc(on.lobby)}" title="Spectate invisibly">👁</button>` : ''}</div>`;
+          }).join('') || '<div class="note">No suspects. Open a player and press 🎯 Mark suspect (the reason box is saved with it).</div>'}</div>
+          <h3 class="mp-gap">Recent actions</h3>
           <div class="mp-recent">${recs.length ? recs.map((r) => {
             const l = (r.log || [])[r.log.length - 1] || {};
             const tags = [moderation.activeBan(r) ? '<em class="bad">BANNED</em>' : '', moderation.activeMute(r) ? '<em class="mute">MUTED</em>' : '',
@@ -121,6 +128,7 @@ export class ModPanel {
       this.look(hits.length ? hits[0].tag : input.value.trim());
     };
     body.querySelectorAll('[data-look]').forEach((b) => { b.onclick = () => this.look(b.dataset.look); });
+    body.querySelectorAll('[data-spec-sus]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.specSus, true); });
   }
 
   // Search results: every gamertag containing what's typed (all of them, most recent first, when empty).
@@ -174,6 +182,8 @@ export class ModPanel {
           ${on ? `<span class="mp-on">● ${on.mode === 'lobby' ? `In match ${esc(on.lobby || '')}` : 'In the menu'}</span>` : ''}
           <span class="mp-state ${ban ? 'bad' : mute ? 'mute' : 'ok'}">${ban ? 'Banned' : mute ? 'Muted' : 'In good standing'}</span></div>
         <button class="mp-watch ${moderation.isWatched(t.tag) ? 'on' : ''}" data-watch title="Get a pop-up when they come online (this device)">${moderation.isWatched(t.tag) ? '★ Watching' : '☆ Watch'}</button>
+        <button class="mp-watch mp-sus ${moderation.isSuspect(t.tag) ? 'on' : ''}" data-suspect title="Every staff member gets a pop-up when they come online or join a match, with a Spectate button">${moderation.isSuspect(t.tag) ? '🎯 Suspect' : '🎯 Mark suspect'}</button>
+        ${moderation.isSuspect(t.tag) ? `<div class="mp-flag sus">🎯 Suspect (marked by ${esc(moderation.suspects.get(k).by)}, ${ago(moderation.suspects.get(k).ts)})${moderation.suspects.get(k).why ? ': ' + esc(moderation.suspects.get(k).why) : ''}</div>` : ''}
         <small class="muted">Gamertag since ${t.since ? when(t.since) : 'unknown'}${rec.rename ? ` · new gamertag requested ${ago(rec.rename.ts)}` : ''}</small>
         ${ban ? `<div class="mp-flag bad">🚫 Banned ${until(ban)} by ${esc(ban.by)}: ${esc(ban.reason)}</div>` : ''}
         ${mute ? `<div class="mp-flag mute">${mute.shadow ? '👻 Shadow-muted (they don\'t know)' : '🔇 Chat muted'} ${until(mute)} by ${esc(mute.by)}: ${esc(mute.reason)}</div>` : ''}
@@ -207,6 +217,12 @@ export class ModPanel {
     if (join) join.onclick = () => this.joinLobby(join.dataset.join);
     const watchBtn = box.querySelector('[data-watch]');
     if (watchBtn) watchBtn.onclick = () => { const on = moderation.toggleWatch(t.tag); this.say(on ? `Watching ${t.tag}: you'll get a pop-up when they come online.` : `Stopped watching ${t.tag}.`); this.renderPlayer(); this.renderResults(); };
+    const susBtn = box.querySelector('[data-suspect]');
+    if (susBtn) susBtn.onclick = async () => {
+      const on = moderation.isSuspect(t.tag);
+      const why = on ? null : (box.querySelector('#mp-reason') ? box.querySelector('#mp-reason').value.trim() : '');
+      try { await moderation.setSuspect(t.tag, why); this.say(on ? `${t.tag} is off the suspect list.` : `${t.tag} is a suspect: all staff get a pop-up when they play.`); this.renderPlayer(); } catch (err) { this.say(err.message); }
+    };
     const spec = box.querySelector('[data-spec]');
     if (spec) spec.onclick = () => this.joinLobby(spec.dataset.spec, true);
     const lbBtn = box.querySelector('[data-lb]');
