@@ -426,6 +426,17 @@ class Moderation {
   }
   claimOf(id) { return this.claims.get(id) || null; }
 
+  // A player's past trouble, for the repeat-offender badge on reports: open reports about them, and
+  // warnings / mutes / bans / kicks from their record's history.
+  offences(tag) {
+    const k = low(tag), rec = this.records.get(k) || {}, log = rec.log || [];
+    const n = (acts) => log.filter((l) => acts.includes(l.act)).length;
+    return {
+      reports: [...this.reports.values()].filter((r) => low(r.target) === k).length,
+      warns: Math.max((rec.warns || []).length, n(['warn'])), mutes: n(['mute', 'smute']), bans: n(['ban']), kicks: n(['kick']),
+    };
+  }
+
   async dismissReport(id) {
     if (!roles.myRole()) return;
     if (this.claims.has(id)) { this.social.relay.publish(CLAIM + id, '', { retain: true }); this.claims.delete(id); }

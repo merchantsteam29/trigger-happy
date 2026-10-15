@@ -667,7 +667,8 @@ becomes free again.
     up, join that match or resolve the report. **✋ I've got this** claims a report so other staff see who's handling it
     (🔒 *name* has this); **Let it go** hands it back, and the **All / Not taken / Mine** switch filters the list.
     **Quick actions** on each report (**⚠ Warn**, **🔇 Mute 1 day**, **🚫 Ban 1 day**) use the report's reason and details
-    as the reason and resolve the report in one click. The reporter sees their reports in **Friends → 🚩 Your reports**: waiting,
+    as the reason and resolve the report in one click. A **🔁 Repeat offender** badge shows how many open reports, warnings,
+    mutes, kicks and bans the reported player already has (**Seen before** when it's just a little). The reporter sees their reports in **Friends → 🚩 Your reports**: waiting,
     looked at by staff (with a thank-you pop-up when it happens), or not looked at within 7 days. They're never told what was done.
   - **Announce:** post a message, either Info or Important, for 1 hour up to "until cleared". Every player sees it at
     the top of the menu, and players in a match get it in chat when it's posted.

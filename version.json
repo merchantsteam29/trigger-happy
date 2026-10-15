@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.9",
+  "version": "2026.10.15.10",
   "notes": [
-    "Warn, mute or ban straight from a report"
+    "Reports show a player's past offences"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

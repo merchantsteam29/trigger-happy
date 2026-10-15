@@ -353,6 +353,13 @@ export class ModPanel {
         <div class="mp-report ${r.reason === AUTO_FLAG ? 'auto' : ''} ${c ? (mine ? 'mine' : 'taken') : ''}">
           <div class="mp-report-head"><b>${esc(r.target)}</b><em>${esc(r.reason)}</em>${c ? `<span class="mp-claim">${mine ? '✋ You\'ve got this' : `🔒 ${esc(c)} has this`}</span>` : ''}<small>${ago(r.ts)}</small></div>
           ${r.details ? `<div class="mp-report-text">“${esc(r.details)}”</div>` : ''}
+          ${(() => { // repeat offender badge
+            const o = moderation.offences(r.target), past = o.warns + o.mutes + o.bans + o.kicks;
+            if (o.reports < 2 && !past) return '';
+            const bits = [o.reports > 1 ? `${o.reports} open reports` : '', o.warns ? `${o.warns} warning${o.warns > 1 ? 's' : ''}` : '', o.mutes ? `${o.mutes} mute${o.mutes > 1 ? 's' : ''}` : '',
+              o.kicks ? `${o.kicks} kick${o.kicks > 1 ? 's' : ''}` : '', o.bans ? `${o.bans} ban${o.bans > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+            return `<div class="mp-repeat ${past >= 2 || o.bans ? 'hot' : ''}">🔁 ${past >= 2 || o.bans ? 'Repeat offender' : 'Seen before'}: ${bits}</div>`;
+          })()}
           ${r.img ? `<a href="#" class="mp-shot" data-shot="${esc(r.id)}" title="Their screen when they reported (click to enlarge)"><img src="${r.img}" alt="Screenshot"></a>` : ''}
           <small class="muted">${r.reason === AUTO_FLAG ? `Flagged automatically by ${esc(r.from)}'s game (the host)` : `Reported by ${esc(r.from)}`}${r.lobby ? ` in match ${esc(r.lobby)}` : ''}</small>
           <div class="mp-actions">

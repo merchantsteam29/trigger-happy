@@ -909,3 +909,5 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-report.mine { border-left-color: #4fc3ff; }
 .mp-report.mine .mp-claim { background: #3bd16f22; color: #6fe39a; }
 .mp-quickacts { display: inline-flex; gap: 6px; padding: 0 6px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.mp-repeat { display: inline-block; margin: 4px 0; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #ffb02022; color: #ffcf7a; }
+.mp-repeat.hot { background: #ff3b3b26; color: #ff8a8a; }
