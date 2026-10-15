@@ -289,6 +289,12 @@ A **kill effect** plays where your victim stood when you get a kill, and everyon
 **Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
 Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
 
+## Character preview
+
+The **Character** screen shows your character in 3D, wearing what you have on (or are trying on) and holding your main
+gun with its charm. It turns slowly; drag it to turn it yourself. The buttons under it play your **emotes** and your
+**victory pose**.
+
 ## Sprays
 
 Draw your own 16×16 pixel spray in **Character → Spray** (draw, fill, erase, 15 colors). Press **X** in a match to spray it

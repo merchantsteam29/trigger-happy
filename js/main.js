@@ -56,6 +56,7 @@ import { COURSES, COURSE_IDS, fmtScore, trainBests, saveBest } from './training.
 import { community, openCommunity } from './community.js';
 import { clanPoints, clanStandings, CLAN_POINTS, CLAN_REWARDS } from './clanseason.js';
 import { Theater, encodeClip, decodeClip, listReplays, loadReplay } from './replay.js';
+import { Lobby3D } from './lobby.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -142,6 +143,8 @@ const chat = new Chat({
   mobile,
 });
 
+// The Character screen's live 3D preview (lobby.js).
+const lobby3d = new Lobby3D();
 function renderCharacter() {
   if (!settingsUI) return;
   const el = $('menu-customize');
@@ -151,7 +154,8 @@ function renderCharacter() {
     onCard: () => { if (profiles.social) profiles.publish(myProfile()); }, saveCard,
     spray: () => ({ mine: store.get('mySpray', null), clan: (clans.myClan() || {}).spray || null, pick: store.get('sprayPick', 'mine') }),
     openSpray: () => openSprayEditor(store.get('mySpray', null), 'mine'),
-    setSprayPick: (v) => { store.set('sprayPick', v); syncMySpray(); }, drawSpray }));
+    setSprayPick: (v) => { store.set('sprayPick', v); syncMySpray(); }, drawSpray,
+    lobby: lobby3d, lobbyGun: () => settings.loadout[0] }));
 }
 // Missions screen: three tabs (daily rewards + challenges, season pass + level, missions).
 let msTab = null;

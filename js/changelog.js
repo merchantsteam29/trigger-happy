@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.20', name: '3D Character', banner: 'galaxy', notes: [
+    'The Character screen shows your character in 3D, in what you wear or try on, with your gun and charm',
+    'Play your emotes and victory pose from the buttons under it, and drag to turn it',
+  ] },
   { v: '2026.10.14.19', name: 'Your Own Spray', banner: 'sunset', notes: [
     'Draw your own spray in Character → Spray, no clan needed. Press X in a match to spray it',
     'In a clan with a spray? Pick which one X sprays',

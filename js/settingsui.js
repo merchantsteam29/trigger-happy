@@ -351,6 +351,7 @@ export class SettingsUI {
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
           <div class="cz-stage"><canvas width="200" height="262"></canvas></div>
+          <div class="cz-emotes"></div>
           <div class="cz-wallet"><span>🪙 ${getTokens()}</span><small>Earn more in Missions</small></div>
           <div class="cz-side-slot"></div>
         </aside>
@@ -360,6 +361,7 @@ export class SettingsUI {
           <div class="cz-panel"></div>
         </div>`;
       drawAvatar(el.querySelector('.cz-stage canvas'), shown, this.getColor());
+      if (ctx.lobby) ctx.lobby.mount(el.querySelector('.cz-stage'), shown, this.getColor(), ctx.lobbyGun && ctx.lobbyGun(), el.querySelector('.cz-emotes')); // 3D preview (lobby.js)
       el.querySelectorAll('[data-tab]').forEach((b) => { b.onclick = () => { this.czTab = b.dataset.tab; rerender(); }; });
       if (ctx.side) el.querySelector('.cz-side-slot').appendChild(ctx.side); // callsign + color (main.js)
       const equip = (next) => { this.tryOn = null; setCos(next); if (this.onCos) this.onCos(next); rerender(); };
