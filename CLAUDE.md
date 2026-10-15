@@ -114,6 +114,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver); `grant: 1` ones are the owner's (`gifts.grant`: checked against `OWNER.pub`, up to `GRANT_MAX` tokens or any `grantable` item; logged on the record as act `grant`) | gifts.js |
 | `ref/…` | invite rewards | invites.js |
 | `gamenight` | Game Night schedule (owner-signed) | gamenight.js |
+| `spotlight` | the owner's shop spotlight (`liveEvent.setSpot` / `spotlight()`, shown first in shop.js Everything; only reorders, the shop never rotates) | liveevent.js |
 | `motd` | the owner's message of the day (`liveEvent.setMotd` / `currentMotd`, main.js `motdCard`; owner-signed, retained) | liveevent.js |
 | `event` | the owner's live event (`liveevent.js`: name, token multiplier via `missions.setTokenBoost`, featured map / mode, `until`; owner-signed, retained) | liveevent.js |
 | `repdone/<report id>` | staff-signed "reviewed" note for the reporter (they clear it once seen) | moderation.js |

@@ -693,7 +693,8 @@ becomes free again.
     looked at by staff (with a thank-you pop-up when it happens), or not looked at within 7 days. They're never told what was done.
   - **Announce:** (owner) **📌 Message of the day**: a title, a message and an optional button (Quick Play, the Shop,
     Missions, Leaderboard, Friends, Character, or an https web link), pinned on top of everyone's Play screen until it's
-    changed or cleared (players can hide it with ✕ until a new one comes). (owner) **🎉 Run an event**: a name, **2x or 3x tokens** on everything players earn (not gifts), and / or
+    changed or cleared (players can hide it with ✕ until a new one comes). (owner) **✨ Shop spotlight**: up to 8 shop items shown first in everyone's Shop (Everything) under
+    a title; it only changes the order, every item stays at the same price with no timer. (owner) **🎉 Run an event**: a name, **2x or 3x tokens** on everything players earn (not gifts), and / or
     a featured **map** and **mode**, for 1 hour up to 7 days. Everyone gets a row on the Play screen with a **Play** button
     (joins or starts a server with the event's mode and map), and Quick Play's new servers use the event map. **End it now**
     stops it early. Below that, post a message, either Info or Important, for 1 hour up to "until cleared". Every player sees it at

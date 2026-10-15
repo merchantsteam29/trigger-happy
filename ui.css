@@ -969,3 +969,10 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-motd textarea, .mp-motd > input { width: 100%; margin: 4px 0; }
 .mp-motd .mp-actions input { flex: 1; }
 .mp-motd .mp-actions select { width: auto; }
+/* Shop spotlight */
+.shop-spot { margin: 6px 0 14px; padding: 10px 12px 12px; border-radius: 14px; border: 1px solid #ffd23f66; background: linear-gradient(100deg, #2a1f0599, #1b153099); }
+.shop-spot h4 { margin: 0 0 8px; color: #ffd23f; letter-spacing: .06em; text-transform: uppercase; font-size: 13px; }
+.mp-spot > input { width: 100%; margin: 4px 0; }
+.mp-spot-items { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.mp-spot-items .chip button { padding: 0 6px; }
+.mp-spot select { width: auto; flex: 1; }

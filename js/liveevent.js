@@ -6,6 +6,8 @@ import { OWNER, roles, verifyWith } from './roles.js';
 // message at whffa/v1/event, signed with the owner's key; it ends by itself at `until`.
 
 const T = 'whffa/v1/event';
+const SPOT = 'whffa/v1/spotlight'; // the owner's shop spotlight: { title, items: [{ slot, id }] } (owner-signed, retained)
+export const SPOT_MAX = 8;
 const MOTD = 'whffa/v1/motd'; // the owner's message of the day: { id, title, text, btn, go } (owner-signed, retained)
 // Where a message of the day's button can take players: a page of the menu, or a web link (https only).
 export const MOTD_GO = [['', 'No button'], ['play', 'Quick Play'], ['shop', 'The Shop'], ['missions', 'Missions'], ['leaderboard', 'Leaderboard'], ['friends', 'Friends'], ['character', 'Character'], ['link', 'A web link…']];
@@ -18,14 +20,16 @@ class LiveEvent {
     this.onChange = null;
     this.motd = null; // { id, title, text, btn, go, url, ts }
     this.onMotd = null;
+    this.spot = null; // { title, items, ts }
+    this.onSpot = null;
   }
 
   init(social) {
     this.social = social;
-    social.relay.onMessage((t, payload) => { if (t === T) this.receive(payload.toString()); else if (t === MOTD) this.receiveMotd(payload.toString()); });
-    social.relay.subscribe(T); social.relay.subscribe(MOTD);
+    social.relay.onMessage((t, payload) => { if (t === T) this.receive(payload.toString()); else if (t === MOTD) this.receiveMotd(payload.toString()); else if (t === SPOT) this.receiveSpot(payload.toString()); });
+    for (const t of [T, MOTD, SPOT]) social.relay.subscribe(t);
     const prev = social.relay.onConnect;
-    social.relay.onConnect = () => { if (prev) prev(); social.relay.subscribe(T); social.relay.subscribe(MOTD); };
+    social.relay.onConnect = () => { if (prev) prev(); for (const t of [T, MOTD, SPOT]) social.relay.subscribe(t); };
   }
 
   async receive(text) {
@@ -93,6 +97,26 @@ class LiveEvent {
     this.social.relay.publish(MOTD, signed, { retain: true });
     await this.receiveMotd(signed);
   }
+  // ---------- Shop spotlight ----------
+  // The owner picks a few shop items to show first in the Shop. It only reorders what's shown:
+  // nothing is added, removed or timed (the shop never rotates).
+  async receiveSpot(text) {
+    let env, b;
+    try { env = JSON.parse(text); b = JSON.parse(env.b); } catch { return; }
+    if (!b || low(b.from) !== low(OWNER.tag) || !(await verifyWith(OWNER.pub, env))) return;
+    if (this.spot && this.spot.ts > Number(b.ts)) return;
+    const items = (Array.isArray(b.items) ? b.items : []).filter((x) => x && typeof x.slot === 'string' && typeof x.id === 'string').slice(0, SPOT_MAX).map((x) => ({ slot: x.slot.slice(0, 12), id: x.id.slice(0, 32) }));
+    this.spot = { title: String(b.title || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40), items, ts: Number(b.ts) || 0 };
+    if (this.onSpot) this.onSpot(this.spot);
+  }
+  async setSpot(title, items) {
+    if (!roles.isOwner()) throw new Error('Only the owner can change the shop spotlight.');
+    const signed = await this.social.sign({ title, items: items.slice(0, SPOT_MAX) });
+    this.social.relay.publish(SPOT, signed, { retain: true });
+    await this.receiveSpot(signed);
+  }
+  spotlight() { return this.spot && this.spot.items.length ? this.spot : null; }
+
   // The message to show (null if there's none, or you hid this one).
   currentMotd(hidden) { const m = this.motd; return m && !m.off && m.id !== hidden ? m : null; }
 }

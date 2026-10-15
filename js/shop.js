@@ -4,6 +4,7 @@ import { CAMOS, camoSwatch } from './camos.js';
 import { bannerOf, bannerHtml } from './banners.js';
 import { drawAvatar } from './settingsui.js';
 import { gifts, giftable, ownsItem, GIFT_MIN, GIFT_MAX, GIFTS_PER_DAY } from './gifts.js';
+import { liveEvent } from './liveevent.js';
 
 // The Shop: everything you can buy with tokens, always the same (no rotating stock, no timers).
 // Categories down the side, item cards in the middle, and the picked item big on the right
@@ -67,11 +68,15 @@ export class Shop {
     if (this.filter === 'buy') list = list.filter(({ slot, c }) => !ownsItem(slot, c.id) && !c.reward);
     list.sort((a, b) => (this.sort === 'name' ? a.c.name.localeCompare(b.c.name) : (a.c.reward ? 1e9 : a.c.price) - (b.c.reward ? 1e9 : b.c.price)));
     const total = items(this.cat).filter(({ c }) => !c.reward), owned = total.filter(({ slot, c }) => ownsItem(slot, c.id)).length;
+    // The owner's spotlight (liveevent.js): picked items shown first in Everything (they're still in their categories too).
+    const sp = this.cat === 'all' && liveEvent.spotlight();
+    const spot = sp ? sp.items.map((it) => items('all').find((x) => x.slot === it.slot && x.c.id === it.id)).filter(Boolean) : [];
     main.innerHTML = `<div class="shop-bar">
         <div class="seg"><button data-f="all" class="${this.filter === 'all' ? 'sel' : ''}">All</button><button data-f="buy" class="${this.filter === 'buy' ? 'sel' : ''}">Not owned</button></div>
         <div class="seg"><button data-s="price" class="${this.sort === 'price' ? 'sel' : ''}">Price</button><button data-s="name" class="${this.sort === 'name' ? 'sel' : ''}">A–Z</button></div>
         <small>You own ${owned} of ${total.length}</small>
       </div>
+      ${spot.length ? `<div class="shop-spot"><h4>✨ ${esc((liveEvent.spotlight() || {}).title || 'Spotlight')}</h4><div class="shop-grid">${spot.map((x) => this.card(x)).join('')}</div></div>` : ''}
       <div class="shop-grid">${list.map((x) => this.card(x)).join('') || '<div class="sv-empty">You own everything here. 🎉</div>'}</div>`;
     main.querySelectorAll('[data-f]').forEach((b) => { b.onclick = () => { this.filter = b.dataset.f; store.set('shopFilter', this.filter); this.render(); }; });
     main.querySelectorAll('[data-s]').forEach((b) => { b.onclick = () => { this.sort = b.dataset.s; store.set('shopSort', this.sort); this.render(); }; });

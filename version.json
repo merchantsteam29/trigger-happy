@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.24",
+  "version": "2026.10.15.25",
   "notes": [
-    "The owner can pin a message of the day"
+    "The owner can put shop items in the spotlight"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -6,7 +6,8 @@ import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './game
 import { leaderboard } from './leaderboard.js';
 import { gifts, grantable, GRANT_MAX } from './gifts.js';
 import { COSMETICS, SLOT_LABELS } from './missions.js';
-import { liveEvent, EVENT_HOURS, MOTD_GO } from './liveevent.js';
+import { liveEvent, EVENT_HOURS, MOTD_GO, SPOT_MAX } from './liveevent.js';
+import { CAMOS } from './camos.js';
 import { MAPS, MAP_ORDER } from './maps.js';
 import { MODES, MODE_ORDER } from './host.js';
 
@@ -545,7 +546,7 @@ export class ModPanel {
     };
     const clear = body.querySelector('#mp-ann-clear');
     if (clear) clear.onclick = async () => { try { await moderation.clearAnnouncement(); this.say('Announcement cleared.'); this.render(); } catch (err) { this.say(err.message); } };
-    if (roles.myRole() === 'owner') { this.renderMotd(body); this.renderEvent(body); this.renderGameNight(body); }
+    if (roles.myRole() === 'owner') { this.renderMotd(body); this.renderSpot(body); this.renderEvent(body); this.renderGameNight(body); }
   }
 
   // Owner: the message of the day pinned on everyone's Play screen (liveevent.js).
@@ -571,6 +572,35 @@ export class ModPanel {
     };
     const clr = card.querySelector('#mp-motd-clear');
     if (clr) clr.onclick = async () => { try { await liveEvent.clearMotd(); this.say('Message of the day cleared.'); this.render(); } catch (err) { this.say(err.message); } };
+  }
+
+  // Owner: the shop spotlight (liveevent.js) — items shown first in the Shop. Nothing rotates or leaves.
+  renderSpot(body) {
+    const cur = liveEvent.spotlight();
+    const draft = (this.spotDraft ||= cur ? cur.items.map((x) => ({ ...x })) : []);
+    const name = (it) => { const c = it.slot === 'wrap' ? CAMOS.find((x) => x.id === it.id) : (COSMETICS[it.slot] || []).find((x) => x.id === it.id); return c ? c.name : it.id; };
+    const card = document.createElement('div');
+    card.className = 'card mp-gap mp-spot';
+    card.innerHTML = `<h3>✨ Shop spotlight <span class="muted">(only you)</span></h3>
+      <div class="note">Pick up to ${SPOT_MAX} items to show first in everyone's Shop (Everything). It only changes the order: every item stays in the shop at the same price, with no timer.</div>
+      <input id="mp-spot-title" maxlength="40" placeholder="Title, e.g. New this week" value="${esc(this.spotTitle ?? (cur ? cur.title : ''))}">
+      <div class="mp-spot-items">${draft.map((it, i) => `<span class="chip">${esc(name(it))} <button class="ghost sm" data-spx="${i}">✕</button></span>`).join('') || '<small class="muted">Nothing picked.</small>'}</div>
+      <div class="mp-actions"><select id="mp-spot-pick"><option value="">Add an item…</option>${Object.keys(SLOT_LABELS).map((slot) => `<optgroup label="${SLOT_LABELS[slot]}">${COSMETICS[slot].filter((c) => c.price > 0 && !c.reward).map((c) => `<option value="${slot}:${esc(c.id)}">${esc(c.name)} · 🪙 ${c.price}</option>`).join('')}</optgroup>`).join('')}<optgroup label="Weapon wraps">${CAMOS.filter((c) => c.price > 0 && !c.reward).map((c) => `<option value="wrap:${esc(c.id)}">${esc(c.name)} · 🪙 ${c.price}</option>`).join('')}</optgroup></select>
+        <button class="primary" id="mp-spot-save">Save spotlight</button>${cur ? '<button class="ghost" id="mp-spot-clear">Clear</button>' : ''}</div>`;
+    body.appendChild(card);
+    card.querySelectorAll('input').forEach((i) => i.addEventListener('keydown', (ev) => ev.stopPropagation()));
+    card.querySelector('#mp-spot-title').oninput = (e) => { this.spotTitle = e.target.value; };
+    card.querySelector('#mp-spot-pick').onchange = (e) => {
+      const [slot, id] = e.target.value.split(':');
+      if (slot && draft.length < SPOT_MAX && !draft.some((x) => x.slot === slot && x.id === id)) draft.push({ slot, id });
+      this.render();
+    };
+    card.querySelectorAll('[data-spx]').forEach((b) => { b.onclick = () => { draft.splice(Number(b.dataset.spx), 1); this.render(); }; });
+    card.querySelector('#mp-spot-save').onclick = async () => {
+      try { await liveEvent.setSpot(card.querySelector('#mp-spot-title').value.trim(), draft); this.spotDraft = null; this.spotTitle = undefined; this.say('Shop spotlight saved.'); this.render(); } catch (err) { this.say(err.message); }
+    };
+    const clr = card.querySelector('#mp-spot-clear');
+    if (clr) clr.onclick = async () => { try { await liveEvent.setSpot('', []); this.spotDraft = null; this.say('Spotlight cleared.'); this.render(); } catch (err) { this.say(err.message); } };
   }
 
   // Owner: run an event (liveevent.js) — double tokens, a featured map / mode — for a while.

@@ -1848,6 +1848,7 @@ setInterval(() => {
 gameNight.init(social);
 liveEvent.init(social);
 setTokenBoost(() => liveEvent.tokenBoost()); // owner events: double / triple tokens
+liveEvent.onSpot = () => { if (!game.active && menuPane === 'shop') shop.render(); };
 liveEvent.onMotd = () => { if (!game.active && menuPane === 'play') showPane('play'); };
 liveEvent.onChange = (e, started) => {
   if (started && e) toast(`🎉 Event: ${e.name}${e.tokens > 1 ? ` · 🪙 ${e.tokens}x tokens` : ''}`);
