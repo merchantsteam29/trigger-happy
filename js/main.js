@@ -1956,6 +1956,10 @@ moderation.onKick = (k) => { if (net && !net.practice) leave(`You were removed f
 // Watchlist: a pop-up when a watched player comes online.
 moderation.onWatched = (tag, pres) => toast(`★ ${tag} is online${pres && pres.mode === 'lobby' ? ' (in a match)' : ''}`);
 
+// Gift freezes (moderation.js LIMITS.gifts): you can't send, and gifts sent while the sender was frozen are dropped.
+gifts.frozen = () => moderation.myLimit('gifts');
+gifts.senderFrozen = async (tag, ts) => { const f = moderation.limited(await moderation.fetchRecord(tag), 'gifts'); return !!f && Number(ts) >= f.ts; };
+
 // Staff switched chat lock / slow mode for every match: the host tells its players.
 let lastGchat = 'false,false';
 moderation.onGlobalChat = (g) => {

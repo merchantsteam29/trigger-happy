@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.16",
+  "version": "2026.10.15.17",
   "notes": [
-    "Staff can ban players from ranked only"
+    "Staff can freeze a player's gifts"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

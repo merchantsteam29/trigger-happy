@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.16', name: 'Staff HQ Update', banner: 'staffhq', notes: [
+  { v: '2026.10.15.17', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
     'Updates are now one big log each, with a heading for every new feature',
     '## 4 New Banners',
@@ -44,6 +44,8 @@ export const UPDATES = [
     'The Mod Panel suggests the next punishment for each player (warn, then mute, then longer bans), and the owner can change the steps',
     '## Ranked Bans',
     'Staff can ban a player from ranked only, without banning them from the game',
+    '## Gift Freeze',
+    "Staff can freeze a player's gifts to stop scams",
   ] },
   { v: '2026.10.14.26', name: 'The Mega Update', banner: 'mega', notes: [
     '## Smoother Replays',

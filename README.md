@@ -660,6 +660,7 @@ becomes free again.
     - **Force a new gamertag:** their tag is released and they must pick another.
     - **Restrictions** (same lengths and reason box as bans; they need the Match tools permission): **🏆 Ranked ban** keeps
       them out of ranked only (Ranked won't start for them, and ranked servers remove them), with **Lift** to undo it.
+      **🎁 Gift freeze** (for scams) stops them sending gifts, and gifts they sent while frozen are thrown away unopened.
     - **Unban**, **Unmute**, **Clear warnings**, or **Join their match**.
 
     It also lists recent actions.

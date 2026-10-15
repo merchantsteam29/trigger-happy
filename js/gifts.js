@@ -49,6 +49,8 @@ class Gifts {
   async send(toTag, gift, note = '') {
     const s = this.social;
     if (!s || !s.tag) throw new Error('Pick a gamertag (Friends tab) to send gifts.');
+    const frozen = this.frozen && this.frozen(); // staff froze your gifts (main.js wires this to moderation.js)
+    if (frozen) throw new Error(`Staff froze your gifts${frozen.until ? ' until ' + new Date(frozen.until).toLocaleString() : ''}: ${frozen.reason}`);
     if (!s.friends.has(low(toTag))) throw new Error('You can only send gifts to friends.');
     if (low(toTag) === low(s.tag)) throw new Error("You can't send a gift to yourself.");
     if (this.sentToday() >= GIFTS_PER_DAY) throw new Error(`That's ${GIFTS_PER_DAY} gifts today. Try again tomorrow.`);
@@ -79,6 +81,9 @@ class Gifts {
     if (this.claimed.has(id)) { s.relay.publish(topic, '', { retain: true }); return; }
     const b = await s.verify(text);
     if (!b || b.id !== id || low(b.to) !== low(s.tag) || low(b.from) === low(s.tag)) return;
+    // Sent by someone whose gifts staff froze (e.g. scams): thrown away unopened.
+    if (this.senderFrozen && await this.senderFrozen(b.from, b.ts)) { this.claimed.add(id); s.relay.publish(topic, '', { retain: true }); return; }
+    if (this.claimed.has(id)) return;
     this.claimed.add(id);
     store.set('giftsClaimed', [...this.claimed].slice(-300));
     let got = null;
