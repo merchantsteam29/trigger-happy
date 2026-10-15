@@ -86,6 +86,16 @@ real match. Replay it any time from **Keyboard & mouse → Play the tutorial** i
 map, and stay inside the closing purple storm; last one standing wins) and the **Tournament** (knockout free-for-all
 rounds, then a 1v1 final). See [Game Night](#quick-play--game-night).
 
+**🎮 Play Hour:** the daily Game Night shows up big on the Play screen from 3 hours before, so everyone knows when to
+hop on together. Your first Game Night match each day pays **🪙 200**.
+
+**♛ GIGACHAD is playing:** when the owner presses **📣 Call everyone** in their pause menu, every player gets a pop-up and a
+**Join** card on the Play screen for up to 2 hours (until the owner leaves that match). The owner also gets a message with
+the join link to send to their players.
+
+**👋 Welcome back:** away for 3 days or more? You get a gift when you come back (🪙 300, 600 after a week, 1,000 after two)
+and a look at what's new since you last played.
+
 **📌 Message of the day:** the owner can pin a message on top of the Play screen (✕ hides it until a new one).
 
 **🎉 Events:** sometimes the owner runs an event (like a Double Token Weekend, or a featured map or mode). It shows as a

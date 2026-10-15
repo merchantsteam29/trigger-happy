@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.34",
+  "version": "2026.10.15.35",
   "notes": [
-    "More costumes, skins, poses and emotes"
+    "Play Hour, Join GIGACHAD and Welcome back gifts"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

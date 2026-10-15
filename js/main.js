@@ -60,6 +60,7 @@ import { Lobby3D } from './lobby.js';
 import { challenges, renderChallenges } from './challenges.js';
 import { clanBaseMap } from './clanbase.js';
 import { liveEvent } from './liveevent.js';
+import { UPDATES } from './changelog.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -254,6 +255,8 @@ function renderHome() {
       : rkWeek.paid ? `Weekly reward earned ✓ · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
         : `This week ${rkWeek.n}/${RANKED_WEEKLY.matches} matches · 🪙 ${RANKED_WEEKLY.tokens} · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
   el.innerHTML = `
+    ${ownerLiveCard()}
+    ${playHourCard()}
     ${motdCard()}
     <div class="play-hero">
       <button class="hero-quick hs-tile" data-quick title="Joins the busiest public server, or starts one with bots if there are none">
@@ -312,6 +315,10 @@ function renderHome() {
   el.querySelector('[data-ranked]').onclick = playRanked;
   el.querySelector('[data-feat]').onclick = playFeatured;
   el.querySelector('[data-motw]').onclick = playMotw;
+  const olBtn = el.querySelector('[data-ownerlive]');
+  if (olBtn) olBtn.onclick = () => { const l = liveEvent.live2(); if (l) joinCode(l.lobby); };
+  const phBtn = el.querySelector('[data-playhour]');
+  if (phBtn) phBtn.onclick = () => joinGameNight();
   const motdBtn = el.querySelector('[data-motd]');
   if (motdBtn) motdBtn.onclick = () => {
     const m = liveEvent.currentMotd();
@@ -378,6 +385,52 @@ async function playRanked() {
   status('');
   hostLobby({ name: `🏆 Ranked · ${me.div.name}`, mode: RANKED_MATCH.mode, map: randomMap(), max: RANKED_MATCH.max, bots: RANKED_MATCH.bots, rotate: true, vis: 'public', ranked: true });
 }
+// ---------- Welcome back ----------
+// Away 3+ days: a gift of tokens (more the longer you were gone) and what's new since you last played.
+function welcomeBack() {
+  const last = store.get('lastSeen', 0), now = Date.now();
+  store.set('lastSeen', now);
+  setInterval(() => store.set('lastSeen', Date.now()), 5 * 60000);
+  const lastV = store.get('lastVersion', '');
+  store.set('lastVersion', UPDATES[0].v);
+  const days = Math.floor((now - last) / 864e5);
+  if (!last || days < 3) return;
+  const gift = days >= 14 ? 1000 : days >= 7 ? 600 : 300;
+  addTokens(gift);
+  const num = (v) => v.split('.').map(Number).reduce((a, x) => a * 1000 + x, 0);
+  const news = UPDATES.filter((u) => !lastV || num(u.v) > num(lastV)).slice(0, 4);
+  const pop = document.createElement('div');
+  pop.id = 'welcome-pop';
+  pop.innerHTML = `<div class="card"><h2>👋 Welcome back!</h2><p>You were away ${days} days. Here's a gift: <b>🪙 ${gift} tokens</b></p>
+    ${news.length ? `<h3>What's new</h3><ul>${news.map((u) => `<li><b>${esc(u.name)}</b><small>${u.notes.filter((n) => n.startsWith('## ')).map((n) => esc(n.slice(3))).slice(0, 5).join(' · ') || esc(u.notes[0] || '')}</small></li>`).join('')}</ul>` : ''}
+    <div class="mp-actions"><button class="primary" data-wb-play>▶ Play now</button><button class="ghost" data-wb-close>Later</button></div></div>`;
+  document.body.appendChild(pop);
+  pop.querySelector('[data-wb-play]').onclick = () => { pop.remove(); quickPlay(); };
+  pop.querySelector('[data-wb-close]').onclick = () => pop.remove();
+  renderChip();
+}
+setTimeout(welcomeBack, 1500);
+
+// ---------- Getting players together ----------
+// The owner's "Call everyone" (liveevent.js): join their match in one click.
+function ownerLiveCard() {
+  const l = liveEvent.live2();
+  if (!l || (net && net.code === l.lobby)) return '';
+  return `<div class="hs-tile owner-live"><span class="hs-ic">♛</span><span class="hs-txt"><b>GIGACHAD is playing right now!</b><small>Jump into the owner's match</small></span><button class="primary" data-ownerlive>Join</button></div>`;
+}
+// Play Hour: the daily Game Night, shown big from 3 hours before, with its bonus.
+const PLAY_HOUR_TOKENS = 200;
+function playHourCard() {
+  const w = gameNight.window();
+  if (!w) return '';
+  const live = w.live, soon = !live && w.start - Date.now() < 3 * 3600e3;
+  if (!live && !soon) return '';
+  const paid = store.get('playHourDay', '') === new Date().toDateString();
+  const n = browser.list().filter((s) => s.gn).reduce((a, s) => a + s.players, 0);
+  const at = new Date(w.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return `<div class="hs-tile play-hour ${live ? 'live' : ''}"><span class="hs-ic">🎮</span><span class="hs-txt"><b>${live ? 'PLAY HOUR IS LIVE' : `Play Hour in ${fmtDuration(w.start - Date.now())}`}</b><small>${live ? `Everyone plays together right now${n ? ` · ${n} playing` : ''}` : `Everyone plays together at ${at}`}${paid ? ' · today\'s bonus earned ✓' : ` · 🪙 ${PLAY_HOUR_TOKENS} for your first match`}</small></span>${live ? '<button class="primary" data-playhour>Join</button>' : ''}</div>`;
+}
+
 // The owner's message of the day (liveevent.js): pinned on top of the Play screen until they change it
 // (or you hide that one).
 function motdCard() {
@@ -1648,6 +1701,9 @@ function showPause() {
   chat.setPaused(true);
   renderLoadout($('pause-loadout'));
   $('btn-hostpanel').classList.toggle('hidden', !(net && net.isHost) || !!(net && net.practice));
+  $('btn-callall').classList.toggle('hidden', !roles.isOwner() || !net || !!net.practice);
+  const ol = liveEvent.live2();
+  $('btn-callall').textContent = ol && net && ol.lobby === net.code ? '📣 Called everyone ✓' : '📣 Call everyone';
   $('pause-code').parentElement.classList.toggle('hidden', !!(net && net.practice));
   renderPractice();
   renderModList();
@@ -1895,6 +1951,14 @@ liveEvent.onMaint = (m) => {
   tick();
   maintT = setInterval(tick, 500);
 };
+// The owner called everyone in: a pop-up (unless you're already there) and the card on the Play screen.
+liveEvent.onLive = (l, started) => {
+  if (started && l && !(net && net.code === l.lobby) && !roles.isOwner()) {
+    if (game.active) chat.system('♛ GIGACHAD is playing right now! Join them from the Play screen.');
+    else toast('♛ GIGACHAD is playing right now! Press Join on the Play screen.');
+  }
+  if (!game.active && menuPane === 'play') showPane('play');
+};
 liveEvent.onSpot = () => { if (!game.active && menuPane === 'shop') shop.render(); };
 liveEvent.onMotd = () => { if (!game.active && menuPane === 'play') showPane('play'); };
 liveEvent.onChange = (e, started) => {
@@ -1962,6 +2026,12 @@ game.onMatchTracked = () => {
     if (paid) game.hud.mission(`Featured mode: ${MODES[game.rules.mode].name}`, `+${paid} tokens`, 'DAILY FEATURED');
   }
   if (game.rules.gn && gameNight.isLive() && grantWrap('midnight')) game.hud.mission('Midnight wrap unlocked', 'Played Game Night', 'GAME NIGHT');
+  // Play Hour bonus: your first Game Night match each day
+  if (game.rules.gn && gameNight.isLive() && store.get('playHourDay', '') !== new Date().toDateString()) {
+    store.set('playHourDay', new Date().toDateString());
+    addTokens(PLAY_HOUR_TOKENS);
+    game.hud.mission('Play Hour bonus', `+${PLAY_HOUR_TOKENS} tokens · thanks for playing together!`, 'PLAY HOUR');
+  }
 };
 gameNight.on((e) => {
   if (e.type === 'start') {
@@ -2433,6 +2503,7 @@ async function joinLobby(spectateArg = false) {
 }
 
 function leave(reason) {
+  if (net && liveEvent.live2() && liveEvent.live2().lobby === net.code) liveEvent.endLive(); // the owner left the match they called everyone into
   if (voice.inRoom) voice.leave(); // Game Night voice is for that server only
   highlights.stop();
   highlights.resetMatch();
@@ -2605,6 +2676,15 @@ $('btn-hostpanel').onclick = () => {
 };
 $('hp-public').onchange = () => setPublic($('hp-public').checked);
 game.onKicked = (reason) => leave(reason || 'You were kicked from the match.');
+// Owner: call everyone into this match, and share a message with the join link.
+$('btn-callall').onclick = async () => {
+  if (!net) return;
+  const link = invites.link(location.origin + location.pathname, net.code);
+  try { await liveEvent.goLive(net.code); } catch (e) { toast(e.message); return; }
+  const text = `I'm playing Trigger Happy right now, come join me! 🎮 ${link}`;
+  $('btn-callall').textContent = '📣 Called everyone ✓';
+  try { if (navigator.share) await navigator.share({ text }); else { await navigator.clipboard.writeText(text); toast('Everyone got a pop-up. Message copied: paste it to your players!'); } } catch { /* closed the share sheet */ }
+};
 $('btn-copy').onclick = async () => {
   const link = invites.link(location.origin + location.pathname, net ? net.code : '');
   try {

@@ -116,6 +116,7 @@ export const COSMETICS = {
     { id: 'staffhq', name: 'Command Center', price: 400 },
     { id: 'masquerade', name: 'Masquerade', price: 400 },
     { id: 'armory', name: 'Armory', price: 400 },
+    { id: 'together', name: 'Together', price: 400 },
     { id: 'sakura', name: 'Cherry Blossom', price: 400 },
     { id: 'deepsea', name: 'Deep Sea', price: 400 },
     { id: 'aurora', name: 'Aurora', price: 500 },

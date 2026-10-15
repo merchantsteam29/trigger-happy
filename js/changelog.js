@@ -9,6 +9,17 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.15.35', name: 'Play Together', banner: 'together', notes: [
+    '## Play Hour',
+    'The daily Game Night shows big on the Play screen, so everyone knows when to hop on together',
+    'Your first Game Night match each day pays 200 tokens',
+    '## Join GIGACHAD',
+    'When the owner calls everyone, you get a pop-up and a Join button to jump into their match',
+    '## Welcome Back',
+    "Away for 3 days or more? Get a token gift when you come back, and see what's new",
+    '## New Banner',
+    'Together, the banner of this update, is in the shop',
+  ] },
   { v: '2026.10.15.34', name: 'Costume Party 2', banner: 'sakura', notes: [
     '## Costumes',
     'New giveaways: Vault Kid, Hooded Assassin and Grin Skeleton, handed out by the owner',

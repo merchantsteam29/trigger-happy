@@ -117,6 +117,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `gamenight` | Game Night schedule (owner-signed) | gamenight.js |
 | `maint` | the owner's maintenance countdown (`liveEvent.startMaint` / `cancelMaint`; main.js `liveEvent.onMaint` draws `#maint-bar` and `#maint-pop`) | liveevent.js |
 | `spotlight` | the owner's shop spotlight (`liveEvent.setSpot` / `spotlight()`, shown first in shop.js Everything; only reorders, the shop never rotates) | liveevent.js |
+| `ownerlive` | the owner's "Call everyone" (`liveEvent.goLive` / `endLive` / `live2`; main.js `ownerLiveCard`; owner-signed, retained, max 2 h) | liveevent.js |
 | `motd` | the owner's message of the day (`liveEvent.setMotd` / `currentMotd`, main.js `motdCard`; owner-signed, retained) | liveevent.js |
 | `event` | the owner's live event (`liveevent.js`: name, token multiplier via `missions.setTokenBoost`, featured map / mode, `until`; owner-signed, retained) | liveevent.js |
 | `repdone/<report id>` | staff-signed "reviewed" note for the reporter (they clear it once seen) | moderation.js |

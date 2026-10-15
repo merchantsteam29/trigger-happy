@@ -94,6 +94,10 @@ export const BANNER_STYLE = {
     bg: 'repeating-conic-gradient(from 0deg at 18% 50%, #ffffff10 0 6deg, transparent 6deg 18deg), radial-gradient(circle at 18% 50%, #fff7 0 6%, #2fe6ff88 12%, transparent 40%), linear-gradient(100deg, #10052a, #4a0f9a 45%, #ff2fd8)',
     accent: '#2fe6ff', emblem: '💥', anim: 'hue',
   },
+  together: {
+    bg: 'radial-gradient(circle at 20% 50%, #ffd23f66 0 14%, transparent 34%), radial-gradient(circle at 50% 50%, #3bd16f55 0 14%, transparent 34%), radial-gradient(circle at 80% 50%, #3ab0ff66 0 14%, transparent 34%), linear-gradient(100deg, #1a0a3a, #3a1a6a 50%, #1a3a6a)',
+    accent: '#ffd23f', emblem: '🤝', anim: 'twinkle',
+  },
   sakura: {
     bg: 'radial-gradient(ellipse 6px 4px at 30% 40%, #ffd0e4 0 70%, transparent 100%) 0 0, radial-gradient(ellipse 4px 3px at 60% 60%, #ffffff 0 70%, transparent 100%) 9px 9px, radial-gradient(circle at 85% 30%, #ff9ac866 0 18%, transparent 45%), linear-gradient(100deg, #3a1030, #8a2a5a 55%, #ffb3d1)',
     accent: '#ffd6e8', emblem: '🌸', anim: 'drift', size: '36px 36px, 36px 36px, cover, cover',
