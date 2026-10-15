@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.12",
+  "version": "2026.10.15.13",
   "notes": [
-    "Staff see every live match with who's in it"
+    "Staff can lock chat in every match at once"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

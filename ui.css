@@ -931,3 +931,6 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-who { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 4px 0 2px 4px; font-size: 12px; }
 .mp-who a { color: var(--text); }
 .mp-who a.sus, .mp-who a.bad { color: #ff8a8a; font-weight: 700; }
+.mp-gchat { margin-bottom: 12px; }
+.mp-gchat-now { font-weight: 700; margin: 6px 0; }
+.mp-gchat-now.bad { color: #ff8a8a; } .mp-gchat-now.mute { color: #ffcf7a; } .mp-gchat-now.ok { color: #6fe39a; }

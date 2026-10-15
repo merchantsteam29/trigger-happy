@@ -79,6 +79,7 @@ export class ModPanel {
     else if (this.tab === 'appeals') this.renderAppeals(body, appeals);
     else if (this.tab === 'filter') this.renderFilter(body);
     else if (this.tab === 'log') this.renderLog(body);
+    if (this.tab === 'filter') this.renderGlobalChat(body);
     else if (this.tab === 'staffchat') this.renderStaffChat(body);
     else if (this.tab === 'recent') this.renderRecent(body);
     else this.renderStaff(body);
@@ -534,6 +535,25 @@ export class ModPanel {
   }
 
   // ---------- Chat filter ----------
+  // (with the switch for chat in every match on top)
+  renderGlobalChat(body) {
+    const g = moderation.globalChat();
+    const card = document.createElement('div');
+    card.className = 'card mp-gchat';
+    card.innerHTML = `<h3>🌐 Chat in every match</h3>
+      <div class="note">Lock match chat or turn on slow mode (1 message per 5 s) in every match at once, for example during a spam raid. Staff can always chat.</div>
+      <div class="mp-gchat-now ${g.lock ? 'bad' : g.slow ? 'mute' : 'ok'}">${g.lock ? '🔒 Chat is locked everywhere' : g.slow ? '🐢 Slow mode everywhere' : '✓ Normal'}${(g.lock || g.slow) ? ` <small>by ${esc(g.by || '?')} · ${g.until ? `ends ${when(g.until)}` : 'until switched off'}</small>` : ''}</div>
+      <div class="mp-actions"><select id="mp-gc-time"><option value="15">15 minutes</option><option value="60" selected>1 hour</option><option value="360">6 hours</option><option value="0">Until I switch it off</option></select>
+        <button class="danger" data-gc="lock">🔒 Lock everywhere</button><button data-gc="slow">🐢 Slow mode everywhere</button>${g.lock || g.slow ? '<button class="primary" data-gc="off">✓ Back to normal</button>' : ''}</div>`;
+    body.prepend(card);
+    card.querySelectorAll('[data-gc]').forEach((b) => {
+      b.onclick = async () => {
+        const op = b.dataset.gc, mins = Number(card.querySelector('#mp-gc-time').value);
+        if (op !== 'off' && !confirm(op === 'lock' ? 'Lock chat in every match?' : 'Turn on slow mode in every match?')) return;
+        try { await moderation.setGlobalChat(op === 'lock', op === 'slow', op === 'off' ? 0 : mins); this.say(op === 'off' ? 'Chat is back to normal everywhere.' : 'Done: every match follows it now.'); this.render(); } catch (err) { this.say(err.message); }
+      };
+    });
+  }
 
   renderFilter(body) {
     const f = moderation.filter;

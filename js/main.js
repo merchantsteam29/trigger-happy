@@ -1941,6 +1941,15 @@ moderation.onKick = (k) => { if (net && !net.practice) leave(`You were removed f
 // Watchlist: a pop-up when a watched player comes online.
 moderation.onWatched = (tag, pres) => toast(`★ ${tag} is online${pres && pres.mode === 'lobby' ? ' (in a match)' : ''}`);
 
+// Staff switched chat lock / slow mode for every match: the host tells its players.
+let lastGchat = 'false,false';
+moderation.onGlobalChat = (g) => {
+  const k = `${g.lock},${g.slow}`;
+  if (k === lastGchat) return; // the relays may hand the same state over again
+  lastGchat = k;
+  if (net && net.logic) net.logic.globalChatChanged(g);
+};
+
 // Suspects (the staff's shared watchlist): a pop-up with Spectate / Look up buttons.
 moderation.onSuspect = (s, pres) => {
   const inMatch = pres.mode === 'lobby' && pres.lobby;

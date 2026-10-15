@@ -678,7 +678,9 @@ becomes free again.
     the top of the menu, and players in a match get it in chat when it's posted.
   - **Appeals:** banned players can send one appeal per ban from their ban screen. Staff can **Unban** or **Deny**,
     and denied players see it was denied.
-  - **Chat filter:** a built-in swear word and slur list (can be switched off) plus your own words. They're starred out
+  - **Chat filter:** on top, **🌐 Chat in every match**: **🔒 Lock everywhere** or **🐢 Slow mode everywhere** (one message
+    per 5 s) for 15 minutes, 1 hour, 6 hours or until switched off, and **Back to normal**. Every host applies it at once
+    and tells its players; staff can still chat. Below it, a built-in swear word and slur list (can be switched off) plus your own words. They're starred out
     in lobby and party chat for everyone, and spellings like "sh1t" and "fuuuck" are caught too.
   - **Log:** moderator activity (actions, warns, bans, mutes and kicks per staff member), then every staff action with
     its time, filterable by moderator.

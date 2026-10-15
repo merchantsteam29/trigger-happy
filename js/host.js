@@ -718,8 +718,9 @@ export class HostLogic {
       case 'chat': { // party chat: plain text, max 100 chars, at most ~2 messages a second each
         const now = Date.now();
         if (p.muted || now - (p.lastChat || 0) < 450) break;
-        if (!p.role && (this.chatLock || (this.chatSlow && now - (p.lastChat || 0) < 5000))) {
-          this.sendTo(id, { t: 'notice', text: this.chatLock ? 'Chat is locked by staff' : 'Slow mode: wait a few seconds' });
+        const cm = this.chatMode();
+        if (!p.role && (cm.lock || (cm.slow && now - (p.lastChat || 0) < 5000))) {
+          this.sendTo(id, { t: 'notice', text: cm.lock ? 'Chat is locked by staff' : 'Slow mode: wait a few seconds' });
           break;
         }
         const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 100);
@@ -751,7 +752,7 @@ export class HostLogic {
         if (m.op === 'lock') this.chatLock = !this.chatLock;
         else if (m.op === 'slow') this.chatSlow = !this.chatSlow;
         else break;
-        this.broadcast({ t: 'chatmode', lock: !!this.chatLock, slow: !!this.chatSlow });
+        this.broadcast({ t: 'chatmode', ...this.chatMode() });
         this.broadcast({ t: 'notice', text: m.op === 'lock' ? (this.chatLock ? 'Chat locked by staff' : 'Chat unlocked') : (this.chatSlow ? 'Slow mode on: 1 message per 5 s' : 'Slow mode off') });
         break;
       }
@@ -929,6 +930,13 @@ export class HostLogic {
       const x = p.home.x + Math.sin(now / 1000 * p.speed + p.phase) * p.sway;
       p.st = [x, p.home.y, p.home.z, p.home.yaw, 0, 'pan', 0, 2]; // flag 2: running pose
     }
+  }
+
+  // Chat lock / slow mode: this match's (staff in the match) or every match's (moderation.js setGlobalChat).
+  chatMode() { const g = moderation.globalChat(); return { lock: !!this.chatLock || g.lock, slow: !!this.chatSlow || g.slow }; }
+  globalChatChanged(g) {
+    this.broadcast({ t: 'chatmode', ...this.chatMode() });
+    this.broadcast({ t: 'notice', text: g.lock ? 'Staff locked chat in every match' : g.slow ? 'Slow mode in every match: 1 message per 5 s' : 'Chat is back to normal' });
   }
 
   // ---------- Anti-cheat ----------

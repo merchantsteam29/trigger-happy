@@ -27,6 +27,7 @@ const REPORT_MAX_AGE = 7 * 864e5;
 const SUSPECTS = V + 'suspects'; // staff-signed shared watchlist: [{ t: tag, why, by, ts }]; every staff member is alerted
 const EVID = V + 'evidence/'; // staff-signed replay clips kept with a player's record: evidence/<lower tag>-<id>
 const CLAIM = V + 'repclaim/'; // "I've got this": which staff member is handling a report (staff-signed, retained)
+const GCHAT = V + 'chatall'; // staff-signed lock / slow mode for match chat in EVERY match: { lock, slow, until }
 const APPROVE = V + 'approve/'; // trial moderators' ban / unban requests, waiting for the owner (signed, retained)
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -53,6 +54,8 @@ class Moderation {
     this.annRaw = null;
     this.reports = new Map(); // report id -> { id, from, target, lobby, reason, details, ts }
     this.bugs = new Map(); // bug id -> { id, from, text, info, img, ts } (owner only)
+    this.gchat = { lock: false, slow: false, until: 0, ts: 0 }; // chat lock / slow mode in every match
+    this.onGlobalChat = null; // (state) it changed (hosts tell their match)
     this.claims = new Map(); // (staff) report id -> { by, ts }
     this.approvals = new Map(); // (owner) request id -> { id, from, target, act, reason, hours, ts }
     this.online = new Map(); // lower tag -> { tag, mode, lobby, at }
@@ -98,6 +101,7 @@ class Moderation {
     else if (t.startsWith(REP)) this.receiveReport(t.slice(REP.length), text);
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
     else if (t === SUSPECTS && roles.myRole()) this.receiveSuspects(text);
+    else if (t === GCHAT) this.receiveGlobalChat(text);
     else if (t.startsWith(CLAIM) && roles.myRole()) this.receiveClaimMark(t.slice(CLAIM.length), text);
     else if (t.startsWith(APPROVE) && roles.isOwner()) this.receiveApproval(t.slice(APPROVE.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
@@ -111,7 +115,7 @@ class Moderation {
   sync() {
     const s = this.social;
     if (!s) return;
-    const want = new Set([ANN, FILTER, PERMA, SHADOW]);
+    const want = new Set([ANN, FILTER, PERMA, SHADOW, GCHAT]);
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
     if (roles.isOwner()) { want.add(BUG + '+'); want.add(APPROVE + '+'); }
     for (const r of this.myReports()) if (r.status === 'sent') want.add(REPDONE + r.id); // has staff looked at mine?
@@ -408,6 +412,27 @@ class Moderation {
   }
 
   // Staff: resolve a report (removes it for every staff member).
+  // ---------- Chat in every match ----------
+  // Hosts read this when players chat (host.js 'chat'): staff can lock match chat or turn on slow
+  // mode everywhere at once, for a while or until switched off.
+  async receiveGlobalChat(text) {
+    const b = text ? await this.staffSigned(text, 'tools') : null;
+    if (!b || Number(b.ts) < this.gchat.ts) return;
+    this.gchat = { lock: !!b.lock, slow: !!b.slow, until: Math.max(0, Number(b.until) || 0), ts: Number(b.ts) || 0, by: b.from };
+    clearTimeout(this.gchatT);
+    if (this.gchat.until > Date.now()) this.gchatT = setTimeout(() => { if (this.onGlobalChat) this.onGlobalChat(this.globalChat()); if (this.onChange) this.onChange(null); }, Math.min(this.gchat.until - Date.now() + 50, 2 ** 31 - 1));
+    if (this.onGlobalChat) this.onGlobalChat(this.globalChat());
+    if (this.onChange) this.onChange(null);
+  }
+  // { lock, slow } right now (both false once it runs out).
+  globalChat() { const g = this.gchat; const on = !g.until || g.until > Date.now(); return { lock: on && g.lock, slow: on && g.slow, until: g.until, by: g.by }; }
+  async setGlobalChat(lock, slow, minutes = 0) {
+    if (!roles.myCan('tools')) throw new Error('You don\'t have permission to do that.');
+    const signed = await this.social.sign({ lock: !!lock, slow: !!slow, until: minutes > 0 ? Date.now() + minutes * 60000 : 0 });
+    this.social.relay.publish(GCHAT, signed, { retain: true });
+    await this.receiveGlobalChat(signed);
+  }
+
   // ---------- Claiming reports ----------
   async receiveClaimMark(id, text) {
     if (!text) { if (this.claims.delete(id) && this.onChange) this.onChange(null); return; }
