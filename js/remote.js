@@ -15,6 +15,7 @@ import { buildDisguise, disguiseBox } from './prophunt.js';
 import { EMOTES, EMOTE_TIME, emoteHand, emoteBubble } from './emotes.js';
 import { angLerp } from './util.js';
 import { Limb, solveIK } from './rig.js';
+import { drawName, animateTag, tagAnim } from './nametags.js';
 
 const legMat = new THREE.MeshStandardMaterial({ color: '#2b2f36', roughness: 0.9 });
 const skinMat = new THREE.MeshStandardMaterial({ color: '#d6a682', roughness: 0.8 });
@@ -48,7 +49,8 @@ function mesh(geo, mat, x, y, z, parent) {
 
 // Staff get a colored role line above their name (see roles.js).
 const TAG_ROLES = { owner: ['♛ OWNER', '#ffd23f'], mod: ['🛡 MOD', '#4fc3ff'] };
-function nameTag(name, color, role = null) {
+// style: a name tag style (nametags.js), or null for plain.
+function nameTag(name, color, role = null, style = null) {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 96;
   const g = c.getContext('2d');
@@ -56,17 +58,20 @@ function nameTag(name, color, role = null) {
   g.textBaseline = 'middle';
   g.lineWidth = 6;
   g.strokeStyle = 'rgba(0,0,0,0.8)';
-  const r = TAG_ROLES[role];
+  const r = style === 'owner' ? null : TAG_ROLES[role]; // the owner's style has its own crown
   if (r) {
     g.font = '800 22px Rubik, sans-serif';
     g.strokeText(r[0], 128, 30);
     g.fillStyle = r[1];
     g.fillText(r[0], 128, 30);
   }
-  g.font = '600 30px Rubik, sans-serif';
-  g.strokeText(name, 128, 64);
-  g.fillStyle = r ? r[1] : color;
-  g.fillText(name, 128, 64);
+  if (style) drawName(g, name, 128, 64, style, color);
+  else {
+    g.font = '600 30px Rubik, sans-serif';
+    g.strokeText(name, 128, 64);
+    g.fillStyle = r ? r[1] : color;
+    g.fillText(name, 128, 64);
+  }
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
@@ -162,7 +167,8 @@ export class RemotePlayer {
     this.cos = null;
     this.setCosmetics(cos);
 
-    this.tag = nameTag(name, color);
+    this.tag = nameTag(name, color, null, this.tagStyle());
+    this.tagAnimId = tagAnim(this.tagStyle()) ? this.tagStyle() : null;
     this.tag.position.set(0, 2.15, 0);
     this.root.add(this.tag);
 
@@ -171,11 +177,19 @@ export class RemotePlayer {
     scene.add(this.root, this.limbs);
   }
 
-  // Team/zombie color; ally name tags show through walls.
-  setLook(color, ally) {
-    if (color === this.lookColor && ally === this.ally) return;
+  // Their name tag style (nametags.js): plain in team modes, and the owner's only on the verified owner.
+  tagStyle() {
+    const s = this.cos && this.cos.nametag;
+    if (!s || s === 'none' || this.teamLook || (s === 'owner' && this.role !== 'owner')) return null;
+    return s;
+  }
+
+  // Team/zombie color; ally name tags show through walls. teams: a team mode (tags keep team colors).
+  setLook(color, ally, teams = false) {
+    if (color === this.lookColor && ally === this.ally && teams === this.teamLook) return;
     this.lookColor = color;
     this.ally = ally;
+    this.teamLook = teams;
     this.bodyMat.color.set(color);
     this.rebuildTag();
   }
@@ -191,7 +205,9 @@ export class RemotePlayer {
   rebuildTag() {
     const ally = this.ally, color = this.lookColor || this.color;
     const old = this.tag;
-    this.tag = nameTag(this.name, color, this.role);
+    const style = this.tagStyle();
+    this.tag = nameTag(this.name, color, this.role, style);
+    this.tagAnimId = tagAnim(style) ? style : null;
     this.tag.position.copy(old.position); // keeps Big Heads height
     this.tag.material.depthTest = !ally;
     this.tag.renderOrder = ally ? 10 : 0;
@@ -204,7 +220,9 @@ export class RemotePlayer {
   setCosmetics(c) {
     const cos = c || DEFAULT_COS;
     if (this.cos && JSON.stringify(this.cos) === JSON.stringify(cos)) return;
+    const tagWas = this.cos && this.cos.nametag;
     this.cos = cos;
+    if (this.tag && tagWas !== cos.nametag) this.rebuildTag();
     for (const g of [this.cosHead, this.cosBack, this.hatFly && this.hat]) {
       if (!g) continue;
       if (g.parent) g.parent.remove(g);
@@ -559,6 +577,7 @@ export class RemotePlayer {
       if (this.propMesh) { this.propMesh.visible = this.alive; this.propMesh.position.copy(this.pos); this.propMesh.rotation.y = this.root.rotation.y; }
     }
     this.updateHat(dt);
+    if (this.tagAnimId && this.tag.visible) animateTag(this.tag, this.tagAnimId, performance.now() / 1000);
   }
 
   // Emotes (emotes.js): wave, dance, salute or laugh, with an emoji over the head.

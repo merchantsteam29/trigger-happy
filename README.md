@@ -289,6 +289,13 @@ A **kill effect** plays where your victim stood when you get a kill, and everyon
 **Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
 Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
 
+## Name tags
+
+Style the name above your head: Gold, Ice, Toxic, Neon, Fire (flickers), Galaxy, Royal and Rainbow (cycles through the
+colors), 🪙 200 to 500 in the **Shop** (Name tags). Pick yours in **Character → Name tags**. In team modes everyone's name
+shows their team color instead, so you can always tell friend from foe. The shimmering gold **Owner** tag with a crown is
+GIGACHAD's alone (it only shows on the verified owner).
+
 ## Victory poses
 
 When a match ends, the **MVP** steps onto a stage and does their **victory pose** while the MVP card is up, and everyone

@@ -1,0 +1,92 @@
+// Name tag styles: a cosmetic (slot `nametag` in missions.js COSMETICS) for the name above your head
+// (remote.js nameTag). Some glow, some move (fire flickers, rainbow cycles, the owner's shimmers).
+// In team modes tags keep the team colors, so you can always tell friend from foe. The owner's
+// style only shows on a player the host has verified as the owner (their role), so it can't be
+// faked by editing a save.
+
+const STYLES = {
+  gold: { stops: ['#fff6c2', '#ffd23a', '#c98a12'], glow: '#ffbf2e', blur: 10 },
+  neon: { stops: ['#c9fbff', '#2ef2ff'], glow: '#00e5ff', blur: 18 },
+  fire: { stops: ['#fff07a', '#ff9a1f', '#ff3a1f'], glow: '#ff5a1f', blur: 16, anim: 'flicker' },
+  ice: { stops: ['#ffffff', '#bfe9ff', '#6cc4ff'], glow: '#9ad8ff', blur: 12 },
+  toxic: { stops: ['#e6ff9a', '#7dff3a', '#2fbf2f'], glow: '#5aff3a', blur: 16 },
+  galaxy: { stops: ['#ffb8f2', '#a46bff', '#3a7bff'], glow: '#8a5cff', blur: 14, sparks: '#ffffff' },
+  royal: { stops: ['#e8c6ff', '#9b4dff'], glow: '#ffd23a', blur: 6, stroke: '#ffd23a' },
+  rainbow: { stops: ['#ffffff', '#ffffff'], glow: '#ffffff', blur: 12, anim: 'hue' }, // white, tinted by the animation
+  owner: { stops: ['#fffbe0', '#ffd23a', '#ff9d00'], glow: '#ffcc33', blur: 20, sparks: '#fff3a0', crown: true, anim: 'shimmer' },
+};
+
+const item = (id, name, price, desc) => ({ id, name, price, desc, get icon() { return tagIcon(id); } });
+export const NAMETAG_ITEMS = [
+  { id: 'none', name: 'Plain', free: true, desc: 'Your name in your color', get icon() { return tagIcon('none'); } },
+  item('gold', 'Gold', 200, 'Shiny gold letters'),
+  item('ice', 'Ice', 250, 'Frosty and cool'),
+  item('toxic', 'Toxic', 250, 'Glowing green'),
+  item('neon', 'Neon', 250, 'Bright cyan glow'),
+  item('fire', 'Fire', 300, 'Flickering flames'),
+  item('galaxy', 'Galaxy', 350, 'Purple and blue, with stars'),
+  item('royal', 'Royal', 400, 'Purple with a gold edge'),
+  item('rainbow', 'Rainbow', 500, 'Cycles through every color'),
+  { id: 'owner', name: 'Owner', reward: true, how: 'Only GIGACHAD can wear this', desc: 'Shimmering gold with a crown', get icon() { return tagIcon('owner'); } },
+];
+export const NAMETAG_IDS = NAMETAG_ITEMS.map((x) => x.id);
+export const tagAnim = (id) => (STYLES[id] && STYLES[id].anim) || null;
+
+// Draws a name centered at (x, y) on a 2D canvas, in a style (or plain in `color`).
+export function drawName(g, name, x, y, id, color) {
+  const st = STYLES[id];
+  g.save();
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.font = '700 30px Rubik, sans-serif';
+  g.lineWidth = 6;
+  g.strokeStyle = 'rgba(0,0,0,0.85)';
+  if (!st) {
+    g.strokeText(name, x, y);
+    g.fillStyle = color;
+    g.fillText(name, x, y);
+    g.restore();
+    return;
+  }
+  if (st.sparks) {
+    g.fillStyle = st.sparks;
+    for (let i = 0; i < 9; i++) { const a = i * 2.39, r = 70 + (i % 3) * 24; g.globalAlpha = 0.5 + (i % 2) * 0.4; g.fillText('✦', x + Math.cos(a) * r, y + Math.sin(a) * 16 + (i % 2 ? -14 : 12)); }
+    g.globalAlpha = 1;
+    g.font = '700 30px Rubik, sans-serif';
+  }
+  if (st.crown) { g.font = '28px sans-serif'; g.fillText('👑', x, y - 30); g.font = '800 30px Rubik, sans-serif'; }
+  g.strokeText(name, x, y);
+  const w = Math.max(40, g.measureText(name).width);
+  const grad = g.createLinearGradient(0, y - 15, 0, y + 15);
+  st.stops.forEach((c, i) => grad.addColorStop(i / Math.max(1, st.stops.length - 1), c));
+  g.shadowColor = st.glow;
+  g.shadowBlur = st.blur;
+  g.fillStyle = grad;
+  g.fillText(name, x, y);
+  g.shadowBlur = 0;
+  if (st.stroke) { g.lineWidth = 1.5; g.strokeStyle = st.stroke; g.strokeText(name, x, y); }
+  g.restore();
+  return w;
+}
+
+// Moves an animated tag (a THREE.Sprite). t: seconds.
+export function animateTag(sprite, id, t) {
+  const m = sprite && sprite.material;
+  if (!m) return;
+  const a = tagAnim(id);
+  if (a === 'hue') m.color.setHSL((t * 0.22) % 1, 0.9, 0.62);
+  else if (a === 'flicker') m.opacity = 0.84 + 0.16 * Math.sin(t * 13) * Math.sin(t * 7.3);
+  else if (a === 'shimmer') m.color.setScalar(0.86 + 0.14 * Math.sin(t * 4));
+}
+
+// A small picture of a style (shop and Character cards).
+const icons = new Map();
+export function tagIcon(id) {
+  if (!icons.has(id)) {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 96;
+    drawName(c.getContext('2d'), id === 'owner' ? 'GIGACHAD' : 'Your Name', 128, 58, id, '#ffffff');
+    icons.set(id, `<img class="tag-prev" src="${c.toDataURL()}" alt="">`);
+  }
+  return icons.get(id);
+}

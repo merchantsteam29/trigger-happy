@@ -11,7 +11,7 @@ import { gifts, giftable, ownsItem, GIFT_MIN, GIFT_MAX, GIFTS_PER_DAY } from './
 
 const CATS = [
   ['all', 'Everything', '🛒'], ['hat', 'Hats', '🎩'], ['hair', 'Hair', '💇'], ['face', 'Face', '🕶'], ['back', 'Back', '🎒'],
-  ['banner', 'Banners', '🏳'], ['killfx', 'Kill effects', '💥'], ['pose', 'Victory poses', '🏆'], ['wrap', 'Weapon wraps', '🎨'], ['gifts', 'Gifts', '🎁'],
+  ['banner', 'Banners', '🏳'], ['killfx', 'Kill effects', '💥'], ['nametag', 'Name tags', '🏷'], ['pose', 'Victory poses', '🏆'], ['wrap', 'Weapon wraps', '🎨'], ['gifts', 'Gifts', '🎁'],
 ];
 const items = (cat) => {
   const wear = ['hat', 'hair', 'face', 'back', 'banner', ...ICON_SLOTS];

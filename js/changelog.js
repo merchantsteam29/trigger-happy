@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.17', name: 'Name Tags', banner: 'rainbow', notes: [
+    'Name tags: style the name above your head. Gold, Ice, Toxic, Neon, Fire, Galaxy, Royal and an animated Rainbow',
+    'Find them in the Shop, and pick yours in Character → Name tags',
+  ] },
   { v: '2026.10.14.16', name: 'Match History', banner: 'galaxy', notes: [
     'Match history: your last 20 matches with your place, kills, deaths, K/D and score',
     'Watch the replay of any of your last 5 right from the list',

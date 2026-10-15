@@ -5,6 +5,7 @@ import { camoOf } from './camos.js';
 import { roles } from './roles.js';
 import { KILL_FX_ITEMS } from './killfx.js';
 import { POSE_ITEMS } from './poses.js';
+import { NAMETAG_ITEMS } from './nametags.js';
 
 // Cosmetics shown on your character to other players. `free` items are owned from the start;
 // everything else is bought with tokens earned from missions (`price`).
@@ -121,12 +122,14 @@ export const COSMETICS = {
   killfx: KILL_FX_ITEMS,
   // What you do on the stage when you're the match MVP (poses.js).
   pose: POSE_ITEMS,
+  // The style of the name above your head (nametags.js).
+  nametag: NAMETAG_ITEMS,
 };
-export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect', pose: 'Victory pose' };
+export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect', pose: 'Victory pose', nametag: 'Name tag' };
 // Slots shown as an icon card instead of your character wearing the item.
-export const ICON_SLOTS = ['killfx', 'pose'];
+export const ICON_SLOTS = ['killfx', 'pose', 'nametag'];
 export const HAIR_COLORS = ['#3b2a1e', '#111111', '#e3c16f', '#b5462a', '#3d6fd8', '#e86fb6', '#e8e8e8'];
-export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none', pose: 'cheer' };
+export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none', pose: 'cheer', nametag: 'none' };
 
 // Each mission tracks one lifetime stat and pays tokens once when finished.
 export const MISSIONS = [
@@ -333,6 +336,7 @@ export function randomCos() {
   const c = { hairColor: pick(HAIR_COLORS) };
   for (const slot of Object.keys(COSMETICS)) c[slot] = pick(COSMETICS[slot]).id;
   if (Math.random() < 0.75) c.killfx = 'none'; // most bots don't have a kill effect
+  if (c.nametag === 'owner' || Math.random() < 0.8) c.nametag = 'none'; // or a fancy name tag
   c.lvl = 1 + Math.floor(Math.random() ** 2 * 40); // bots show a level too
   return c;
 }

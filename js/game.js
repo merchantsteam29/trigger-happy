@@ -299,7 +299,7 @@ export class Game {
     const big = !!MODES[this.rules.mode].bigHead;
     for (const r of this.remotes.values()) {
       const p = this.players.get(r.id);
-      if (p) r.setLook(this.colorFor(p), this.teams && p.team === this.myTeam && !MODES[this.rules.mode].infect);
+      if (p) r.setLook(this.colorFor(p), this.teams && p.team === this.myTeam && !MODES[this.rules.mode].infect, !!MODES[this.rules.mode].teams);
       r.setBigHead(big);
     }
     const me = this.players.get(this.myId);
