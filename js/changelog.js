@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.7', name: 'Staff HQ Update', banner: 'staffhq', notes: [
+  { v: '2026.10.15.8', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
     'Updates are now one big log each, with a heading for every new feature',
     '## 4 New Banners',
@@ -26,6 +26,8 @@ export const UPDATES = [
     "Staff can save the last 60 seconds of a match as evidence on a player's record (🎬 Clip in the pause menu, or F9 while spectating), and watch it later",
     '## Aim-Snap Detector',
     'Anti-cheat now spots aim that snaps onto heads impossibly fast, and sends staff a report with a replay',
+    '## Report Claiming',
+    "Staff press ✋ I've got this on a report so nobody handles it twice, and can filter to reports nobody has taken",
   ] },
   { v: '2026.10.14.26', name: 'The Mega Update', banner: 'mega', notes: [
     '## Smoother Replays',

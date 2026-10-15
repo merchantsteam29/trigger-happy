@@ -337,14 +337,20 @@ export class ModPanel {
     body.querySelectorAll('[data-shot]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); a.classList.toggle('big'); }; });
   }
 
-  renderReports(body, reports) {
-    reports.sort((a, b) => b.ts - a.ts);
+  renderReports(body, all) {
+    all.sort((a, b) => b.ts - a.ts);
+    const me = String(this.social.tag).toLowerCase(), show = this.repShow || 'all';
+    const claimer = (r) => { const c = moderation.claimOf(r.id); return c ? c.by : ''; };
+    const reports = all.filter((r) => show === 'all' || (show === 'open' ? !claimer(r) : claimer(r).toLowerCase() === me));
     body.innerHTML = `<div class="card">
-      <h3>Reports <span class="muted">(${reports.length})</span></h3>
-      <div class="note">Players report each other from the pause menu in a match. Reports older than 7 days disappear on their own.</div>
-      <div class="mp-reports">${reports.length ? reports.map((r) => `
-        <div class="mp-report ${r.reason === AUTO_FLAG ? 'auto' : ''}">
-          <div class="mp-report-head"><b>${esc(r.target)}</b><em>${esc(r.reason)}</em><small>${ago(r.ts)}</small></div>
+      <h3>Reports <span class="muted">(${all.length})</span></h3>
+      <div class="note">Players report each other from the pause menu in a match. Reports older than 7 days disappear on their own. Press ✋ I've got this so other staff know you're handling one.</div>
+      <div class="seg mp-repshow">${[['all', `All ${all.length}`], ['open', `Not taken ${all.filter((r) => !claimer(r)).length}`], ['mine', `Mine ${all.filter((r) => claimer(r).toLowerCase() === me).length}`]].map(([id, n]) => `<button data-show="${id}" class="${show === id ? 'sel' : ''}">${n}</button>`).join('')}</div>
+      <div class="mp-reports">${reports.length ? reports.map((r) => {
+        const c = claimer(r), mine = c && c.toLowerCase() === me;
+        return `
+        <div class="mp-report ${r.reason === AUTO_FLAG ? 'auto' : ''} ${c ? (mine ? 'mine' : 'taken') : ''}">
+          <div class="mp-report-head"><b>${esc(r.target)}</b><em>${esc(r.reason)}</em>${c ? `<span class="mp-claim">${mine ? '✋ You\'ve got this' : `🔒 ${esc(c)} has this`}</span>` : ''}<small>${ago(r.ts)}</small></div>
           ${r.details ? `<div class="mp-report-text">“${esc(r.details)}”</div>` : ''}
           ${r.img ? `<a href="#" class="mp-shot" data-shot="${esc(r.id)}" title="Their screen when they reported (click to enlarge)"><img src="${r.img}" alt="Screenshot"></a>` : ''}
           <small class="muted">${r.reason === AUTO_FLAG ? `Flagged automatically by ${esc(r.from)}'s game (the host)` : `Reported by ${esc(r.from)}`}${r.lobby ? ` in match ${esc(r.lobby)}` : ''}</small>
@@ -353,16 +359,21 @@ export class ModPanel {
             ${r.lobby && this.joinLobby ? `<button data-spec="${esc(r.lobby)}">👁 Spectate that match</button><button data-join="${esc(r.lobby)}">▶ Join</button>` : ''}
             ${r.rp && this.watchReplay ? `<button data-replay="${esc(r.id)}" title="The last 30 seconds before they reported, from any angle">🎬 Watch replay</button>` : ''}
             <button data-look="${esc(r.from)}">Look up reporter</button>
+            ${mine ? `<button class="ghost" data-unclaim="${esc(r.id)}">Let it go</button>` : `<button data-claim="${esc(r.id)}" ${c ? `title="${esc(c)} is handling it: take it over"` : ''}>✋ I've got this</button>`}
             <button class="ghost" data-dismiss="${esc(r.id)}">✓ Resolve</button>
           </div>
-        </div>`).join('') : '<div class="sv-empty">No reports. 🎉</div>'}</div>
+        </div>`;
+      }).join('') : `<div class="sv-empty">${all.length ? 'Nothing here.' : 'No reports. 🎉'}</div>`}</div>
     </div>`;
+    body.querySelectorAll('[data-show]').forEach((b) => { b.onclick = () => { this.repShow = b.dataset.show; this.render(); }; });
+    body.querySelectorAll('[data-claim]').forEach((b) => { b.onclick = async () => { await moderation.claimReport(b.dataset.claim, true); this.say('It\'s yours: other staff see you\'re on it.'); this.render(); }; });
+    body.querySelectorAll('[data-unclaim]').forEach((b) => { b.onclick = async () => { await moderation.claimReport(b.dataset.unclaim, false); this.render(); }; });
     body.querySelectorAll('[data-look]').forEach((b) => { b.onclick = () => this.look(b.dataset.look); });
     body.querySelectorAll('[data-join]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.join); });
     body.querySelectorAll('[data-spec]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.spec, true); });
     body.querySelectorAll('[data-replay]').forEach((b) => {
       b.onclick = async () => {
-        const r = reports.find((x) => x.id === b.dataset.replay);
+        const r = all.find((x) => x.id === b.dataset.replay);
         b.disabled = true; b.textContent = 'Loading…';
         const clip = r && await moderation.fetchReplay(r);
         b.disabled = false; b.textContent = '🎬 Watch replay';

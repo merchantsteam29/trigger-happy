@@ -26,6 +26,7 @@ const REPDONE = 'whffa/v1/repdone/'; // "reviewed" notes for reporters (staff-si
 const REPORT_MAX_AGE = 7 * 864e5;
 const SUSPECTS = V + 'suspects'; // staff-signed shared watchlist: [{ t: tag, why, by, ts }]; every staff member is alerted
 const EVID = V + 'evidence/'; // staff-signed replay clips kept with a player's record: evidence/<lower tag>-<id>
+const CLAIM = V + 'repclaim/'; // "I've got this": which staff member is handling a report (staff-signed, retained)
 const APPROVE = V + 'approve/'; // trial moderators' ban / unban requests, waiting for the owner (signed, retained)
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -52,6 +53,7 @@ class Moderation {
     this.annRaw = null;
     this.reports = new Map(); // report id -> { id, from, target, lobby, reason, details, ts }
     this.bugs = new Map(); // bug id -> { id, from, text, info, img, ts } (owner only)
+    this.claims = new Map(); // (staff) report id -> { by, ts }
     this.approvals = new Map(); // (owner) request id -> { id, from, target, act, reason, hours, ts }
     this.online = new Map(); // lower tag -> { tag, mode, lobby, at }
     this.appeals = new Map(); // lower tag -> { tag, banTs, text, ts }
@@ -96,6 +98,7 @@ class Moderation {
     else if (t.startsWith(REP)) this.receiveReport(t.slice(REP.length), text);
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
     else if (t === SUSPECTS && roles.myRole()) this.receiveSuspects(text);
+    else if (t.startsWith(CLAIM) && roles.myRole()) this.receiveClaimMark(t.slice(CLAIM.length), text);
     else if (t.startsWith(APPROVE) && roles.isOwner()) this.receiveApproval(t.slice(APPROVE.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
     else if (t === FILTER) this.receiveFilter(text);
@@ -112,7 +115,7 @@ class Moderation {
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
     if (roles.isOwner()) { want.add(BUG + '+'); want.add(APPROVE + '+'); }
     for (const r of this.myReports()) if (r.status === 'sent') want.add(REPDONE + r.id); // has staff looked at mine?
-    if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+', SUSPECTS]) want.add(t);
+    if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+', SUSPECTS, CLAIM + '+']) want.add(t);
     for (const w of this.watching) if (!want.has(w)) s.relay.unsubscribe(w);
     for (const w of want) if (!this.watching.has(w)) s.relay.subscribe(w);
     this.watching = want;
@@ -404,8 +407,28 @@ class Moderation {
   }
 
   // Staff: resolve a report (removes it for every staff member).
+  // ---------- Claiming reports ----------
+  async receiveClaimMark(id, text) {
+    if (!text) { if (this.claims.delete(id) && this.onChange) this.onChange(null); return; }
+    const b = await this.staffSigned(text);
+    if (!b || b.id !== id) return;
+    const cur = this.claims.get(id);
+    if (cur && cur.ts > Number(b.ts)) return;
+    if (b.off) this.claims.delete(id); else this.claims.set(id, { by: b.from, ts: Number(b.ts) || 0 });
+    if (this.onChange) this.onChange(null);
+  }
+  // on: take the report ("I've got this"), or let it go.
+  async claimReport(id, on = true) {
+    if (!roles.myRole()) return;
+    const signed = await this.social.sign(on ? { id } : { id, off: 1 });
+    this.social.relay.publish(CLAIM + id, signed, { retain: true });
+    await this.receiveClaimMark(id, signed);
+  }
+  claimOf(id) { return this.claims.get(id) || null; }
+
   async dismissReport(id) {
     if (!roles.myRole()) return;
+    if (this.claims.has(id)) { this.social.relay.publish(CLAIM + id, '', { retain: true }); this.claims.delete(id); }
     this.social.relay.publish(REP + id, '', { retain: true });
     this.social.relay.publish(REPLAY + id, '', { retain: true });
     this.reports.delete(id);
