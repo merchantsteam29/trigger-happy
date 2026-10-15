@@ -116,6 +116,10 @@ export const COSMETICS = {
     { id: 'staffhq', name: 'Command Center', price: 400 },
     { id: 'masquerade', name: 'Masquerade', price: 400 },
     { id: 'armory', name: 'Armory', price: 400 },
+    { id: 'sakura', name: 'Cherry Blossom', price: 400 },
+    { id: 'deepsea', name: 'Deep Sea', price: 400 },
+    { id: 'aurora', name: 'Aurora', price: 500 },
+    { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one' },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },
     { id: 's1elite', name: 'Ignition Elite (S1)', reward: true, how: 'Season 1, tier 25' },
@@ -368,7 +372,7 @@ export function wearSkin(cos, id, gun = null) {
 export function randomCos() {
   const pick = (a) => a[(Math.random() * a.length) | 0];
   const c = { hairColor: pick(HAIR_COLORS) };
-  for (const slot of Object.keys(COSMETICS)) c[slot] = pick(COSMETICS[slot]).id;
+  for (const slot of Object.keys(COSMETICS)) c[slot] = pick(COSMETICS[slot].filter((x) => !x.owner)).id; // never the owner's own items
   if (Math.random() < 0.75) c.killfx = 'none'; // most bots don't have a kill effect
   if (c.nametag === 'owner' || Math.random() < 0.8) c.nametag = 'none'; // or a fancy name tag
   if (Math.random() < 0.7) c.charm = 'none';

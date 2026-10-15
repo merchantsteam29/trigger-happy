@@ -94,6 +94,22 @@ export const BANNER_STYLE = {
     bg: 'repeating-conic-gradient(from 0deg at 18% 50%, #ffffff10 0 6deg, transparent 6deg 18deg), radial-gradient(circle at 18% 50%, #fff7 0 6%, #2fe6ff88 12%, transparent 40%), linear-gradient(100deg, #10052a, #4a0f9a 45%, #ff2fd8)',
     accent: '#2fe6ff', emblem: '💥', anim: 'hue',
   },
+  sakura: {
+    bg: 'radial-gradient(ellipse 6px 4px at 30% 40%, #ffd0e4 0 70%, transparent 100%) 0 0, radial-gradient(ellipse 4px 3px at 60% 60%, #ffffff 0 70%, transparent 100%) 9px 9px, radial-gradient(circle at 85% 30%, #ff9ac866 0 18%, transparent 45%), linear-gradient(100deg, #3a1030, #8a2a5a 55%, #ffb3d1)',
+    accent: '#ffd6e8', emblem: '🌸', anim: 'drift', size: '36px 36px, 36px 36px, cover, cover',
+  },
+  deepsea: {
+    bg: 'radial-gradient(circle at 50% 50%, transparent 0 2px, #cff4ffcc 2.5px 3.5px, transparent 4px) 0 0, radial-gradient(circle at 50% 50%, #ffffffaa 0 1.8px, transparent 2.5px) 9px 9px, radial-gradient(ellipse at 50% -20%, #3ad1ff55, transparent 60%), linear-gradient(180deg, #0a3a6a, #041a3a 70%, #020a1a)',
+    accent: '#7fe3ff', emblem: '🫧', anim: 'rise', size: '36px 36px, 36px 36px, cover, cover',
+  },
+  aurora: {
+    bg: 'linear-gradient(100deg, transparent 0 10%, #3affb055 25%, transparent 40%, #8a3aff55 55%, transparent 70%, #3affb044 85%, transparent 100%) 0 0, radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 20%, #fff, transparent), linear-gradient(180deg, #020818, #0a1a3a)',
+    accent: '#8affd0', emblem: '🌌', anim: 'wave', size: '200% 100%, cover, cover, cover',
+  },
+  gigachad: {
+    bg: 'repeating-linear-gradient(135deg, #ffffff10 0 2px, transparent 2px 14px), radial-gradient(circle at 84% 50%, #fff3a0aa 0 10%, #ffd23a55 20%, transparent 45%), linear-gradient(100deg, #2a0a3a, #6a1a8a 40%, #c88a12 75%, #ffd23a)',
+    accent: '#ffe27a', emblem: '♛', anim: 'shine',
+  },
   armory: {
     bg: 'repeating-linear-gradient(90deg, #ffffff0d 0 2px, transparent 2px 16px), radial-gradient(circle at 82% 50%, #3fe8ff55 0 14%, transparent 40%), linear-gradient(100deg, #0a1018, #1a2a3a 50%, #ff8a1a)',
     accent: '#3fe8ff', emblem: '🔫', anim: 'shine',
@@ -128,7 +144,7 @@ export const bannerOf = (id) => BANNER_STYLE[id] || BANNER_STYLE.standard;
 // Banner card markup. `top` is a small label above the name, `sub` a line of chips under it.
 export function bannerHtml(id, name, nameColor, top = '', sub = '') {
   const b = bannerOf(id);
-  return `<div class="bnr ${b.anim ? 'bnr-' + b.anim : ''} ${b.dark ? 'bnr-light' : ''}" style="--bg:${b.bg};--ac:${b.accent}">
+  return `<div class="bnr ${b.anim ? 'bnr-' + b.anim : ''} ${b.dark ? 'bnr-light' : ''}" style="--bg:${b.bg};--ac:${b.accent}${b.size ? `;background-size:${b.size}` : ''}">
     <div class="bnr-emblem"><span>${b.emblem}</span></div>
     <div class="bnr-text">${top ? `<div class="bnr-top">${top}</div>` : ''}<div class="bnr-name" style="color:${esc(nameColor || '#fff')}">${esc(name)}</div>${sub ? `<div class="bnr-sub">${sub}</div>` : ''}</div>
   </div>`;

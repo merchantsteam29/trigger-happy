@@ -14,6 +14,9 @@ export const KILL_FX_ITEMS = [
   { id: 'spirit', name: 'Spirit', price: 350, icon: '👻', desc: 'Their ghost drifts up and away' },
   { id: 'jackpot', name: 'Jackpot', price: 400, icon: '🪙', desc: 'A fountain of gold coins' },
   { id: 'blackhole', name: 'Black Hole', price: 500, icon: '🌀', desc: 'Everything gets sucked into a void' },
+  { id: 'sakura', name: 'Sakura Burst', price: 350, icon: '🌸', desc: 'Cherry blossom petals swirl around' },
+  { id: 'angel', name: 'Angel Wings', price: 450, icon: '😇', desc: 'A halo and wings float up' },
+  { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one', icon: '♛', desc: 'A golden crown rises in a burst of gold and purple' },
 ];
 
 const _v = new THREE.Vector3();
@@ -70,6 +73,32 @@ export function playKillFx(fx, id, pos) {
       }
       setTimeout(() => { for (let i = 0; i < 18; i++) P(pos, _v.set(rnd(9), rnd(9), rnd(9)), pick(['#c86bff', '#1a0030']), 0.07, 0.4, 0); fx.flashAt(pos, '#a050ff', 16, 0.15); }, 650);
       break;
+    case 'sakura':
+      // petals spiral outwards and drift down slowly
+      for (let i = 0; i < 44; i++) {
+        const a = Math.random() * Math.PI * 2, r = 0.3 + Math.random() * 0.6;
+        P(_v.set(pos.x + Math.cos(a) * r, pos.y + rnd(1.4), pos.z + Math.sin(a) * r).clone(), new THREE.Vector3(-Math.sin(a) * 2.2 + Math.cos(a) * 0.6, 0.6 + Math.random(), Math.cos(a) * 2.2 + Math.sin(a) * 0.6), pick(['#ffc2dc', '#ff9ac8', '#ffffff', '#ffb3d1']), 0.09, 2.2, 1.2);
+      }
+      break;
+    case 'angel': {
+      // a ring of light (halo) and two wings of feathers rising together
+      for (let i = 0; i < 18; i++) { const a = (i / 18) * Math.PI * 2; P(_v.set(pos.x + Math.cos(a) * 0.32, pos.y + 0.75, pos.z + Math.sin(a) * 0.32).clone(), new THREE.Vector3(0, 1.1, 0), '#fff3a0', 0.07, 1.8, 0); }
+      for (const s of [-1, 1]) for (let i = 0; i < 16; i++) {
+        const t = i / 15, wx = s * (0.15 + t * 0.85), wy = 0.2 + Math.sin(t * Math.PI) * 0.45 - t * 0.2;
+        P(_v.set(pos.x + wx, pos.y + wy, pos.z + rnd(0.15)).clone(), new THREE.Vector3(s * 0.2, 1.1, 0), pick(['#ffffff', '#f2f4ff', '#e6ecff']), 0.1, 1.8, 0);
+      }
+      fx.flashAt(pos, '#fff6cc', 12, 0.3);
+      break;
+    }
+    case 'gigachad': {
+      // the owner's: a golden crown made of light rises, gold and purple burst out, a big flash
+      const top = new THREE.Vector3(pos.x, pos.y + 0.5, pos.z);
+      for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; P(_v.set(top.x + Math.cos(a) * 0.4, top.y, top.z + Math.sin(a) * 0.4).clone(), new THREE.Vector3(0, 1.4, 0), '#ffd23a', 0.09, 1.6, 0); } // the crown's band
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; for (let h = 0; h < 4; h++) P(_v.set(top.x + Math.cos(a) * 0.4 * (1 - h * 0.12), top.y + 0.08 + h * 0.08, top.z + Math.sin(a) * 0.4 * (1 - h * 0.12)).clone(), new THREE.Vector3(0, 1.4, 0), h === 3 ? '#d0122a' : '#fff0a8', 0.08, 1.6, 0); } // its points, red gems on top
+      for (let i = 0; i < 40; i++) P(pos, _v.set(rnd(9), 3 + Math.random() * 6, rnd(9)), pick(['#ffd23a', '#fff0a8', '#b36bff', '#7a2aff']), 0.1, 1.5, 10);
+      fx.flashAt(pos, '#ffd23a', 30, 0.35);
+      break;
+    }
     default:
   }
 }

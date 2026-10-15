@@ -302,7 +302,7 @@ modes) always shows on it somewhere. Pick one in **Character → Costumes**, or 
   Golem, Ice Golem, Banana, Ninja, Mummy, Deep Sea Diver, Dino, Shark, Astronaut, Chicken (flaps its wings when you
   emote), Toaster Bot (toast pops up when you emote) and Ice Cream Cone (🪙 800 to 1,200). Friends can gift these.
 - **Giveaways only:** Impostor, Bug Knight, Cube Hero, Blood Machine, Hellwalker, Spartan, Freddy Bear, Bounty Hunter
-  and Creeper Suit can't be bought: only the owner hands them out.
+  Creeper Suit, Vault Kid, Hooded Assassin and Grin Skeleton can't be bought: only the owner hands them out.
 - **Ranked armor:** Contender, Veteran, Elite, Master and Legend Armor, each yours once your best rating reaches that
   division. The higher the division, the fancier it is.
 - Zombies, the Juggernaut and the bounty target keep their own look, and Prop Hunt props are still props.
@@ -315,7 +315,8 @@ A **gun skin** changes a weapon's whole model, not just its colors. Damage, spee
 normal** takes it off. Everyone sees your skins, in first person and third person. Skins keep their own colors.
 
 - **In the shop:** Toy Blaster and Laser Rifle (the old Laser Rifle's look) for the Assault Rifle, Pumpkin Launcher for the
-  Rocket Launcher, Golden Deagle for the Hand Cannon, and Fish and Energy Blade for the Combat Knife (🪙 700 to 1,000).
+  Rocket Launcher, Golden Deagle for the Hand Cannon, Fish and Energy Blade for the Combat Knife, Squirt Gun for the SMG,
+  Candy Cane Sniper and Retro Ray Gun for the Pistol (🪙 700 to 1,000).
 - **Giveaways only:** Marksman Revolver (with a coin, goes with Blood Machine) and Shield Saw Shotgun (goes with
   Hellwalker), handed out by the owner.
 
@@ -326,7 +327,8 @@ normal** takes it off. Everyone sees your skins, in first person and third perso
 
 A **kill effect** plays where your victim stood when you get a kill, and everyone in the match sees it. Buy them in the
 **Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
-Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
+Burst, Spirit, Jackpot, Black Hole, Sakura Burst (petals swirl) and Angel Wings (a halo and wings rise) (🪙 200 to 500). The
+gold **GIGACHAD** crown burst is the owner's alone.
 
 ## Character preview
 
@@ -348,8 +350,8 @@ and Diamond, 🪙 100 to 300 in the **Shop** (Weapon charms). Pick yours in **Ch
 
 ## Name tags
 
-Style the name above your head: Gold, Ice, Toxic, Neon, Fire (flickers), Galaxy, Royal and Rainbow (cycles through the
-colors), 🪙 200 to 500 in the **Shop** (Name tags). Pick yours in **Character → Name tags**. In team modes everyone's name
+Style the name above your head: Gold, Ice, Toxic, Neon, Fire (flickers), Galaxy, Royal, Rainbow (cycles through the
+colors), Pixel (8-bit arcade letters), Lava (dripping) and Code (green computer letters), 🪙 200 to 500 in the **Shop** (Name tags). Pick yours in **Character → Name tags**. In team modes everyone's name
 shows their team color instead, so you can always tell friend from foe. The shimmering gold **Owner** tag with a crown is
 GIGACHAD's alone (it only shows on the verified owner).
 
@@ -388,7 +390,7 @@ and players who are out for good (Battle Royale, Last Man Standing, a Tournament
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
 ("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Character → Banner**:
 Standard and Carbon are free; Tiger, Woodland / Arctic Camo, Ocean, Sunset, Hazard, Bloodbath, Neon Grid, Code Rain,
-Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst, Command Center, Masquerade and Armory cost tokens (several are animated). Some can only be
+Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst, Command Center, Masquerade, Armory, Cherry Blossom (drifting petals), Deep Sea (rising bubbles) and Aurora (moving lights) cost tokens (several are animated). Some can only be
 earned: season pass banners, a banner for each holiday event, ranked season banners and **Top Clan**. Bots wear random ones.
 
 ## Levels, daily rewards & challenges

@@ -559,7 +559,7 @@ export class Hud {
     if (p.hs) stats.push(['HEADSHOTS', p.hs]);
     if (p.streak >= 3) stats.push(['BEST STREAK', p.streak]);
     return `<div class="mvp-tag">★ MATCH MVP${mine ? ' · THAT\'S YOU!' : ''}</div>
-      ${bannerHtml(p.banner || 'standard', p.name, p.color, 'MOST VALUABLE PLAYER', badge(p.role))}
+      ${bannerHtml(p.banner === 'gigachad' && p.role !== 'owner' ? 'standard' : p.banner || 'standard', p.name, p.color, 'MOST VALUABLE PLAYER', badge(p.role))}
       <div class="mvp-stats">${stats.map(([n, v]) => `<div><b>${v}</b><small>${n}</small></div>`).join('')}</div>`;
   }
 }

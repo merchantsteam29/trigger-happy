@@ -42,6 +42,9 @@ export const COSTUME_ITEMS = [
   { id: 'spartan', name: 'Spartan', reward: true, handout: true, how: HANDOUT, icon: '🪖', desc: 'Big green armor and a wide gold visor.' },
   { id: 'freddy', name: 'Freddy Bear', reward: true, handout: true, how: HANDOUT, icon: '🐻', desc: 'A brown animatronic bear with a top hat and bow tie.' },
   { id: 'bountyhunter', name: 'Bounty Hunter', reward: true, handout: true, how: HANDOUT, icon: '🛰', desc: 'Orange power suit, round shoulders, a green visor and an arm cannon.' },
+  { id: 'vaultkid', name: 'Vault Kid', reward: true, handout: true, how: HANDOUT, icon: '☢', desc: 'A blue jumpsuit with yellow stripes and a big number on the back.' },
+  { id: 'assassin', name: 'Hooded Assassin', reward: true, handout: true, how: HANDOUT, icon: '🗡', desc: 'White hood and robes with a red sash.' },
+  { id: 'grinskeleton', name: 'Grin Skeleton', reward: true, handout: true, how: HANDOUT, icon: '😁', desc: 'A blue hoodie, a big skull grin and one glowing blue eye.' },
   { id: 'creeper', name: 'Creeper Suit', reward: true, handout: true, how: HANDOUT, icon: '🟩', desc: 'Green pixel blocks and that famous frown.' },
   // Ranked division armor (ranked.js DIVISIONS)
   { id: 'rk_contender', name: 'Contender Armor', reward: true, rank: 'contender', how: rankHow('Contender'), icon: '◆', desc: 'Earned by reaching Contender.' },
@@ -493,6 +496,60 @@ const BUILD = {
     for (const s of [-1, 1]) ball(head, black, 0.025, s * 0.06, 0.17, -0.175);
     box(head, black, 0.07, 0.015, 0.01, 0, 0.1, -0.18);
     return { arm: scoop, leg: waffle, hand: scoop, foot: line };
+  },
+  vaultkid({ hips, spine, head }, team) {
+    // Fallout vibe: a blue jumpsuit with yellow trim, a yellow number on the back, a wrist computer.
+    const blue = mat('#2a5cb8', { roughness: 0.7 }), yellow = mat('#f2c12e', { roughness: 0.6 }), skin = mat('#d6a682'), hair = mat('#5a3a1e'), dark = mat('#2a2d33');
+    torso(spine, blue);
+    box(spine, yellow, 0.05, 0.56, 0.01, 0, 0.3, -0.142); // zip stripe down the front
+    box(spine, yellow, 0.5, 0.04, 0.29, 0, 0.56, 0); // yellow collar
+    box(spine, yellow, 0.26, 0.2, 0.01, 0, 0.32, 0.142); // the number patch on the back...
+    for (const x of [-0.075, 0, 0.075]) box(spine, blue, 0.025, 0.12, 0.012, x, 0.32, 0.145); // ...with "111" on it
+    box(spine, team, 0.1, 0.05, 0.01, 0.13, 0.46, -0.142); // a name patch in your color
+    shoulders(spine, blue);
+    box(spine, mat('#4a5a3a'), 0.12, 0.1, 0.14, -0.33, 0.36, -0.05); box(spine, glow('#7dff6a', 1.2), 0.08, 0.05, 0.01, -0.33, 0.37, -0.122); // wrist computer
+    pelvis(hips, blue); belt(hips, dark);
+    headBlock(head, skin, 0.27);
+    for (const s of [-1, 1]) box(head, mat('#1a1a1a'), 0.04, 0.04, 0.02, s * 0.06, 0.17, -0.137);
+    box(head, mat('#b5462a'), 0.08, 0.02, 0.02, 0, 0.09, -0.137);
+    box(head, hair, 0.3, 0.09, 0.3, 0, 0.3, 0.01); box(head, hair, 0.3, 0.14, 0.05, 0, 0.22, 0.13);
+    return { arm: blue, leg: blue, hand: dark, foot: dark };
+  },
+  assassin({ hips, spine, head }, team) {
+    // Assassin's Creed vibe: white hood with a beak tip and a shadowed face, white robes, red sash, leather straps.
+    const white = mat('#ecebe6', { roughness: 0.85 }), red = mat('#b01e24', { roughness: 0.7 }), leather = mat('#5a3a22', { roughness: 0.8 }), shadow = mat('#0a0a0c'), steel = mat('#c9ced6', { metalness: 0.5, roughness: 0.3 });
+    torso(spine, white);
+    box(spine, white, 0.42, 0.5, 0.05, 0, 0.0, -0.13, -0.1); // robe skirt front
+    box(spine, white, 0.42, 0.5, 0.05, 0, 0.0, 0.13, 0.1);
+    box(spine, leather, 0.06, 0.6, 0.02, 0.08, 0.3, -0.145, 0, 0, 0.5); // chest strap
+    for (let i = 0; i < 3; i++) box(spine, steel, 0.03, 0.08, 0.015, -0.04 + i * 0.05, 0.4 - i * 0.06, -0.15, 0, 0, 0.5); // throwing knives
+    shoulders(spine, white);
+    box(spine, steel, 0.02, 0.02, 0.12, -0.32, 0.25, -0.16); // the hidden blade, peeking
+    pelvis(hips, white); box(hips, red, 0.47, 0.12, 0.29, 0, 0.07, 0); box(hips, leather, 0.1, 0.1, 0.3, 0, 0.07, 0); box(hips, team, 0.06, 0.06, 0.02, 0, 0.07, -0.155); // red sash, buckle in your color
+    headBlock(head, shadow, 0.26); // the face in shadow
+    box(head, white, 0.32, 0.3, 0.06, 0, 0.17, 0.13); for (const s of [-1, 1]) box(head, white, 0.04, 0.3, 0.3, s * 0.16, 0.17, 0);
+    box(head, white, 0.32, 0.06, 0.32, 0, 0.32, 0);
+    cone(head, white, 0.07, 0.12, 0, 0.3, -0.17, -Math.PI / 2 - 0.5, 0, 0, 4); // the hood's beak
+    for (const s of [-1, 1]) box(head, mat('#ffe9b0', { emissive: '#ffd23a', emissiveIntensity: 0.4 }), 0.03, 0.012, 0.01, s * 0.05, 0.15, -0.135); // eyes in the shadow
+    return { arm: white, leg: white, hand: leather, foot: leather };
+  },
+  grinskeleton({ hips, spine, head }, team) {
+    // Undertale vibe: a blue hoodie with fur trim, a white shirt, black shorts, pink slippers, a big round skull grinning,
+    // one eye glowing blue.
+    const hoodie = mat('#3a7ad8', { roughness: 0.85 }), fur = mat('#f2f2f2', { roughness: 0.95 }), skull = mat('#f6f4ec', { roughness: 0.5 }), black = mat('#0a0a0a'), eye = glow('#3ad8ff', 2.6);
+    torso(spine, mat('#f2f2f2'), 0.46, 0.56, 0.26); // white shirt
+    for (const s of [-1, 1]) box(spine, hoodie, 0.17, 0.58, 0.3, s * 0.17, 0.3, 0); // open hoodie
+    box(spine, fur, 0.52, 0.08, 0.32, 0, 0.56, 0); // fur trim
+    box(spine, hoodie, 0.42, 0.16, 0.05, 0, 0.5, 0.16); // hood down on the back
+    box(spine, team, 0.04, 0.12, 0.01, 0.06, 0.4, -0.152); box(spine, team, 0.04, 0.12, 0.01, -0.06, 0.4, -0.152); // drawstrings in your color
+    pelvis(hips, black); box(hips, fur, 0.02, 0.2, 0.27, 0.215, 0, 0); box(hips, fur, 0.02, 0.2, 0.27, -0.215, 0, 0); // shorts with a white stripe
+    ball(head, skull, 0.17, 0, 0.16, 0).scale.set(1.1, 1, 1); // big round skull
+    ball(head, black, 0.035, -0.065, 0.19, -0.135); ball(head, black, 0.035, 0.065, 0.19, -0.135); // eye sockets
+    ball(head, eye, 0.016, -0.065, 0.19, -0.165); // one glowing eye
+    ball(head, mat('#ffffff', { emissive: '#ffffff', emissiveIntensity: 0.5 }), 0.012, 0.065, 0.19, -0.165);
+    box(head, black, 0.2, 0.012, 0.02, 0, 0.09, -0.15); for (let i = -4; i <= 4; i++) box(head, black, 0.006, 0.04, 0.02, i * 0.022, 0.09, -0.15); // the big grin
+    box(head, black, 0.03, 0.025, 0.02, 0, 0.14, -0.163); // nose
+    return { arm: hoodie, leg: mat('#e8e2d0'), hand: skull, foot: mat('#ff8fb8', { roughness: 0.9 }) };
   },
   gigachad({ hips, spine, head }, team) {
     const gold = mat('#f5c533', { metalness: 0.35, roughness: 0.3, emissive: '#3a2a00', emissiveIntensity: 0.6 }), deep = mat('#c08a16', { metalness: 0.35, roughness: 0.35 }), gem = mat('#d0213a', { emissive: '#600010', emissiveIntensity: 0.8 });

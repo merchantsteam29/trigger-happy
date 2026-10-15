@@ -13,6 +13,9 @@ const STYLES = {
   galaxy: { stops: ['#ffb8f2', '#a46bff', '#3a7bff'], glow: '#8a5cff', blur: 14, sparks: '#ffffff' },
   royal: { stops: ['#e8c6ff', '#9b4dff'], glow: '#ffd23a', blur: 6, stroke: '#ffd23a' },
   rainbow: { stops: ['#ffffff', '#ffffff'], glow: '#ffffff', blur: 12, anim: 'hue' }, // white, tinted by the animation
+  pixel: { stops: ['#ffffff', '#ffffff'], glow: '#000000', blur: 0, font: '900 32px "Courier New", monospace', pixel: true },
+  lava: { stops: ['#ffe28a', '#ff7a1a', '#c81a0a'], glow: '#ff4a12', blur: 16, drips: '#ff5a12', anim: 'flicker' },
+  code: { stops: ['#d8ffe0', '#3aff7a', '#1a9a3a'], glow: '#3aff7a', blur: 14, font: '700 28px "Courier New", monospace', anim: 'flicker' },
   owner: { stops: ['#fffbe0', '#ffd23a', '#ff9d00'], glow: '#ffcc33', blur: 20, sparks: '#fff3a0', crown: true, anim: 'shimmer' },
 };
 
@@ -27,6 +30,9 @@ export const NAMETAG_ITEMS = [
   item('galaxy', 'Galaxy', 350, 'Purple and blue, with stars'),
   item('royal', 'Royal', 400, 'Purple with a gold edge'),
   item('rainbow', 'Rainbow', 500, 'Cycles through every color'),
+  item('pixel', 'Pixel', 300, 'Blocky 8-bit letters'),
+  item('lava', 'Lava', 400, 'Hot letters dripping lava'),
+  item('code', 'Code', 400, 'Glowing green computer letters'),
   { id: 'owner', name: 'Owner', reward: true, how: 'Only GIGACHAD can wear this', desc: 'Shimmering gold with a crown', get icon() { return tagIcon('owner'); } },
 ];
 export const NAMETAG_IDS = NAMETAG_ITEMS.map((x) => x.id);
@@ -55,7 +61,17 @@ export function drawName(g, name, x, y, id, color) {
     g.font = '700 30px Rubik, sans-serif';
   }
   if (st.crown) { g.font = '28px sans-serif'; g.fillText('👑', x, y - 30); g.font = '800 30px Rubik, sans-serif'; }
+  if (st.font) g.font = st.font;
   g.strokeText(name, x, y);
+  if (st.pixel) { // arcade look: cyan and pink copies just off to the sides
+    g.fillStyle = '#2ef2ff'; g.fillText(name, x - 2, y - 1);
+    g.fillStyle = '#ff2fd8'; g.fillText(name, x + 2, y + 1);
+  }
+  if (st.drips) { // drops hanging under the letters
+    const w0 = g.measureText(name).width;
+    g.fillStyle = st.drips;
+    for (let i = 0; i < 6; i++) { const dx = x - w0 / 2 + ((i + 0.5) / 6) * w0, len = 6 + ((i * 7) % 5) * 3; g.fillRect(dx - 2, y + 10, 4, len); g.beginPath(); g.arc(dx, y + 10 + len, 3, 0, Math.PI * 2); g.fill(); }
+  }
   const w = Math.max(40, g.measureText(name).width);
   const grad = g.createLinearGradient(0, y - 15, 0, y + 15);
   st.stops.forEach((c, i) => grad.addColorStop(i / Math.max(1, st.stops.length - 1), c));

@@ -169,6 +169,9 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
   (a material swap function) or `build` (new meshes; the weapon's named groups and anchors stay, so reloads and hands still
   work). Owned like cosmetics (slot `skin`), worn in `cos.skins` (one per weapon: `wearSkin` / `cleanSkins` in missions.js),
   built by `buildGun(id, mods, skin)`. Animated wraps: `anim` / `speed` in camos.js, moved by `animLoop` in models.js.
+- **Owner-only items:** `owner: true` on the item (never grantable, kept off bots); shown only for the verified owner
+  (costume / skin: `remote.js`; banner: `game.js` death screen and `hud.js` MVP; kill effect: `game.js` `onKill`).
+- **Banner with repeating tiles:** give it `size` (background sizes per layer, banners.js) since `.bnr` uses `cover`.
 - **Cosmetic or banner:** `COSMETICS` in `missions.js` (`price`, or `reward` with `how`), with its look in `cosmetics.js` /
   `banners.js`. Earn-only items use `grantItem` / `grantWrap`.
 - **Achievement:** `ACHIEVEMENTS` in `achievements.js` (stat-based; event stats come in via `track.stat`).

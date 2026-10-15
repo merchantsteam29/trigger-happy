@@ -1167,7 +1167,8 @@ export class Game {
     if (m.k !== m.v) {
       const kc = m.k === this.myId ? getCos() : this.remotes.get(m.k) && this.remotes.get(m.k).cos;
       const vp = m.v === this.myId ? this.me.pos : this.remotes.get(m.v) && this.remotes.get(m.v).pos;
-      if (kc && kc.killfx && kc.killfx !== 'none' && vp) playKillFx(this.fx, kc.killfx, vp.clone().add(new THREE.Vector3(0, 1.1, 0)));
+      const ownerOnly = kc && kc.killfx === 'gigachad' && !(pk && pk.role === 'owner'); // the owner's own, only on the verified owner
+      if (kc && kc.killfx && kc.killfx !== 'none' && vp && !ownerOnly) playKillFx(this.fx, kc.killfx, vp.clone().add(new THREE.Vector3(0, 1.1, 0)));
     }
     if (v) this.hud.feed(k, v, m.w, m.head, m.k === this.myId || m.v === this.myId);
     // Everyone's current kill streak (for SHUTDOWN medals), from the kills we've seen.
@@ -3352,7 +3353,7 @@ export class Game {
       const tourOut = this.tourData && !this.tourData[2].includes(this.myId);
       const kr = killer && this.remotes.get(killer.id);
       hud.death(true, killer ? killer.name : null, this.deathInfo.w, secs, out ? 'Out of lives · spectating until the next round' : tourOut ? 'Out of the tournament · spectating' : brOut ? 'Eliminated · spectating until the round ends' : downed ? 'Downed · back when your team clears the wave' : null, this.deathInfo.head,
-        killer ? this.colorFor(killer) : '#fff', (kr && kr.cos && kr.cos.banner) || 'standard', killer ? killer.role : null);
+        killer ? this.colorFor(killer) : '#fff', ((b) => (b === 'gigachad' && !(killer && killer.role === 'owner') ? 'standard' : b))((kr && kr.cos && kr.cos.banner) || 'standard'), killer ? killer.role : null);
     }
     if (this.matchOver && this.endInfo) {
       const next = MAPS[this.endInfo.nextMap];

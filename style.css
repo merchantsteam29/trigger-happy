@@ -962,6 +962,12 @@ body.mobile #hud #lobby-tag { max-width: calc(50% - 150px); white-space: nowrap;
 @keyframes bnr-flicker { to { filter: brightness(1.18) saturate(1.2); } }
 .bnr-twinkle { animation: bnr-flicker 1.6s ease-in-out infinite alternate; }
 .bnr-hue { animation: bnr-hue 4s linear infinite; }
+.bnr-rise { animation: bnr-rise 3.5s linear infinite; }
+@keyframes bnr-rise { to { background-position: 0 -36px, 9px -27px, 0 0, 0 0; } }
+.bnr-drift { animation: bnr-drift 5s linear infinite; }
+@keyframes bnr-drift { to { background-position: 36px 36px, 45px 45px, 0 0, 0 0; } }
+.bnr-wave { animation: bnr-wave 7s ease-in-out infinite alternate; }
+@keyframes bnr-wave { to { background-position: 100% 0, 0 0, 0 0, 0 0; } }
 @keyframes bnr-hue { to { filter: hue-rotate(360deg); } }
 .bnr-shine::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -50%;
   background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent); animation: bnr-shine 2.6s ease-in-out infinite; }

@@ -19,6 +19,9 @@ export const SKIN_ITEMS = [
   { id: 'golddeagle', gun: 'handcannon', name: 'Golden Deagle', price: 1000, icon: '🥇', desc: 'Solid gold with black grips.' },
   { id: 'fish', gun: 'knife', name: 'Fish', price: 700, icon: '🐟', desc: 'Slap them with a fish.' },
   { id: 'energyblade', gun: 'knife', name: 'Energy Blade', price: 1000, icon: '⚔', desc: 'A glowing energy blade on a metal hilt.' },
+  { id: 'squirtgun', gun: 'smg', name: 'Squirt Gun', price: 800, icon: '💦', desc: 'Bright plastic with a water tank on top.' },
+  { id: 'candycane', gun: 'sniper', name: 'Candy Cane Sniper', price: 900, icon: '🍬', desc: 'A striped candy barrel and peppermint trim.' },
+  { id: 'raygun', gun: 'pistol', name: 'Retro Ray Gun', price: 900, icon: '🛸', desc: 'A classic sci-fi ray gun with glowing rings.' },
   { id: 'coinrevolver', gun: 'revolver', name: 'Marksman Revolver', reward: true, handout: true, how: HANDOUT, icon: '🪙', desc: 'A blue machine revolver with a coin on top (goes with Blood Machine).' },
   { id: 'shieldsaw', gun: 'shotgun', name: 'Shield Saw Shotgun', reward: true, handout: true, how: HANDOUT, icon: '🪚', desc: 'Green armor plating and a saw blade under the barrel (goes with Hellwalker).' },
   { id: 'gigachad', gun: 'ar', name: 'GIGACHAD Rifle', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'Solid gold with a crown and red gems.' },
@@ -27,6 +30,7 @@ export const skinItem = (id) => SKIN_ITEMS.find((s) => s.id === id && s.gun) || 
 // The skin someone wears on weapon `gun` (from their list), or null.
 export const skinFor = (skins, gun) => (Array.isArray(skins) ? skins.map(skinItem).find((s) => s && s.gun === gun) : null) || null;
 
+const add3 = (g, geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); g.add(o); return o; };
 const mats = new Map();
 const mat = (color, o = {}) => { const k = color + JSON.stringify(o); if (!mats.has(k)) mats.set(k, new THREE.MeshStandardMaterial({ color, roughness: 0.5, ...o })); return mats.get(k); };
 const glow = (color, i = 1.8) => mat(color, { emissive: color, emissiveIntensity: i });
@@ -108,6 +112,41 @@ const SKINS = {
       box(g, glow('#ff3a3a', 2), 0.008, 0.01, 0.01, 0.02, 0.012, 0.0); // power button
       cyl(g, core, 0.01, 0.42, 0, 0, -0.29, 10); // the blade
       cyl(g, aura, 0.02, 0.44, 0, 0, -0.29, 12).castShadow = false;
+    },
+  },
+  squirtgun: {
+    build(g) {
+      const pink = mat('#ff4fa8', { roughness: 0.35 }), green = mat('#3ad86a', { roughness: 0.35 }), orange = mat('#ff9a1a', { roughness: 0.4 });
+      const water = mat('#5ac8ff', { roughness: 0.05, transparent: true, opacity: 0.6, emissive: '#1a5a8a', emissiveIntensity: 0.4 });
+      rbox(g, pink, 0.07, 0.09, 0.32, 0, 0.055, -0.08); // body
+      cylY(g, water, 0.05, 0.12, 0, 0.16, -0.06); cylY(g, green, 0.02, 0.02, 0, 0.23, -0.06); // water tank and its cap
+      cyl(g, green, 0.018, 0.18, 0, 0.06, -0.32, 10); cyl(g, orange, 0.01, 0.04, 0, 0.06, -0.42, 8); // nozzle
+      box(g, green, 0.03, 0.04, 0.1, 0, -0.01, -0.2); // pump handle
+      rbox(g, green, 0.04, 0.12, 0.05, 0, -0.05, 0.05, -0.25); // grip
+      box(g, orange, 0.012, 0.03, 0.02, 0, 0.0, -0.01); // trigger
+    },
+  },
+  candycane: {
+    build(g) {
+      const red = mat('#d8202a', { roughness: 0.3 }), white = mat('#f8f4f0', { roughness: 0.3 }), mint = mat('#3ad88a', { roughness: 0.3 });
+      rbox(g, white, 0.07, 0.08, 0.32, 0, 0.06, -0.04); // body
+      for (let i = 0; i < 12; i++) cyl(g, i % 2 ? red : white, 0.018, 0.05, 0, 0.065, -0.22 - i * 0.05, 12); // striped barrel
+      cylX(g, red, 0.03, 0.074, 0, 0.06, 0.02, 16); cylX(g, white, 0.018, 0.076, 0, 0.06, 0.02, 16); // peppermint wheels
+      for (let i = 0; i < 6; i++) box(g, i % 2 ? red : white, 0.064, 0.09, 0.04, 0, 0.03, 0.18 + i * 0.04); // striped stock
+      const hook = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.016, 8, 16, Math.PI), red); hook.position.set(0, 0.1, 0.42); hook.rotation.y = Math.PI / 2; g.add(hook); // the cane's hook at the back
+      rbox(g, mint, 0.04, 0.11, 0.05, 0, -0.05, 0.06, -0.3); // grip
+    },
+  },
+  raygun: {
+    build(g) {
+      const silver = mat('#c9d0d8', { metalness: 0.5, roughness: 0.25 }), red = mat('#d8202a', { roughness: 0.4 }), ring = glow('#5affc8', 2), bulb = glow('#b8fff0', 2.4);
+      const body = sphere(g, silver, 0.05, 0, 0.05, -0.04, 14, 10); body.scale.set(1, 1, 1.8);
+      for (let i = 0; i < 3; i++) add3(g, new THREE.TorusGeometry(0.035 - i * 0.006, 0.006, 6, 18), ring, 0, 0.05, -0.15 - i * 0.04); // glowing rings
+      cyl(g, silver, 0.012, 0.18, 0, 0.05, -0.18, 10);
+      sphere(g, bulb, 0.018, 0, 0.05, -0.28, 10, 8); // the glowing tip
+      for (const s of [-1, 1]) box(g, red, 0.005, 0.07, 0.06, s * 0.035, 0.09, 0.0, 0, 0, s * 0.4); // fins
+      box(g, red, 0.005, 0.07, 0.06, 0, 0.11, 0.0);
+      rbox(g, red, 0.035, 0.1, 0.045, 0, -0.04, 0.03, -0.3); // grip
     },
   },
   coinrevolver: {
