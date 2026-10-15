@@ -262,15 +262,15 @@
       <nav class="menu-nav" id="menu-nav">
         <button data-pane="play" class="sel"><span class="ic">▶</span><span class="lbl">Play<small>Join or create a match</small></span></button>
         <button data-pane="loadout"><span class="ic">⌖</span><span class="lbl">Loadout<small>Pick your weapons</small></span></button>
-        <button data-pane="character"><span class="ic">☺</span><span class="lbl">Character<small>Name, color, cosmetics</small></span></button>
+        <button data-pane="character"><span class="ic">☺</span><span class="lbl">Locker Room<small>Your look: costumes, skins, cosmetics</small></span></button>
         <button data-pane="shop"><span class="ic">🛒</span><span class="lbl">Shop<small>Cosmetics, wraps & gifts</small></span></button>
         <button data-pane="missions"><span class="ic">★</span><span class="lbl">Missions<small>Season pass &amp; daily rewards</small></span><b id="nav-missions-count"></b></button>
         <button data-pane="leaderboard"><span class="ic">🏆</span><span class="lbl">Leaderboard<small>Weekly, all-time, per mode</small></span><b id="nav-lb-rank"></b></button>
         <button data-pane="friends"><span class="ic">☻</span><span class="lbl">Friends<small>Gamertags &amp; party chat</small></span><b id="nav-friends-count" class="alert"></b></button>
         <button data-pane="mod" id="nav-mod" class="hidden"><span class="ic">🛡</span><span class="lbl">Mod Panel<small>Warn, ban, rename players</small></span></button>
-        <button id="btn-practice"><span class="ic">🎯</span><span class="lbl">Practice<small>Solo range · every weapon</small></span></button>
-        <button id="btn-editor"><span class="ic">🛠</span><span class="lbl">Map editor<small>Build your own map</small></span></button>
-        <button id="btn-settings-menu"><span class="ic">⚙</span><span class="lbl">Settings<small>Controls, video, audio</small></span></button>
+        <button id="btn-practice" title="Practice range"><span class="ic">🎯</span><span class="lbl">Practice<small>Solo range · every weapon</small></span></button>
+        <button id="btn-editor" title="Map editor"><span class="ic">🛠</span><span class="lbl">Map editor<small>Build your own map</small></span></button>
+        <button id="btn-settings-menu" title="Settings"><span class="ic">⚙</span><span class="lbl">Settings<small>Controls, video, audio</small></span></button>
       </nav>
       <div class="rail-foot">
         <details class="controls">
@@ -290,6 +290,7 @@
       <!-- Play -->
       <section class="menu-pane" data-pane="play">
         <div id="home-strip" class="home-strip"></div>
+        <aside id="home-side" class="home-side"></aside>
         <p id="menu-status"></p>
         <!-- Find servers -->
         <div class="card servers-card">
@@ -372,6 +373,7 @@
           <div id="map-tiles" class="tiles maps"></div>
           <button id="btn-host" class="primary big">Create server</button>
         </div>
+        <div id="home-bottom" class="home-bottom"></div>
       </section>
       <!-- Loadout -->
       <section class="menu-pane hidden" data-pane="loadout">

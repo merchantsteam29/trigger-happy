@@ -6,7 +6,17 @@
 
 ## How to play
 
-Everything starts in the **Servers** tab:
+On PC the tabs run along the top: **Play · Loadout · Locker Room · Shop · Missions · Leaderboard · Friends** (and the Mod
+Panel for staff), with Practice 🎯, the Map editor 🛠 and Settings ⚙ as icons on the right.
+
+**Play** opens with two big buttons, **Quick Play** and **Ranked**, the servers list under them, your level, daily
+reward and challenges on the right, and Play Hour, Game Night, the featured mode, the mode of the week and your match
+history along the bottom. **Locker Room** has your character in 3D on the left and your items on the right, with the
+categories along the bottom. The **Shop** shows you in 3D trying on what you pick. Weapon wraps are picked in the Locker
+Room (not in Loadout). **Friends** lists your friends and challenges first, then your clan, inviting friends and linking
+devices.
+
+Everything starts in the **Play** tab:
 
 - **Join with code:** type a friend's 5-letter code (from their pause menu or invite link). Works for private servers too.
 - **Find servers:** a live list of public servers (name, mode, map, players, region). Tap **Join** on any open one.
@@ -224,7 +234,7 @@ Every gun has an **Attachments** panel on its card in Loadout (hover an option t
 | Muzzle | Standard · Suppressor (quiet, no muzzle flash for others, damage drops off a bit sooner) · Compensator (30% less recoil) |
 | Magazine | Standard · Extended (+50% ammo, slower reload, slightly slower movement) · Fast mag (25% faster reload) |
 | Underbarrel | None · Vertical grip (less recoil, steadier on the move) · Laser (tighter hip-fire) |
-| Camo | (also in **Character → Customize → Weapon wraps**, with a 3D preview, "apply to all guns", and premium wraps for tokens: Carbon Fiber, Zebra, Toxic, Glacier, Lava, Galaxy, Chrome, Diamond) Default · Crimson · Cobalt · Blackout · Arctic · Gold · Digital · Urban Digital · Desert · Tiger · Neon. Looks only: camos never change stats, and other players see yours. Saved per gun. |
+| Camo | (also in **Locker Room → Customize → Weapon wraps**, with a 3D preview, "apply to all guns", and premium wraps for tokens: Carbon Fiber, Zebra, Toxic, Glacier, Lava, Galaxy, Chrome, Diamond) Default · Crimson · Cobalt · Blackout · Arctic · Gold · Digital · Urban Digital · Desert · Tiger · Neon. Looks only: camos never change stats, and other players see yours. Saved per gun. |
 
 Which options a gun takes depends on its type (pistols can't take scopes, break-action shotguns have no muzzle
 slot, and so on). Attachments show on the gun model, and other players see yours too.
@@ -306,7 +316,7 @@ the weapon you had out before.
 
 A **costume** changes your whole look, not just a hat: same size and the same hitbox, so it's fair. It replaces your hat,
 hair, face and back items (your banner, kill effect, name tag and charm stay), and your color (your team color in team
-modes) always shows on it somewhere. Pick one in **Character → Costumes**, or try them on in the **Shop** (Costumes).
+modes) always shows on it somewhere. Pick one in **Locker Room → Costumes**, or try them on in the **Shop** (Costumes).
 
 - **In the shop:** Skeleton (glows a little in the dark), Cyber Samurai, Astronaut Cat, Party Llama, Junk Robot, Lava
   Golem, Ice Golem, Banana, Ninja, Mummy, Deep Sea Diver, Dino, Shark, Astronaut, Chicken (flaps its wings when you
@@ -323,7 +333,7 @@ modes) always shows on it somewhere. Pick one in **Character → Costumes**, or 
 ## Gun skins
 
 A **gun skin** changes a weapon's whole model, not just its colors. Damage, speed and accuracy never change. Pick them in
-**Character → Gun skins** (a turning 3D preview) or the **Shop** (Gun skins); one skin per weapon, and **Back to the
+**Locker Room → Gun skins** (a turning 3D preview) or the **Shop** (Gun skins); one skin per weapon, and **Back to the
 normal** takes it off. Everyone sees your skins, in first person and third person. Skins keep their own colors.
 
 - **In the shop:** Toy Blaster and Laser Rifle (the old Laser Rifle's look) for the Assault Rifle, Pumpkin Launcher for the
@@ -333,25 +343,25 @@ normal** takes it off. Everyone sees your skins, in first person and third perso
   Hellwalker) and Portal Gun (goes with Cube Hero), handed out by the owner.
 
 **Animated wraps** move on your gun: Gold Shine, Frost Sparkle, Drifting Galaxy, Code Rain, Rainbow Flow and Lava Flow
-(🪙 500 to 700, in Character → Weapon wraps and the Shop).
+(🪙 500 to 700, in Locker Room → Weapon wraps and the Shop).
 
 ## Kill effects
 
 A **kill effect** plays where your victim stood when you get a kill, and everyone in the match sees it. Buy them in the
-**Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
+**Shop** (Kill effects) and pick one in **Locker Room → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
 Burst, Spirit, Jackpot, Black Hole, Sakura Burst (petals swirl), Angel Wings (a halo and wings rise), Glitch Delete,
 Snowstorm and Disco Ball (🪙 200 to 500). The
 gold **GIGACHAD** crown burst is the owner's alone.
 
 ## Character preview
 
-The **Character** screen shows your character in 3D, wearing what you have on (or are trying on) and holding your main
+The **Locker Room** shows your character in 3D, wearing what you have on (or are trying on) and holding your main
 gun with its charm. It turns slowly; drag it to turn it yourself. The buttons under it play your **emotes** and your
 **victory pose**.
 
 ## Sprays
 
-Draw your own 16×16 pixel spray in **Character → Spray** (draw, fill, erase, 15 colors). Press **X** in a match to spray it
+Draw your own 16×16 pixel spray in **Locker Room → Spray** (draw, fill, erase, 15 colors). Press **X** in a match to spray it
 on the wall you're looking at (within 5 m, once every 8 seconds); everyone in the match sees it. If your clan has a
 spray too, pick which one X sprays. Your spray follows you to your linked devices.
 
@@ -359,13 +369,13 @@ spray too, pick which one X sprays. Your spray follows you to your linked device
 
 A little keychain hanging off the side of every gun you hold, for you (in first person) and everyone else to see. It swings
 as you move and jumps when you shoot. Lucky Die, 8-Ball, Heart, Rubber Duck, Pumpkin, Gold Star, Golden Bullet, Skull
-and Diamond, 🪙 100 to 300 in the **Shop** (Weapon charms). The golden **Crown** charm is the owner's alone. Pick yours in **Character → Weapon charms**.
+and Diamond, 🪙 100 to 300 in the **Shop** (Weapon charms). The golden **Crown** charm is the owner's alone. Pick yours in **Locker Room → Weapon charms**.
 
 ## Name tags
 
 Style the name above your head: Gold, Ice, Toxic, Neon, Fire (flickers), Galaxy, Royal, Rainbow (cycles through the
 colors), Pixel (8-bit arcade letters), Lava (dripping), Code (green computer letters), Candy Stripe, Shadow (black with a
-red glow) and Hearts, 🪙 200 to 500 in the **Shop** (Name tags). Pick yours in **Character → Name tags**. In team modes everyone's name
+red glow) and Hearts, 🪙 200 to 500 in the **Shop** (Name tags). Pick yours in **Locker Room → Name tags**. In team modes everyone's name
 shows their team color instead, so you can always tell friend from foe. The shimmering gold **Owner** tag with a crown is
 GIGACHAD's alone (it only shows on the verified owner).
 
@@ -374,7 +384,7 @@ GIGACHAD's alone (it only shows on the verified owner).
 When a match ends, the **MVP** steps onto a stage and does their **victory pose** while the MVP card is up, and everyone
 in the match sees it. Everyone has **Cheer**; Flex, Finger Guns, Dab, Heart Hands, Take a Bow, Floss, Spin Jump and
 Levitate, Push-ups (drops down and does push-ups) and Guitar Solo (shreds on a red guitar) are in the **Shop** (🪙 200 to
-500). Pick yours in **Character → Victory poses**. The owner sits on a golden **Throne**.
+500). Pick yours in **Locker Room → Victory poses**. The owner sits on a golden **Throne**.
 
 ## Replay theater
 
@@ -403,7 +413,7 @@ and players who are out for good (Battle Royale, Last Man Standing, a Tournament
 ## Banners
 
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
-("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Character → Banner**:
+("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Locker Room → Banner**:
 Standard and Carbon are free; Tiger, Woodland / Arctic Camo, Ocean, Sunset, Hazard, Bloodbath, Neon Grid, Code Rain,
 Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst, Command Center, Masquerade, Armory, Cherry Blossom (drifting petals), Deep Sea (rising bubbles), Aurora (moving lights), Pixel Arcade, Glitch and Checkered Flag cost tokens (several are animated). Some can only be
 earned: season pass banners, a banner for each holiday event, ranked season banners and **Top Clan**. Bots wear random ones.
@@ -492,7 +502,7 @@ Click a gamertag (your own in **Friends**, a friend, or anyone on the **Leaderbo
 character in their outfit, a title, four stats they picked, favorite gun, ranked division, season badges and up to 3
 achievements they picked to show, with an **Add friend** button. Players with a gamertag post their profile automatically.
 
-Set up yours in **Character → Player card**: pick a title (any achievement you've unlocked) and the four stats to show
+Set up yours in **Locker Room → Player card**: pick a title (any achievement you've unlocked) and the four stats to show
 (kills, K/D, wins, win rate, matches, headshots, headshot %, best streak, player kills or level). **⬇ Save image**
 downloads the card as a picture to share.
 

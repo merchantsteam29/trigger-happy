@@ -39,17 +39,34 @@ export class Shop {
     const { el } = this.ctx;
     if (!el) return;
     if (!CATS.some(([k]) => k === this.cat)) this.cat = 'all';
-    el.innerHTML = `<div class="shop">
-      <aside class="shop-cats">
+    // Your character in 3D on the left (wearing / holding what you pick), the shop on the right:
+    // categories along the top, the picked item with Buy / Wear / Gift, then the items.
+    el.innerHTML = `<div class="shop shop2">
+      <aside class="shop-stage">
+        <div class="shop-3d"></div>
         <div class="shop-wallet"><b>🪙 ${getTokens().toLocaleString()}</b><small>Earn tokens from missions, daily rewards, levels and events</small></div>
-        ${CATS.map(([k, n, ic]) => `<button data-cat="${k}" class="${k === this.cat ? 'sel' : ''}"><span>${ic}</span>${n}${k === 'gifts' && gifts.received.length ? ` <em>${gifts.received.length}</em>` : ''}</button>`).join('')}
       </aside>
-      <div class="shop-main"></div>
-      <aside class="shop-detail"></aside>
+      <div class="shop-right">
+        <nav class="shop-cats">${CATS.map(([k, n, ic]) => `<button data-cat="${k}" class="${k === this.cat ? 'sel' : ''}"><span>${ic}</span>${n}${k === 'gifts' && gifts.received.length ? ` <em>${gifts.received.length}</em>` : ''}</button>`).join('')}</nav>
+        <div class="shop-detail"></div>
+        <div class="shop-main"></div>
+      </div>
     </div>`;
+    this.show3d(null);
     el.querySelectorAll('[data-cat]').forEach((b) => { b.onclick = () => { this.cat = b.dataset.cat; store.set('shopCat', this.cat); this.sel = null; this.render(); }; });
     if (this.cat === 'gifts') this.renderGifts(el.querySelector('.shop-main'), el.querySelector('.shop-detail'));
     else this.renderItems(el.querySelector('.shop-main'), el.querySelector('.shop-detail'));
+  }
+
+  // The 3D model: you, trying on the picked item (a gun skin / wrap goes on the gun you hold).
+  show3d(sel) {
+    const stage = this.ctx.el && this.ctx.el.querySelector('.shop-3d');
+    if (!stage || !this.ctx.lobby) return;
+    let cos = getCos(), gun = (this.ctx.lobbyGun && this.ctx.lobbyGun()) || 'ar', mods = null;
+    if (sel && sel.slot === 'skin') { const it = COSMETICS.skin.find((x) => x.id === sel.id); if (it && it.gun) { cos = wearSkin(cos, it.id); gun = it.gun; } }
+    else if (sel && sel.slot === 'wrap') mods = { [gun]: { camo: sel.id } };
+    else if (sel && sel.slot && sel.slot !== 'gifts') cos = { ...cos, [sel.slot]: sel.id };
+    this.ctx.lobby.mount(stage, cos, this.ctx.getColor(), gun, null, mods);
   }
 
   card({ slot, c }) {
@@ -116,6 +133,7 @@ export class Shop {
       <p class="shop-msg note"></p>`;
     const cv = detail.querySelector('.shop-avatar');
     if (cv) drawAvatar(cv, put(cos), this.ctx.getColor());
+    this.show3d(s);
     const msg = (t) => { detail.querySelector('.shop-msg').textContent = t; };
     const b = detail.querySelector('[data-buy]');
     if (b) b.onclick = () => {

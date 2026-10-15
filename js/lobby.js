@@ -24,7 +24,7 @@ export class Lobby3D {
       this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, alpha: true, antialias: true });
     } catch { this.ok = false; return false; }
     this.renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
-    this.renderer.setSize(200, 262, false);
+    this.renderer.setSize(340, 446, false); // shown at up to this size (Locker Room / Shop)
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.scene = new THREE.Scene();
     this.scene.add(new THREE.HemisphereLight('#f4ecff', '#3a2a40', 2.2));
@@ -33,7 +33,7 @@ export class Lobby3D {
     const floor = new THREE.Mesh(new THREE.CircleGeometry(0.9, 32), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.25 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = 0.01;
     this.scene.add(floor);
-    this.camera = new THREE.PerspectiveCamera(32, 200 / 262, 0.1, 50);
+    this.camera = new THREE.PerspectiveCamera(32, 340 / 446, 0.1, 50);
     this.camera.position.set(0, 1.4, 5.4);
     this.camera.lookAt(0, 1.3, 0); // room for an emote bubble over the head
     this.r = new RemotePlayer(this.scene, 'lobby', '', '#fff', null, {});
@@ -49,7 +49,8 @@ export class Lobby3D {
 
   // Puts the preview into the Character screen's stage (replacing the flat picture) and shows `cos`.
   // gun: the weapon to hold. buttons: an element for the emote / pose buttons.
-  mount(stage, cos, color, gun, buttons) {
+  // mods: the guns' attachments / wraps to show (the Shop previews a wrap on your gun).
+  mount(stage, cos, color, gun, buttons, mods = null) {
     if (!this.init()) return false;
     const flat = stage.querySelector('canvas:not(.cz-3d)');
     if (flat) flat.style.display = 'none';
@@ -57,6 +58,8 @@ export class Lobby3D {
     this.r.setIdentity('', roles.myRole()); // owner-only items (the owner name tag and costume) show for the owner
     this.r.setCosmetics(cos);
     if (color !== this.color) { this.color = color; this.r.setLook(color, false, false); }
+    const mk = JSON.stringify(mods || {});
+    if (mk !== this.modsKey) { this.modsKey = mk; this.r.setMods(mods || {}); }
     this.r.setWeapon(gun || 'ar'); this.r.swapT = 0;
     this.cos = cos;
     if (buttons) {

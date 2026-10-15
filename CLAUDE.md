@@ -130,6 +130,11 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.js`).
 
 ### Module map (`js/`)
+- **Menu layout (PC, 2026-10-15 remake; phones get their own later):** tabs across the top (`.menu-nav` in the top bar).
+  Play = `#home-strip` (big Quick Play / Ranked) + `#home-side` (level, daily reward, challenges; right column) +
+  `#home-bottom` (Play Hour, Game Night, featured, mode of the week, history…), all from `renderHome`; the servers card sits
+  between. Locker Room (pane id still `character`): `.cz2` with the 3D preview left and `.cz-tabs` along the bottom. Shop:
+  `.shop2` with the same `Lobby3D` on the left (`Shop.show3d` tries the picked item on). Friends order is CSS `order`.
 - **Core:** `main.js` (menus, wiring, everything UI outside a match) · `game.js` (client match:
   input, movement, shooting, camera, effects, HUD feeding) · `host.js` (`HostLogic`) · `net.js` ·
   `physics.js` (boxes, `moveBody`, `raycast`) · `maps.js` (map data + scene build) · `nav.js`

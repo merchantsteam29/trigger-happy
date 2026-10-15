@@ -147,7 +147,7 @@ const chat = new Chat({
   mobile,
 });
 
-// The Character screen's live 3D preview (lobby.js).
+// The Locker Room's live 3D preview (lobby.js).
 const lobby3d = new Lobby3D();
 function renderCharacter() {
   if (!settingsUI) return;
@@ -208,7 +208,7 @@ achievements.onUnlock((a) => {
 setTimeout(() => achievements.check(), 1500); // older stats might already count
 // ---------- Shop and gifts ----------
 const shop = new Shop({
-  el: $('menu-shop'), social, getColor: () => settings.color, getName: () => settings.name || 'Player', toast,
+  el: $('menu-shop'), social, getColor: () => settings.color, getName: () => settings.name || 'Player', toast, lobby: lobby3d, lobbyGun: () => settings.loadout[0],
   onCos: (c) => { game.myBanner = c.banner; if (net) net.send({ t: 'cos', c: { ...myCos(), ...c } }); renderChip(); },
 });
 gifts.init(social);
@@ -242,7 +242,7 @@ const cmpVersion = (a, b) => { const x = String(a).split('.').map(Number), y = S
 // ---------- Home strip (top of Servers) and Daily (Missions) ----------
 // Level, the daily login reward and today's challenges at a glance.
 function renderHome() {
-  const el = $('home-strip');
+  let el = $('home-strip');
   if (!el) return;
   const lv = myLevel(), login = loginState(), daily = dailyChallenges();
   const doneN = daily.list.filter((c) => c.done).length;
@@ -254,21 +254,30 @@ function renderHome() {
     : rkNow ? `🔴 ${rkNow} playing ranked now · join them!`
       : rkWeek.paid ? `Weekly reward earned ✓ · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
         : `This week ${rkWeek.n}/${RANKED_WEEKLY.matches} matches · 🪙 ${RANKED_WEEKLY.tokens} · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  // The Play screen: big Quick Play and Ranked on top (home-strip), level / daily reward / challenges
+  // in a column on the right (home-side), and everything else in a row of tiles at the bottom
+  // (home-bottom, under the servers list).
+  const side = $('home-side'), bottom = $('home-bottom');
   el.innerHTML = `
     ${ownerLiveCard()}
-    ${playHourCard()}
     ${motdCard()}
-    <div class="play-hero">
-      <button class="hero-quick hs-tile" data-quick title="Joins the busiest public server, or starts one with bots if there are none">
-        <span class="hq-kicker">Quick Play</span>
-        <span class="hq-title">Jump into a match</span>
-        <span class="hq-sub">${playing ? `${playing} playing on ${open.length} server${open.length === 1 ? '' : 's'}` : 'Starts a match with bots if nobody is on'}</span>
-        <span class="hq-go">Play now ▶</span>
+    <div class="play-big">
+      <button class="big-play bp-quick" data-quick title="Joins the busiest public server, or starts one with bots if there are none">
+        <span class="bp-kicker">⚡ Quick Play</span>
+        <span class="bp-title">Jump into a match</span>
+        <span class="bp-sub">${playing ? `${playing} playing on ${open.length} server${open.length === 1 ? '' : 's'}` : 'Starts a match with bots if nobody is on'}</span>
+        <span class="bp-go">Play now ▶</span>
       </button>
-      <div class="hero-side">
-        <button class="hero-mini hs-tile hs-ranked ${rkHour.live || rkNow ? 'live' : ''}" data-ranked style="--dv:${rk.div.color}" title="Ranked Free For All: your rating moves with where you finish among real players. Everyone joins the same ranked server.">
-          <span class="hs-ic">🏆</span><span class="hs-txt"><b>Ranked</b><small>${rk.placing ? `Placement ${rk.played}/${PLACEMENTS}` : `${rk.div.icon} ${rk.div.name} · ${rk.sr} SR`}</small><small class="rk-line">${rkLine}</small></span><span class="hm-arrow">›</span>
-        </button>
+      <button class="big-play bp-ranked ${rkHour.live || rkNow ? 'live' : ''}" data-ranked style="--dv:${rk.div.color}" title="Ranked Free For All: your rating moves with where you finish among real players. Everyone joins the same ranked server.">
+        <span class="bp-kicker">🏆 Ranked</span>
+        <span class="bp-title">${rk.placing ? `Placement ${rk.played}/${PLACEMENTS}` : `${rk.div.icon} ${rk.div.name}`}</span>
+        <span class="bp-sub">${rk.placing ? 'Play 5 matches to get your rank' : `${rk.sr} SR`} · ${rkLine}</span>
+        <span class="bp-go">Play ranked ▶</span>
+      </button>
+    </div>`;
+  bottom.innerHTML = `
+    ${playHourCard()}
+    <div class="hs-tiles">
         <div class="hero-mini hs-tile hs-feat">
           <span class="hs-ic">⭐</span>
           <span class="hs-txt"><b>${esc(MODES[featuredMode()].name)}</b><small>Featured today · ${FEATURED_XP}x XP${featuredClaimed() ? '' : ` · 🪙 ${FEATURED_TOKENS}`}</small></span>
@@ -281,14 +290,14 @@ function renderHome() {
             : `in ${fmtDuration(gn.start - Date.now())} · ${new Date(gn.start).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`}</small></span>
           ${gnLive ? '<button class="primary sm" data-gn>Join</button>' : gn ? `<button class="ghost sm hs-remind" data-remind title="${esc(describeGn(gameNight.schedule))}">${gameNight.remind ? '🔔' : '🔕'}</button>` : ''}
         </div>
-      </div>
-    </div>
     ${(() => { const w = motwNow(), p = motwProgress(); return `<div class="hs-tile banner-row hs-motw"><span class="hs-ic">${w.icon}</span><span class="hs-txt"><b>Mode of the week: ${esc(w.name)}</b><small>${esc(w.desc)} · ${p.paid ? '✓ reward earned' : `play ${MOTW_MATCHES} matches: ${p.n}/${MOTW_MATCHES} · 🪙 ${MOTW_TOKENS}`} · new mode in ${fmtDuration(motwEnds() - Date.now())}</small></span><button class="primary sm" data-motw>Play</button></div>`; })()}
     ${eventRow()}
     ${holidayRow()}
     ${replayCount || store.get('matchHistory', []).length ? `<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Match history & replays</b><small>Your last matches: results, scores, and replays from any angle</small></span><span class="hm-arrow">›</span></button>` : ''}
     ${!tutorialDone() ? '<button class="hs-tile hs-tutorial banner-row" data-tutorial><span class="hs-ic">🎓</span><span class="hs-txt"><b>New here? Take the 1-minute tutorial</b><small>Learn the controls in the Practice Range · 🪙 ' + TUTORIAL_TOKENS + '</small></span><span class="hm-arrow">›</span></button>' : ''}
     ${canInstall() ? '<button class="hs-tile hs-install banner-row" data-install><span class="hs-ic">📲</span><span class="hs-txt"><b>Install the app</b><small>Trigger Happy on your home screen, full screen</small></span><span class="hm-arrow">›</span></button>' : ''}
+    </div>`;
+  side.innerHTML = `
     <div class="today-row">
       <div class="hs-tile hs-daily ${login.claimed ? '' : 'ready'}">
         <span class="hs-ic">🎁</span>
@@ -304,6 +313,9 @@ function renderHome() {
         <span class="hs-txt"><b>${esc(lv.rank.name)} · Lv ${lv.level}</b><span class="hs-bar"><i style="width:${lv.pct * 100}%"></i></span><small>Season tier ${seasons.info().tier} · ${lv.need ? `${(lv.need - lv.into).toLocaleString()} XP to go` : 'Max level'}</small></span>
       </button>
     </div>`;
+  // (handlers for all three parts)
+  const parts = [el, side, bottom];
+  el = { querySelector: (q) => parts.map((p) => p.querySelector(q)).find(Boolean) || null, querySelectorAll: (q) => parts.flatMap((p) => [...p.querySelectorAll(q)]) };
   el.querySelectorAll('[data-go]').forEach((b) => { b.onclick = () => showPane(b.dataset.go); });
   const c = el.querySelector('[data-claim]');
   if (c) c.onclick = doClaim;
@@ -463,7 +475,7 @@ async function playEvent() {
 function grantRankArmor() {
   const best = myRanked().best || 0;
   const got = DIVISIONS.slice(1).filter((d) => best >= d.min && grantItem('costume', 'rk_' + d.id));
-  for (const d of got) toast(`${d.icon} ${d.name} Armor unlocked! Wear it in Character → Costumes.`);
+  for (const d of got) toast(`${d.icon} ${d.name} Armor unlocked! Wear it in Locker Room → Costumes.`);
 }
 
 // Today's featured mode: a public server already playing it, or a new one with bots.
@@ -663,11 +675,8 @@ function modsPanel(id) {
   const rows = MOD_SLOTS.filter((s) => opts[s].length > 1).map((s) =>
     `<div class="lo-mod"><span>${MOD_SLOT_NAMES[s]}</span><div class="lo-mod-opts">${opts[s].map((o) =>
       `<button class="${m[s] === o ? 'sel' : ''}" data-mod="${s}:${o}">${MODS[s][o].name}</button>`).join('')}</div></div>`).join('');
-  // Camo: looks only (camos.js), saved with the gun's attachments.
-  const camo = m.camo || 'default';
-  const camos = `<div class="lo-mod lo-camo"><span>Camo</span><div class="lo-camos">${CAMOS.filter((c) => ownsWrap(c.id)).map((c) =>
-    `<button class="${camo === c.id ? 'sel' : ''}" data-camo="${c.id}" title="${c.name}"><i style="background:${camoSwatch(c)}"></i>${c.name}</button>`).join('')}<button class="lo-more-wraps" data-morewraps>More wraps →</button></div></div>`;
-  return `<div class="lo-mods"><h4>Attachments</h4>${rows}${camos}<p class="lo-mod-desc"></p></div>`;
+  // Wraps (camos) are picked in the Locker Room, not here.
+  return `<div class="lo-mods"><h4>Attachments</h4>${rows}<p class="lo-mod-desc"></p></div>`;
 }
 
 // One-line summary under each weapon in the picker.
@@ -1080,7 +1089,7 @@ function renderClan() {
   el.querySelectorAll('[data-ckick]').forEach((b) => { b.onclick = async () => { if (confirm(`Remove ${b.dataset.ckick} from the clan?`)) await clans.kick(b.dataset.ckick); }; });
 }
 
-// ---------- Spray editor: your own spray (Character → Spray) or your clan's (leader) ----------
+// ---------- Spray editor: your own spray (Locker Room → Spray) or your clan's (leader) ----------
 function drawSpray(canvas, spray) {
   const g = canvas.getContext('2d'), s = canvas.width / 16;
   g.clearRect(0, 0, canvas.width, canvas.height);
@@ -1151,7 +1160,7 @@ function sprayAt(e) {
     try { await clans.setSpray(str); $('spray-pop').classList.add('hidden'); toast('🎨 Clan spray saved! Members can spray it in matches.'); } catch (e) { $('spray-msg').textContent = e.message; }
   };
 }
-// The spray for the X key in matches: yours or your clan's (Character → Spray picks; whichever you have otherwise).
+// The spray for the X key in matches: yours or your clan's (Locker Room → Spray picks; whichever you have otherwise).
 function syncMySpray() {
   const c = clans.myClan(), clanS = c && c.spray ? c.spray : null, mine = SPRAY_RE.test(store.get('mySpray', '') || '') ? store.get('mySpray') : null;
   game.mySpray = store.get('sprayPick', 'mine') === 'clan' ? clanS || mine : mine || clanS;
@@ -1556,7 +1565,7 @@ function setPublic(v) {
 const PANE_INFO = {
   play: ['Play', 'Quick Play, ranked, the featured mode of the day, or pick a server.'],
   loadout: ['Loadout', 'One weapon per slot. Changes apply the next time you spawn.'],
-  character: ['Character', 'Your callsign, color and cosmetics. Earn tokens from missions to unlock more.'],
+  character: ['Locker Room', 'Your look: costumes, gun skins, wraps and cosmetics. Earn tokens from missions to unlock more.'],
   missions: ['Missions', 'The season pass, daily rewards and challenges, your level and missions. All of them pay tokens.'],
   shop: ['Shop', 'Everything you can buy with tokens. Prices never change and nothing leaves the shop. You can gift items and tokens to friends too.'],
   leaderboard: ['Leaderboard', 'Top players by kills, wins and headshots: this week, last week or all time, in every mode or just one.'],

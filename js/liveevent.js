@@ -12,7 +12,7 @@ const SPOT = 'whffa/v1/spotlight'; // the owner's shop spotlight: { title, items
 export const SPOT_MAX = 8;
 const MOTD = 'whffa/v1/motd'; // the owner's message of the day: { id, title, text, btn, go } (owner-signed, retained)
 // Where a message of the day's button can take players: a page of the menu, or a web link (https only).
-export const MOTD_GO = [['', 'No button'], ['play', 'Quick Play'], ['shop', 'The Shop'], ['missions', 'Missions'], ['leaderboard', 'Leaderboard'], ['friends', 'Friends'], ['character', 'Character'], ['link', 'A web link…']];
+export const MOTD_GO = [['', 'No button'], ['play', 'Quick Play'], ['shop', 'The Shop'], ['missions', 'Missions'], ['leaderboard', 'Leaderboard'], ['friends', 'Friends'], ['character', 'Locker Room'], ['link', 'A web link…']];
 const low = (s) => String(s || '').toLowerCase();
 export const EVENT_HOURS = [[1, '1 hour'], [3, '3 hours'], [24, '1 day'], [48, '2 days'], [72, '3 days (a weekend)'], [168, '7 days']];
 

@@ -999,3 +999,92 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 #welcome-pop ul { margin: 6px 0 12px; padding-left: 18px; }
 #welcome-pop li { margin: 6px 0; }
 #welcome-pop li small { display: block; opacity: .75; }
+
+/* ================= PC menu remake (2026-10-15): Play screen, top tabs ================= */
+/* Play: big Quick Play + Ranked on top, servers in the middle, a column on the right (level, daily
+   reward, challenges), and the rest (Play Hour, Game Night, featured, mode of the week, history…)
+   as tiles along the bottom. Phones keep their own layout for now. */
+body:not(.mobile) .menu-pane[data-pane="play"]:not(.hidden), body.tablet .menu-pane[data-pane="play"]:not(.hidden) {
+  display: grid; grid-template-columns: minmax(0, 1fr) 300px; column-gap: 16px; align-items: start; }
+body:not(.mobile) .menu-pane[data-pane="play"] > *, body.tablet .menu-pane[data-pane="play"] > * { grid-column: 1; }
+body:not(.mobile) #home-side, body.tablet #home-side { grid-column: 2; grid-row: 1 / span 4; position: sticky; top: 0; }
+body:not(.mobile) #home-bottom, body.tablet #home-bottom { grid-column: 1 / -1; }
+.play-big { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.big-play { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 8px; min-height: 250px;
+  padding: 26px 28px; text-align: left; text-transform: none; letter-spacing: 0; overflow: hidden; border: 0; border-radius: 22px; color: #fff; cursor: pointer;
+  transition: transform 0.15s var(--ease-back, ease), filter 0.15s; }
+.big-play:hover { transform: translateY(-3px) scale(1.01); filter: saturate(1.1) brightness(1.05); }
+.big-play:active { transform: translateY(1px) scale(0.99); }
+.bp-quick { background: repeating-linear-gradient(-60deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px), radial-gradient(120% 120% at 100% 0%, rgba(255,210,58,0.35), transparent 50%), linear-gradient(120deg, #ff3f84 0%, #ff2d75 40%, #ff6a2a 100%);
+  box-shadow: inset 0 -4px 0 rgba(90,0,30,0.25), 0 18px 40px rgba(255,45,117,0.25); }
+.bp-quick::after { content: ''; position: absolute; right: -40px; top: -46px; width: 280px; height: 280px; pointer-events: none;
+  background: url(icons/mark.svg) center / contain no-repeat; opacity: 0.2; transform: rotate(8deg); }
+.bp-ranked { --dv: #9aa4b2; background: repeating-linear-gradient(60deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 22px),
+  radial-gradient(110% 120% at 100% 0%, color-mix(in srgb, var(--dv) 55%, transparent), transparent 55%), linear-gradient(120deg, #1a1040 0%, #2a1660 55%, #3a1a7a 100%);
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25), 0 18px 40px color-mix(in srgb, var(--dv) 25%, transparent); border: 2px solid color-mix(in srgb, var(--dv) 60%, transparent); }
+.bp-ranked.live { animation: rk-pulse 1.6s ease-in-out infinite; }
+.bp-kicker { font-family: var(--font-display); font-size: 13px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; padding: 4px 12px;
+  border-radius: 4px; background: rgba(0,0,0,0.25); transform: skewX(-10deg); }
+.bp-title { font-family: var(--font-display); font-size: 44px; font-weight: 900; font-style: italic; line-height: 1; text-transform: uppercase; text-shadow: 3px 3px 0 rgba(0,0,0,0.3); }
+.bp-sub { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.88); max-width: 95%; }
+.bp-go { margin-top: 10px; padding: 12px 26px; border-radius: 8px; font-family: var(--font-display); font-weight: 900; letter-spacing: 1.5px; font-size: 16px;
+  text-transform: uppercase; color: #1a1200; background: var(--pop); transform: skewX(-10deg); box-shadow: inset 0 -3px 0 rgba(120,80,0,0.35), 0 8px 20px rgba(0,0,0,0.35); }
+.bp-ranked .bp-go { background: #fff; }
+/* The right-hand column */
+.home-side .today-row { display: flex; flex-direction: column; gap: 10px; }
+.home-side .today-row .hs-tile { width: 100%; }
+.home-side .hs-level { flex-wrap: wrap; }
+/* The bottom row */
+.home-bottom { margin-top: 4px; }
+.home-bottom .hs-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.home-bottom .hs-tiles > * { margin: 0; min-height: 66px; }
+.home-bottom .play-hour { margin-bottom: 12px; }
+@media (max-width: 1100px) { body:not(.mobile) .menu-pane[data-pane="play"]:not(.hidden) { grid-template-columns: minmax(0, 1fr) 250px; } .bp-title { font-size: 34px; } .big-play { min-height: 210px; } }
+/* Phones (until their own remake): everything stacked, Quick Play / Ranked side by side and smaller */
+body.mobile:not(.tablet) .play-big { gap: 8px; }
+body.mobile:not(.tablet) .big-play { min-height: 0; padding: 12px 14px; border-radius: 14px; }
+body.mobile:not(.tablet) .bp-title { font-size: 18px; }
+body.mobile:not(.tablet) .bp-sub, body.mobile:not(.tablet) .bp-go, body.mobile:not(.tablet) .bp-quick::after { display: none; }
+body.mobile:not(.tablet) .home-side .today-row { flex-direction: row; overflow-x: auto; }
+body.mobile:not(.tablet) .home-bottom .hs-tiles { grid-template-columns: 1fr; }
+
+/* Top tabs: bigger, and Practice / Map editor / Settings as small icon buttons on the right */
+body:not(.mobile) .menu-nav button, body.tablet .menu-nav button { height: 50px; font-size: 15px; }
+body:not(.mobile) .menu-nav #btn-practice .lbl, body:not(.mobile) .menu-nav #btn-editor .lbl, body:not(.mobile) .menu-nav #btn-settings-menu .lbl { display: none; }
+body:not(.mobile) .menu-nav #btn-practice, body:not(.mobile) .menu-nav #btn-editor, body:not(.mobile) .menu-nav #btn-settings-menu { padding: 0 12px; }
+body:not(.mobile) .menu-nav #btn-practice .ic, body:not(.mobile) .menu-nav #btn-editor .ic, body:not(.mobile) .menu-nav #btn-settings-menu .ic { display: inline-block; font-size: 20px; }
+
+/* Locker Room (PC): a big 3D model on the left; on the right the items, with the categories along the bottom */
+body:not(.mobile) .customize.cz2, body.tablet .customize.cz2 { grid-template-columns: 380px minmax(0, 1fr); }
+body:not(.mobile) .cz-3d, body.tablet .cz-3d { width: 340px; height: 446px; }
+body:not(.mobile) .cz2 .cz-main, body.tablet .cz2 .cz-main { display: flex; flex-direction: column; height: calc(100vh - 290px); min-height: 460px; }
+body:not(.mobile) .cz2 .cz-panel, body.tablet .cz2 .cz-panel { order: 1; flex: 1; overflow-y: auto; padding-right: 4px; }
+body:not(.mobile) .cz2 .cz-buy, body.tablet .cz2 .cz-buy { order: 2; margin: 10px 0 0; }
+body:not(.mobile) .cz2 .cz-tabs, body.tablet .cz2 .cz-tabs { order: 3; margin: 12px 0 0; padding: 6px; }
+body:not(.mobile) .cz2 .cz-tabs button, body.tablet .cz2 .cz-tabs button { padding: 10px 12px; font-size: 13px; }
+/* Shop: the same 3D model on the left, the shop on the right */
+.shop.shop2 { grid-template-columns: 380px minmax(0, 1fr); }
+.shop2 .shop-stage { position: sticky; top: 0; display: flex; flex-direction: column; gap: 10px; }
+.shop2 .shop-3d { display: flex; justify-content: center; padding: 14px 0 6px; border-radius: var(--r-lg); border: 1px solid var(--line);
+  background: radial-gradient(260px 200px at 50% 80%, rgba(255,45,117,0.22), transparent 70%), rgba(255,255,255,0.02); }
+.shop2 .shop-3d .cz-3d { width: 340px; height: 446px; }
+.shop2 .shop-right { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.shop2 .shop-cats { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); }
+.shop2 .shop-cats button { flex: 1 1 auto; justify-content: center; padding: 9px 10px; }
+.shop2 .shop-cats button.sel { box-shadow: none; background: var(--grad); color: #fff; }
+.shop2 .shop-detail { position: static; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px 14px; }
+.shop2 .shop-detail > canvas.shop-avatar { display: none; } /* the 3D model shows it */
+.shop2 .shop-detail .shop-bnr, .shop2 .shop-detail .shop-wrap.big, .shop2 .shop-detail .shop-icon.big { grid-row: span 3; max-width: 260px; }
+.shop2 .shop-detail .shop-icon.big { font-size: 46px; }
+.shop2 .shop-detail .shop-wrap.big { width: 120px; height: 70px; }
+.shop2 .shop-detail .shop-gift, .shop2 .shop-detail .shop-msg { grid-column: 1 / -1; }
+body.mobile:not(.tablet) .shop.shop2 { grid-template-columns: 1fr; }
+body.mobile:not(.tablet) .shop2 .shop-3d .cz-3d { width: 160px; height: 210px; }
+/* Friends: friends (add friends) and challenges first, then your clan, then inviting friends, then linking devices */
+.menu-pane[data-pane="friends"]:not(.hidden) { display: flex; flex-direction: column; }
+.menu-pane[data-pane="friends"] > #menu-friends { order: 1; }
+.menu-pane[data-pane="friends"] > #fchal-card { order: 2; }
+.menu-pane[data-pane="friends"] > #myreports-card { order: 3; }
+.menu-pane[data-pane="friends"] > #clan-card { order: 4; }
+.menu-pane[data-pane="friends"] > #invite-card { order: 5; }
+.menu-pane[data-pane="friends"] > #devices-card { order: 6; }

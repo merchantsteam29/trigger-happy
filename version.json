@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.35",
+  "version": "2026.10.15.36",
   "notes": [
-    "Play Hour, Join GIGACHAD and Welcome back gifts"
+    "New PC menus: big Quick Play and Ranked, Locker Room, 3D shop"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
