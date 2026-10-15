@@ -1510,6 +1510,7 @@ export class Game {
     if (edge('KeyR')) this.specFP = !this.specFP;
     if (edge('KeyH')) this.hud.el.classList.toggle('cine');
     const cp = Math.cos(me.pitch);
+    if (this.specGo && list.some((r) => r.id === this.specGo)) this.specFree = false;
     if (this.specFree || !list.length) {
       if (!this.specPos) this.specPos = cam.position.clone();
       if (!this.specVel) this.specVel = new THREE.Vector3();
@@ -1526,6 +1527,7 @@ export class Game {
       cam.rotation.set(me.pitch, me.yaw, 0);
       this.specTarget = null;
     } else {
+      if (this.specGo) { const j = list.findIndex((r) => r.id === this.specGo); if (j >= 0) this.specIdx = j; this.specGo = null; } // specGoTo
       const i = ((this.specIdx || 0) % list.length + list.length) % list.length;
       const r = list[i], d = 3.4;
       if (this.specFP) { // through their eyes
@@ -1548,6 +1550,9 @@ export class Game {
     const p = this.specTarget && this.players.get(this.specTarget.id);
     this.hud.spectate(p ? p.name : null, this.specFree || !list.length, !free, { speed: Math.round(this.specSpeed || 9), fp: !!this.specFP && !this.specFree && !!list.length });
   }
+
+  // Spectating: jump the camera straight to a player (staff pick them by name in the pause menu).
+  specGoTo(id) { this.specGo = id; this.specFree = false; }
 
   // After dying: watch the killer, then other living players (teammates only in team modes)
   // until you respawn. Only when there's time for it — quick respawns keep the normal death cam.

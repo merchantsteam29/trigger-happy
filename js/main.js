@@ -1650,10 +1650,23 @@ function renderModList() {
   const rows = [...game.players.values()].filter((p) => p.id !== game.myId && !p.bot);
   $('mod-list').innerHTML = rows.length ? rows.map((p) => {
     const can = rank(mine) > rank(p.role), may = (x) => roles.myCan(x); // moderator permissions (roles.js PERMS)
-    return `<div class="mod-row"><span class="mod-name">${esc(p.name)}${badge(p.role, true)}${p.gt && p.gt !== p.name ? ` <small class="gt">@${esc(p.gt)}</small>` : p.gt ? ' <small class="gt">✓</small>' : ' <small class="gt guest">guest</small>'}${p.muted ? ' <em>muted</em>' : ''}</span>
+    return `<div class="mod-row" data-name="${esc(`${p.name} ${p.gt || ''}`.toLowerCase())}">${game.spectating ? `<button class="primary" data-mgo="${p.id}" title="Move the camera to them">👁 Go to</button>` : ''}<span class="mod-name">${esc(p.name)}${badge(p.role, true)}${p.gt && p.gt !== p.name ? ` <small class="gt">@${esc(p.gt)}</small>` : p.gt ? ' <small class="gt">✓</small>' : ' <small class="gt guest">guest</small>'}${p.muted ? ' <em>muted</em>' : ''}</span>
       ${can ? `${may('warn') ? `<button data-mwarn="${p.id}" title="Pop up a warning on their screen">⚠ Warn</button>` : ''}${may('rename') ? `<button data-mren="${p.id}" title="Change their name in this match">✎ Rename</button>` : ''}${may('tools') ? `<button data-mfreeze="${p.id}">${p.frozen ? '🔥 Unfreeze' : '🧊 Freeze'}</button>` : ''}${may('mute') ? `<button data-mute="${p.id}">${p.muted ? 'Unmute' : 'Mute'}</button>` : ''}${p.gt ? `<button data-mclip="${p.id}" title="Save the last 60 seconds as evidence on their record (F9 saves it on whoever you're spectating)">🎬 Clip</button>` : ''}${p.id === 'host' ? '<small>host</small>' : may('kick') ? `<button class="danger" data-mkick="${p.id}">Kick</button>` : ''}` : '<small>staff</small>'}</div>`;
   }).join('') : '<div class="note">No other players here yet.</div>';
   $('mod-list').querySelectorAll('[data-mute]').forEach((b) => { b.onclick = () => net.send({ t: 'modmute', id: b.dataset.mute }); });
+  // Spectating: find a player by name and jump the camera to them.
+  $('mod-list').querySelectorAll('[data-mgo]').forEach((b) => { b.onclick = () => { game.specGoTo(b.dataset.mgo); $('btn-resume').click(); }; });
+  const find = $('mod-find');
+  find.classList.toggle('hidden', rows.length < 2);
+  const filterRows = () => { const q = find.value.trim().toLowerCase(); $('mod-list').querySelectorAll('.mod-row').forEach((r) => r.classList.toggle('hidden', !!q && !r.dataset.name.includes(q))); };
+  find.oninput = filterRows;
+  find.onkeydown = (e) => {
+    e.stopPropagation();
+    if (e.key !== 'Enter') return;
+    const hit = [...$('mod-list').querySelectorAll('.mod-row:not(.hidden) [data-mgo]')][0];
+    if (hit) hit.click();
+  };
+  filterRows();
   $('mod-list').querySelectorAll('[data-mfreeze]').forEach((b) => { b.onclick = () => net.send({ t: 'modfreeze', id: b.dataset.mfreeze }); });
   // Match tools work for any staff member, even when someone else is hosting.
   $('mod-match').classList.toggle('hidden', !roles.myCan('tools'));

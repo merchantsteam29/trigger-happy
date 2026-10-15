@@ -934,3 +934,5 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-gchat { margin-bottom: 12px; }
 .mp-gchat-now { font-weight: 700; margin: 6px 0; }
 .mp-gchat-now.bad { color: #ff8a8a; } .mp-gchat-now.mute { color: #ffcf7a; } .mp-gchat-now.ok { color: #6fe39a; }
+#mod-find { width: 100%; margin: 6px 0; }
+.mod-row [data-mgo] { margin-right: 8px; }

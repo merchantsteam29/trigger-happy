@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.13",
+  "version": "2026.10.15.14",
   "notes": [
-    "Staff can lock chat in every match at once"
+    "Spectating staff can jump to a player by name"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
