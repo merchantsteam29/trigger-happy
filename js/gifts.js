@@ -23,9 +23,9 @@ export function giftable(slot, id) {
 }
 // Anything the owner may hand out: any cosmetic (earn-only ones too) except the owner's own name tag.
 export function grantable(slot, id) {
-  if (slot === 'wrap') { const c = camoOf(id); return c.id === id ? c : null; }
+  if (slot === 'wrap') { const c = camoOf(id); return c.id === id && !c.owner ? c : null; }
   const c = (COSMETICS[slot] || []).find((x) => x.id === id);
-  return c && !(slot === 'nametag' && id === 'owner') && !(slot === 'costume' && id === 'gigachad') ? c : null;
+  return c && !c.owner && !(slot === 'nametag' && id === 'owner') && !(slot === 'costume' && id === 'gigachad') && id !== 'none' ? c : null;
 }
 export const ownsItem = (slot, id) => (slot === 'wrap' ? ownsWrap(id) : isOwned(slot, id));
 

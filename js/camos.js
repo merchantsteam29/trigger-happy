@@ -7,6 +7,8 @@
 //   reward           can't be bought: earned (see `how`), e.g. by a login streak or a rank
 //   metal / rough    material finish (optional)
 //   glow             emissive color (optional)
+//   anim             it moves (models.js animates it): 'scroll' (the pattern slides along), 'fall' (slides down),
+//                    'pulse' (the glow breathes), 'twinkle' (sparkles); speed: how fast
 // The black accents, steel, brass, lenses and sights always keep their own materials.
 
 export const CAMOS = [
@@ -46,6 +48,14 @@ export const CAMOS = [
   { id: 's2_aurora', name: 'Aurora (S2)', pattern: 'stripes', colors: ['#3affb0', '#6a3aff'], glow: '#0a2a2a', reward: true, how: 'Season 2, tier 15' },
   { id: 's2_glacier', name: 'Deep Glacier (S2)', pattern: 'splotch', colors: ['#0a2a4a', '#3a8ad8', '#bfefff', '#ffffff'], metal: 0.6, rough: 0.15, reward: true, how: 'Season 2, tier 20' },
   { id: 's2_prism', name: 'Frostbite Prism (S2)', pattern: 'stars', colors: ['#06101a', '#6fd8ff', '#c9a8ff', '#ffffff'], metal: 0.7, rough: 0.1, glow: '#0a2440', reward: true, how: 'Season 2, tier 30' },
+  // Animated wraps (they move)
+  { id: 'goldshine', name: 'Gold Shine', pattern: 'shine', colors: ['#e8a81e', '#ffd86a', '#fff8d0'], metal: 0.3, rough: 0.25, glow: '#3a2600', anim: 'scroll', speed: 0.5, price: 600 },
+  { id: 'frost', name: 'Frost Sparkle', pattern: 'stars', colors: ['#bfefff', '#e8f9ff', '#7fc8e8', '#ffffff'], metal: 0.3, rough: 0.15, glow: '#4a8ab8', anim: 'twinkle', price: 500 },
+  { id: 'galaxydrift', name: 'Drifting Galaxy', pattern: 'stars', colors: ['#0a0618', '#7a3aff', '#ff3aa8', '#ffffff'], glow: '#24104e', anim: 'scroll', speed: 0.06, price: 600 },
+  { id: 'coderain', name: 'Code Rain', pattern: 'code', colors: ['#020a04', '#3aff7a', '#b8ffcf'], glow: '#0a5a1e', anim: 'fall', speed: 0.5, price: 500 },
+  { id: 'rainbowflow', name: 'Rainbow Flow', pattern: 'rainbow', colors: ['#ff3b3b'], glow: '#202020', anim: 'scroll', speed: 0.25, price: 700 },
+  { id: 'lavaflow', name: 'Lava Flow', pattern: 'cracks', colors: ['#1a0a06', '#ff5a12', '#ffb020'], glow: '#ff3a00', anim: 'pulse', speed: 0.12, price: 600 },
+  { id: 'gigachad', name: 'GIGACHAD', pattern: 'crowns', colors: ['#e8a81e', '#ffe28a', '#b8860b'], metal: 0.3, rough: 0.25, glow: '#4a3000', anim: 'scroll', speed: 0.3, reward: true, owner: true, how: 'Only the game owner has this one' },
   { id: 'champion', name: 'Weekly Champion', pattern: 'cracks', colors: ['#1a1206', '#ffd23a', '#fff2b0'], metal: 0.8, rough: 0.2, glow: '#3a2600', reward: true, how: 'Finish #1 on a weekly leaderboard' },
 ];
 
@@ -54,6 +64,9 @@ export const camoOf = (id) => CAMOS.find((c) => c.id === id) || CAMOS[0];
 
 // CSS background for the little swatch in the loadout menu.
 export function camoSwatch(c) {
+  if (c.pattern === 'shine' || c.pattern === 'crowns') return `linear-gradient(110deg, ${c.colors[0]} 0 35%, ${c.colors[2]} 45%, ${c.colors[0]} 55%, ${c.colors[1]})`;
+  if (c.pattern === 'rainbow') return 'linear-gradient(90deg, #ff3b3b, #ffb020, #ffe94a, #3bd16f, #3b9cff, #8a4bff)';
+  if (c.pattern === 'code') return `repeating-linear-gradient(90deg, ${c.colors[0]} 0 4px, ${c.colors[1]} 4px 5px, ${c.colors[0]} 5px 9px)`;
   if (c.pattern === 'carbon') return `repeating-linear-gradient(45deg, ${c.colors[0]} 0 3px, ${c.colors[1]} 3px 6px)`;
   if (c.pattern === 'stars') return `radial-gradient(circle at 30% 30%, ${c.colors[3]} 0 1px, transparent 2px), radial-gradient(circle at 70% 60%, ${c.colors[3]} 0 1px, transparent 2px), linear-gradient(135deg, ${c.colors[0]}, ${c.colors[1]} 60%, ${c.colors[2]})`;
   if (c.pattern === 'cracks') return `linear-gradient(120deg, ${c.colors[0]} 0 40%, ${c.colors[1]} 42%, ${c.colors[0]} 44% 70%, ${c.colors[2]} 72%, ${c.colors[0]} 74%)`;

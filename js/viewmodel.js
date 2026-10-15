@@ -3,6 +3,7 @@ import { buildGun } from './models.js';
 import { WEAPONS } from './weapons.js';
 import { Limb, solveIK, seg, bump, keyBlend } from './rig.js';
 import { attachCharm, swingCharm } from './charms.js';
+import { skinFor } from './gunskins.js';
 
 const S = 0.8; // model scale in first person
 const HIP = {
@@ -165,10 +166,17 @@ export class Viewmodel {
   }
 
   // Attachments changed: rebuild the affected guns (the one in hand right away).
+  // Your gun skins (gunskins.js): a list of skin ids, one per weapon.
+  setSkins(list) {
+    this.skins = list || [];
+    this.skinsKey = this.skins.join();
+    this.setMods(this.mods);
+  }
+
   setMods(mods) {
     this.mods = mods || {};
     for (const [id, m] of Object.entries(this.builtModels)) {
-      const key = JSON.stringify(this.mods[id] || null);
+      const key = this.modelKey(id);
       if (m.modsKey === key) continue;
       this.root.remove(m.holder);
       m.holder.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
@@ -180,15 +188,17 @@ export class Viewmodel {
   buildModel(id) {
     const holder = new THREE.Group();
     holder.scale.setScalar(S);
-    const gun = buildGun(id, this.mods ? this.mods[id] : null);
+    const sk = skinFor(this.skins, id);
+    const gun = buildGun(id, this.mods ? this.mods[id] : null, sk ? sk.id : null);
     attachCharm(gun, this.charm); // weapon charm (charms.js)
     holder.add(gun);
     holder.visible = false;
     this.root.add(holder);
     const sight = gun.userData.sight || 0.1;
     // Magnified optics sit closer to the eye so you look into the scope.
-    return { id, holder, gun, parts: gun.userData.parts, ads: [0, -sight * S, gun.userData.adsZ ?? -0.3], modsKey: JSON.stringify(this.mods ? this.mods[id] || null : null) };
+    return { id, holder, gun, parts: gun.userData.parts, ads: [0, -sight * S, gun.userData.adsZ ?? -0.3], modsKey: this.modelKey(id) };
   }
+  modelKey(id) { const sk = skinFor(this.skins, id); return JSON.stringify([this.mods ? this.mods[id] || null : null, sk ? sk.id : null]); }
 
   get model() { return this.models[this.quick || this.cur]; }
 

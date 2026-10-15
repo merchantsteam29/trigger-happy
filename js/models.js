@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { M, box, rbox, cyl, grp, anchor, grip, trigger, modelQuality } from './modelkit.js';
 import { GUNS, finishGun } from './guns.js';
 import { camoOf } from './camos.js';
+import { skinItem, skinBase, applySkin } from './gunskins.js';
 
 export { modelQuality };
 
@@ -260,10 +261,13 @@ const builders = {
 };
 
 // mods: the gun's attachments (see mods.js); guns get their defaults if left out.
-export function buildGun(id, mods = null) {
+// skin: a gun skin id (gunskins.js) for this weapon, or null.
+export function buildGun(id, mods = null, skin = null) {
   const g = new THREE.Group();
   const key = builders[id] ? id : 'ar';
-  const spec = builders[key](g);
+  const sk = skinItem(skin), use = sk && sk.gun === key ? sk : null, base = skinBase(use);
+  let spec = builders[base && builders[base] ? base : key](g);
+  spec = applySkin(g, use, spec);
   if (spec) finishGun(g, key, spec, mods);
   if (mods && mods.camo) applyCamo(g, mods.camo);
   g.traverse((o) => { if (o.isMesh) o.castShadow = o.material !== M.glass; });
@@ -359,6 +363,24 @@ function camoTexture(c) {
       for (let j = 0; j < 4; j++) { x += (rnd() - 0.5) * 22; y += (rnd() - 0.5) * 22; g.lineTo(x, y); }
       g.stroke();
     }
+  } else if (c.pattern === 'shine' || c.pattern === 'crowns') { // gold with a bright band (and little crowns)
+    const grd = g.createLinearGradient(0, 0, 64, 0);
+    grd.addColorStop(0, col[0]); grd.addColorStop(0.42, col[0]); grd.addColorStop(0.5, col[2]); grd.addColorStop(0.58, col[0]); grd.addColorStop(1, col[1]);
+    g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
+    if (c.pattern === 'crowns') {
+      g.fillStyle = col[2];
+      for (const [x, y] of [[8, 14], [40, 30], [20, 48], [52, 6]]) { g.beginPath(); g.moveTo(x, y + 8); g.lineTo(x, y); g.lineTo(x + 3, y + 4); g.lineTo(x + 6, y); g.lineTo(x + 9, y + 4); g.lineTo(x + 12, y); g.lineTo(x + 12, y + 8); g.fill(); g.fillStyle = '#d0122a'; g.fillRect(x + 5, y + 5, 2, 2); g.fillStyle = col[2]; }
+    }
+  } else if (c.pattern === 'rainbow') {
+    ['#ff3b3b', '#ffb020', '#ffe94a', '#3bd16f', '#3b9cff', '#8a4bff', '#ff3bd0', '#ff3b3b'].forEach((h, i) => { g.fillStyle = h; g.fillRect(i * 8, 0, 8, 64); });
+  } else if (c.pattern === 'code') { // falling green characters
+    g.font = 'bold 7px monospace';
+    for (let x = 0; x < 64; x += 6) for (let y = 0; y < 64; y += 7) {
+      const r = rnd();
+      if (r < 0.45) continue;
+      g.fillStyle = r > 0.9 ? col[2] : col[1];
+      g.fillText(String.fromCharCode(0x30 + ((rnd() * 42) | 0)), x, y + 6);
+    }
   } else if (c.pattern === 'stripes') {
     g.fillStyle = col[1];
     for (let i = -64; i < 128; i += 14) {
@@ -382,8 +404,30 @@ function camoTexture(c) {
   return tex;
 }
 
+// Animated wraps (camos.js anim): one loop moves every animated texture / glow while any exist.
+const animTex = new Map(), animMats = new Set();
+let animOn = false;
+function animLoop() {
+  const t = performance.now() / 1000;
+  for (const [tex, c] of animTex) {
+    const v = c.speed || 0.2;
+    if (c.anim === 'scroll') tex.offset.x = (t * v) % 1;
+    else if (c.anim === 'fall') tex.offset.y = (t * v) % 1;
+    else if (c.anim === 'pulse') tex.offset.x = (t * v) % 1;
+  }
+  for (const m of animMats) {
+    const c = m.userData.camo;
+    if (c.anim === 'pulse') m.emissiveIntensity = 0.6 + Math.sin(t * 2.4) * 0.5;
+    else if (c.anim === 'twinkle') m.emissiveIntensity = 0.5 + Math.max(0, Math.sin(t * 7) * Math.sin(t * 3.1)) * 1.4;
+  }
+  requestAnimationFrame(animLoop);
+}
 function camoMaterial(c, base) {
   const key = c.id + ':' + base.uuid;
+  if (!camoMats.has(key) && c.anim) {
+    if (!animOn) { animOn = true; requestAnimationFrame(animLoop); }
+    if (c.pattern) animTex.set(camoTexture(c), c);
+  }
   if (!camoMats.has(key)) {
     camoMats.set(key, new THREE.MeshStandardMaterial({
       color: c.pattern ? '#ffffff' : c.color,
@@ -392,6 +436,7 @@ function camoMaterial(c, base) {
       metalness: c.metal ?? base.metalness,
       emissive: c.glow || '#000000',
     }));
+    if (c.anim) { const m = camoMats.get(key); m.userData.camo = c; animMats.add(m); }
   }
   return camoMats.get(key);
 }

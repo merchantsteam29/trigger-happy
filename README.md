@@ -308,6 +308,20 @@ modes) always shows on it somewhere. Pick one in **Character → Costumes**, or 
 - Zombies, the Juggernaut and the bounty target keep their own look, and Prop Hunt props are still props.
   **Settings → Show other players' costumes** turns them off for you.
 
+## Gun skins
+
+A **gun skin** changes a weapon's whole model, not just its colors. Damage, speed and accuracy never change. Pick them in
+**Character → Gun skins** (a turning 3D preview) or the **Shop** (Gun skins); one skin per weapon, and **Back to the
+normal** takes it off. Everyone sees your skins, in first person and third person. Skins keep their own colors.
+
+- **In the shop:** Toy Blaster and Laser Rifle (the old Laser Rifle's look) for the Assault Rifle, Pumpkin Launcher for the
+  Rocket Launcher, Golden Deagle for the Hand Cannon, and Fish and Energy Blade for the Combat Knife (🪙 700 to 1,000).
+- **Giveaways only:** Marksman Revolver (with a coin, goes with Blood Machine) and Shield Saw Shotgun (goes with
+  Hellwalker), handed out by the owner.
+
+**Animated wraps** move on your gun: Gold Shine, Frost Sparkle, Drifting Galaxy, Code Rain, Rainbow Flow and Lava Flow
+(🪙 500 to 700, in Character → Weapon wraps and the Shop).
+
 ## Kill effects
 
 A **kill effect** plays where your victim stood when you get a kill, and everyone in the match sees it. Buy them in the
@@ -374,7 +388,7 @@ and players who are out for good (Battle Royale, Last Man Standing, a Tournament
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
 ("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Character → Banner**:
 Standard and Carbon are free; Tiger, Woodland / Arctic Camo, Ocean, Sunset, Hazard, Bloodbath, Neon Grid, Code Rain,
-Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst, Command Center and Masquerade cost tokens (several are animated). Some can only be
+Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst, Command Center, Masquerade and Armory cost tokens (several are animated). Some can only be
 earned: season pass banners, a banner for each holiday event, ranked season banners and **Top Clan**. Bots wear random ones.
 
 ## Levels, daily rewards & challenges

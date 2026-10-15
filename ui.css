@@ -984,3 +984,7 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 #maint-pop .card { max-width: 420px; text-align: center; }
 .mp-maint input { flex: 1; }
 .mp-maint select { width: auto; }
+/* Gun skins (settingsui.js skinsView) */
+.cz-skins .sk-gun { margin-bottom: 10px; }
+.cz-skins .sk-gun > b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; opacity: .8; margin: 4px 0; }
+.cz-skins .wr-preview .note { margin-top: 8px; }

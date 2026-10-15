@@ -15,7 +15,8 @@ import { WEAPONS } from './weapons.js';
 import { CB_MODES } from './access.js';
 import { PAD_ACTIONS, padButton, setPadButton, resetPadButtons, buttonName, padStyle, padInput } from './gamepad.js';
 import { hasMods, cleanMods } from './mods.js';
-import { COSMETICS, SLOT_LABELS, ICON_SLOTS, HAIR_COLORS, MISSIONS, getStat, missionDone, isOwned, priceOf, buy, getTokens, getCos, setCos, ownsWrap, buyWrap } from './missions.js';
+import { COSMETICS, SLOT_LABELS, ICON_SLOTS, HAIR_COLORS, MISSIONS, getStat, missionDone, isOwned, priceOf, buy, getTokens, getCos, setCos, ownsWrap, buyWrap, wearSkin } from './missions.js';
+import { SKIN_ITEMS, skinFor } from './gunskins.js';
 
 const $ = (id) => document.getElementById(id);
 const pct = (v) => Math.round(v * 100) + '%';
@@ -236,6 +237,43 @@ export class SettingsUI {
     return box;
   }
 
+  // ---------- Gun skins (Character) ----------
+  // A weapon's whole model (gunskins.js): pick one, see it turning in 3D (with that gun's wrap),
+  // buy it or put it on. One skin per weapon; "Normal" takes it off.
+  skinsView(rerender) {
+    const cos = getCos(), skins = SKIN_ITEMS.filter((s) => s.gun);
+    if (!skins.some((s) => s.id === this.skinTry)) this.skinTry = (skins.find((s) => cos.skins.includes(s.id)) || skins[0]).id;
+    const pick = skins.find((s) => s.id === this.skinTry), have = isOwned('skin', pick.id), on = cos.skins.includes(pick.id), tokens = getTokens();
+    const guns = [...new Set(skins.map((s) => s.gun))];
+    const box = document.createElement('div');
+    box.className = 'cz-wraps cz-skins';
+    let actions;
+    if (on) actions = `<span class="cz-tag on">On your ${esc(WEAPONS[pick.gun].name)}</span><button data-skin-off>Back to the normal ${esc(WEAPONS[pick.gun].name)}</button>`;
+    else if (have) actions = `<button class="primary" data-skin-on>Use on ${esc(WEAPONS[pick.gun].name)}</button>`;
+    else if (pick.reward) actions = `<span class="wr-need">🔒 ${esc(pick.name)} can't be bought. ${esc(pick.how)}.</span>`;
+    else if (tokens >= pick.price) actions = `<button class="primary" data-skin-buy>Buy & use · 🪙 ${pick.price}</button>`;
+    else actions = `<span class="wr-need">${esc(pick.name)} costs 🪙 ${pick.price}. You need ${pick.price - tokens} more: complete Missions to earn tokens.</span>`;
+    box.innerHTML = `<div class="set-label">Gun skins<small>A whole new look for one weapon. Looks only: damage, speed and accuracy never change. Other players see it. Skins keep their own colors (wraps don't change them).</small></div>
+      <div class="wr-body">
+        <div class="wr-preview"><div class="wr-canvas"></div><p class="note">${esc(pick.desc || '')}</p></div>
+        <div class="wr-side">${guns.map((g) => `<div class="sk-gun"><b>${esc(WEAPONS[g].name)}</b><div class="cz-grid cz-icon-grid">${skins.filter((s) => s.gun === g).map((s) => {
+          const own = isOwned('skin', s.id), worn = cos.skins.includes(s.id);
+          const tag = worn ? '<em class="cz-tag on">Using</em>' : own ? '<em class="cz-tag">Owned</em>' : s.owner ? '<em class="cz-tag lock">👑 Owner only</em>' : s.reward ? '<em class="cz-tag lock">🔒 Giveaway</em>' : `<em class="cz-tag price">🪙 ${s.price}</em>`;
+          return `<button class="cz-card cz-icon-card ${s.id === this.skinTry ? 'trying' : ''} ${worn ? 'sel' : ''} ${own ? '' : 'locked'}" data-skin="${s.id}"><span class="cz-icon">${s.icon}</span><b>${esc(s.name)}</b>${tag}</button>`;
+        }).join('')}</div></div>`).join('')}
+        <div class="wr-actions">${actions}</div></div>
+      </div>`;
+    box.querySelector('.wr-canvas').appendChild(this.wrapCanvas());
+    const camo = (this.getMods()[pick.gun] || {}).camo || 'default';
+    this.showWrap(pick.gun, camo, pick.id);
+    box.querySelectorAll('[data-skin]').forEach((b) => { b.onclick = () => { this.skinTry = b.dataset.skin; rerender(); }; });
+    const use = (next) => { setCos(next); if (this.onCos) this.onCos(next); rerender(); };
+    const onB = box.querySelector('[data-skin-on]'); if (onB) onB.onclick = () => use(wearSkin(getCos(), pick.id));
+    const offB = box.querySelector('[data-skin-off]'); if (offB) offB.onclick = () => use(wearSkin(getCos(), null, pick.gun));
+    const buyB = box.querySelector('[data-skin-buy]'); if (buyB) buyB.onclick = () => { if (buy('skin', pick.id)) use(wearSkin(getCos(), pick.id)); };
+    return box;
+  }
+
   // One small 3D view, reused: a slowly turning gun.
   wrapCanvas() {
     if (!this.wr) {
@@ -274,12 +312,13 @@ export class SettingsUI {
     return this.wr.canvas;
   }
 
-  showWrap(gunId, camo) {
-    const wr = this.wr, key = gunId + ':' + camo;
+  showWrap(gunId, camo, skin = null) {
+    const wr = this.wr, key = gunId + ':' + camo + ':' + (skin || skinFor(getCos().skins, gunId)?.id || '');
     if (!wr || wr.key === key) return;
     wr.key = key;
     if (wr.gun) { wr.pivot.remove(wr.gun); wr.gun.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
-    const g = buildGun(gunId, { ...(this.getMods()[gunId] || {}), camo });
+    const worn = skinFor(getCos().skins, gunId);
+    const g = buildGun(gunId, { ...(this.getMods()[gunId] || {}), camo }, skin || (worn ? worn.id : null)); // wraps preview on your skin too
     // Center it and scale it to fit the view.
     const bb = new THREE.Box3().setFromObject(g), size = bb.getSize(new THREE.Vector3()), mid = bb.getCenter(new THREE.Vector3());
     g.position.sub(mid);
@@ -348,7 +387,7 @@ export class SettingsUI {
       const cos = getCos();
       const t = this.tryOn;
       const shown = t ? { ...cos, [t.slot]: t.id } : cos;
-      const TABS = [['costume', 'Costumes'], ['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['nametag', 'Name tags'], ['charm', 'Weapon charms'], ['spray', 'Spray'], ['card', 'Player card'], ['wraps', 'Weapon wraps']];
+      const TABS = [['costume', 'Costumes'], ['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['nametag', 'Name tags'], ['charm', 'Weapon charms'], ['spray', 'Spray'], ['card', 'Player card'], ['skins', 'Gun skins'], ['wraps', 'Weapon wraps']];
       if (!TABS.some(([k]) => k === this.czTab)) this.czTab = t ? t.slot : 'hat';
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
@@ -385,7 +424,9 @@ export class SettingsUI {
         const have = isOwned(slot, c.id), on = cos[slot] === c.id && !t, trying = t && t.slot === slot && t.id === c.id;
         return { have, on, trying, tag: on ? '<em class="cz-tag on">Equipped</em>' : have ? '<em class="cz-tag">Owned</em>' : c.reward ? '<em class="cz-tag lock">🔒 Earn</em>' : `<em class="cz-tag price">🪙 ${c.price}</em>` };
       };
-      if (tab === 'wraps') {
+      if (tab === 'skins') {
+        panel.appendChild(this.skinsView(rerender));
+      } else if (tab === 'wraps') {
         panel.appendChild(this.wrapsView(rerender));
       } else if (tab === 'spray') {
         // Your own 16×16 spray (main.js spray editor), and which one X sprays if you're in a clan with one.

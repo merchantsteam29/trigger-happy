@@ -257,7 +257,7 @@ export class ModPanel {
         </div>` : `<div class="note">${role ? 'Staff can only be moderated by someone ranked above them.' : 'You can\'t moderate yourself.'}</div>`}
         ${roles.isOwner() && k !== String(this.social.tag).toLowerCase() ? `<div class="mp-sub">🎁 Give (owner)</div>
         <div class="mp-give"><input id="mp-give-n" type="number" min="1" max="${GRANT_MAX}" placeholder="Tokens"><span class="muted">or</span>
-          <select id="mp-give-item"><option value="">An item…</option>${Object.keys(SLOT_LABELS).map((slot) => `<optgroup label="${SLOT_LABELS[slot]}">${COSMETICS[slot].filter((c) => grantable(slot, c.id)).map((c) => `<option value="${slot}:${esc(c.id)}">${esc(c.name)}</option>`).join('')}</optgroup>`).join('')}</select>
+          <select id="mp-give-item"><option value="">An item…</option>${Object.keys(SLOT_LABELS).map((slot) => `<optgroup label="${SLOT_LABELS[slot]}">${COSMETICS[slot].filter((c) => grantable(slot, c.id)).map((c) => `<option value="${slot}:${esc(c.id)}">${esc(c.name)}</option>`).join('')}</optgroup>`).join('')}<optgroup label="Weapon wraps">${CAMOS.filter((c) => grantable('wrap', c.id) && c.id !== 'default').map((c) => `<option value="wrap:${esc(c.id)}">${esc(c.name)}</option>`).join('')}</optgroup></select>
           <button class="primary" data-give>Give</button></div>
         <small class="muted">For prizes or making up for a bug. The reason box above is sent as a note; it's logged on their record.</small>` : ''}
         ${log.length ? `<div class="mp-sub">History</div><div class="mp-list mp-log">${log.slice().reverse().map((l) =>
@@ -304,7 +304,7 @@ export class ModPanel {
       const n = Number(box.querySelector('#mp-give-n').value), it = box.querySelector('#mp-give-item').value, note = box.querySelector('#mp-reason').value.trim();
       const item = it ? { slot: it.split(':')[0], id: it.split(':')[1] } : null;
       if (!item && !(n >= 1)) { this.say('Type a number of tokens or pick an item.'); return; }
-      const what = item ? (COSMETICS[item.slot].find((c) => c.id === item.id) || {}).name : `${n} tokens`;
+      const what = item ? ((item.slot === 'wrap' ? CAMOS : COSMETICS[item.slot]).find((c) => c.id === item.id) || {}).name : `${n} tokens`;
       if (!confirm(`Give ${t.tag} ${what}?`)) return;
       give.disabled = true;
       try {

@@ -5,6 +5,8 @@ import { RoundedBoxGeometry as RoundedBox } from 'three/addons/geometries/Rounde
 import { buildGun, modelQuality, mergeStatic } from './models.js';
 import { buildCosmetics } from './cosmetics.js';
 import { buildCostume } from './costumes.js';
+import { skinFor } from './gunskins.js';
+import { camoOf } from './camos.js';
 import { DEFAULT_COS } from './missions.js';
 
 // Plain boxes on phones (see modelQuality).
@@ -212,6 +214,7 @@ export class RemotePlayer {
     this.role = role;
     this.rebuildTag();
     if (wasRole !== role && this.cos && this.cos.costume === 'gigachad') this.applyCosmetics(); // the owner's costume shows once verified
+    if (wasRole !== role && this.guns && Object.keys(this.guns).length) this.setMods(this.mods); // and the owner's gun skin / wrap
   }
 
   // Costume to show: none in modes with a forced look (setCostumeOff), and the owner's only on the verified owner.
@@ -244,8 +247,9 @@ export class RemotePlayer {
   setCosmetics(c) {
     const cos = c || DEFAULT_COS;
     if (this.cos && JSON.stringify(this.cos) === JSON.stringify(cos)) return;
-    const tagWas = this.cos && this.cos.nametag;
+    const tagWas = this.cos && this.cos.nametag, skinsWas = this.cos && JSON.stringify(this.cos.skins || []);
     this.cos = cos;
+    if (skinsWas !== undefined && skinsWas !== JSON.stringify(cos.skins || []) && this.guns) this.setMods(this.mods); // gun skins changed: rebuild the guns
     if (this.tag && tagWas !== cos.nametag) this.rebuildTag();
     this.applyCosmetics();
   }
@@ -289,7 +293,10 @@ export class RemotePlayer {
     if (id === this.weapon || !WEAPONS[id]) return;
     if (this.weapon && this.guns[this.weapon]) this.guns[this.weapon].visible = false;
     if (!this.guns[id]) {
-      const g = buildGun(id, this.mods[id]);
+      // Their skin for this weapon, and their wrap (the owner's own only on the verified owner).
+      const sk = skinFor(this.cos && this.cos.skins, id), owner = this.role === 'owner';
+      const m = this.mods[id] && camoOf(this.mods[id].camo).owner && !owner ? { ...this.mods[id], camo: 'default' } : this.mods[id];
+      const g = buildGun(id, m, sk && (!sk.owner || owner) ? sk.id : null);
       attachCharm(g, this.cos && this.cos.charm);
       g.userData.charmId = this.cos && this.cos.charm;
       g.scale.setScalar(1.25);

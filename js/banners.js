@@ -94,6 +94,10 @@ export const BANNER_STYLE = {
     bg: 'repeating-conic-gradient(from 0deg at 18% 50%, #ffffff10 0 6deg, transparent 6deg 18deg), radial-gradient(circle at 18% 50%, #fff7 0 6%, #2fe6ff88 12%, transparent 40%), linear-gradient(100deg, #10052a, #4a0f9a 45%, #ff2fd8)',
     accent: '#2fe6ff', emblem: '💥', anim: 'hue',
   },
+  armory: {
+    bg: 'repeating-linear-gradient(90deg, #ffffff0d 0 2px, transparent 2px 16px), radial-gradient(circle at 82% 50%, #3fe8ff55 0 14%, transparent 40%), linear-gradient(100deg, #0a1018, #1a2a3a 50%, #ff8a1a)',
+    accent: '#3fe8ff', emblem: '🔫', anim: 'shine',
+  },
   masquerade: {
     bg: 'radial-gradient(circle at 80% 50%, #ffd23f55 0 12%, transparent 40%), repeating-linear-gradient(135deg, #ffffff10 0 10px, transparent 10px 20px), linear-gradient(100deg, #1a0630, #5a1a8a 50%, #ff3f84)',
     accent: '#ffd23f', emblem: '🎭', anim: 'twinkle',

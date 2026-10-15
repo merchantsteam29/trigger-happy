@@ -1391,8 +1391,9 @@ export class Game {
     updateMovers(mt);
     carry(this.me, this.lastMoverT || mt, mt);
     this.lastMoverT = mt;
-    const charm = getCos().charm || 'none';
+    const myCos = getCos(), charm = myCos.charm || 'none';
     if (this.vm.charm !== charm) this.vm.setCharm(charm); // weapon charm changed (charms.js)
+    if (this.vm.skinsKey !== myCos.skins.join()) this.vm.setSkins(myCos.skins); // gun skins changed (gunskins.js)
     const me = this.me;
     const cam = this.camera;
     const w = this.W(this.curW);

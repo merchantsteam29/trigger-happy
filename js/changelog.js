@@ -9,6 +9,16 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.15.32', name: 'Armory', banner: 'armory', notes: [
+    '## Gun Skins',
+    'A whole new model for a weapon (damage never changes): pick them in Character → Gun skins',
+    'In the shop: Toy Blaster and Laser Rifle for the Assault Rifle, Pumpkin Launcher, Golden Deagle, and Fish and Energy Blade for the knife',
+    'Giveaway only: Marksman Revolver and Shield Saw Shotgun, handed out by the owner',
+    '## Animated Wraps',
+    'Wraps that move: Gold Shine, Frost Sparkle, Drifting Galaxy, Code Rain, Rainbow Flow and Lava Flow',
+    '## New Banner',
+    'Armory, the banner of this update, is in the shop',
+  ] },
   { v: '2026.10.15.31', name: 'Costume Party', banner: 'masquerade', notes: [
     '## Costumes',
     'A whole new look for your character, same size and hitbox: pick one in Character → Costumes',

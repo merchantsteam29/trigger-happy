@@ -1,5 +1,6 @@
 import { esc, store } from './util.js';
-import { COSMETICS, SLOT_LABELS, ICON_SLOTS, getTokens, buy, buyWrap, getCos, setCos } from './missions.js';
+import { COSMETICS, SLOT_LABELS, ICON_SLOTS, getTokens, buy, buyWrap, getCos, setCos, wearSkin } from './missions.js';
+import { WEAPONS } from './weapons.js';
 import { CAMOS, camoSwatch } from './camos.js';
 import { bannerOf, bannerHtml } from './banners.js';
 import { drawAvatar } from './settingsui.js';
@@ -11,11 +12,11 @@ import { liveEvent } from './liveevent.js';
 // with Buy / Wear / Gift to a friend. Also: send tokens to a friend, and gifts you've received.
 
 const CATS = [
-  ['all', 'Everything', '🛒'], ['costume', 'Costumes', '🦸'], ['hat', 'Hats', '🎩'], ['hair', 'Hair', '💇'], ['face', 'Face', '🕶'], ['back', 'Back', '🎒'],
+  ['all', 'Everything', '🛒'], ['costume', 'Costumes', '🦸'], ['skin', 'Gun skins', '🔫'], ['hat', 'Hats', '🎩'], ['hair', 'Hair', '💇'], ['face', 'Face', '🕶'], ['back', 'Back', '🎒'],
   ['banner', 'Banners', '🏳'], ['killfx', 'Kill effects', '💥'], ['nametag', 'Name tags', '🏷'], ['charm', 'Weapon charms', '🔑'], ['pose', 'Victory poses', '🏆'], ['wrap', 'Weapon wraps', '🎨'], ['gifts', 'Gifts', '🎁'],
 ];
 const items = (cat) => {
-  const wear = ['hat', 'hair', 'face', 'back', 'banner', ...ICON_SLOTS];
+  const wear = ['hat', 'hair', 'face', 'back', 'banner', ...ICON_SLOTS, 'skin'];
   const list = [];
   for (const slot of cat === 'all' ? [...wear, 'wrap'] : [cat]) {
     if (slot === 'wrap') for (const c of CAMOS) { if (c.price > 0 || c.reward) list.push({ slot, c }); }
@@ -52,15 +53,15 @@ export class Shop {
   }
 
   card({ slot, c }) {
-    const own = ownsItem(slot, c.id), on = slot !== 'wrap' && getCos()[slot] === c.id;
+    const own = ownsItem(slot, c.id), on = slot === 'skin' ? getCos().skins.includes(c.id) : slot !== 'wrap' && getCos()[slot] === c.id;
     const sel = this.sel && this.sel.slot === slot && this.sel.id === c.id;
     const tag = on ? '<em class="cz-tag on">Wearing</em>' : own ? '<em class="cz-tag">Owned</em>' : c.reward ? '<em class="cz-tag lock">🔒 Earn</em>' : `<em class="cz-tag price">🪙 ${c.price}</em>`;
     let pic;
     if (slot === 'banner') { const b = bannerOf(c.id); pic = `<span class="cz-bnr-swatch" style="--bg:${b.bg}"><em>${b.emblem}</em></span>`; }
     else if (slot === 'wrap') pic = `<span class="shop-wrap" style="background:${camoSwatch(c)}"></span>`;
-    else if (ICON_SLOTS.includes(slot)) pic = `<span class="shop-icon">${c.icon}</span>`;
+    else if (ICON_SLOTS.includes(slot) || slot === 'skin') pic = `<span class="shop-icon">${c.icon}</span>`;
     else pic = '<canvas width="76" height="100"></canvas>';
-    return `<button class="shop-card ${own ? 'owned' : ''} ${sel ? 'sel' : ''}" data-slot="${slot}" data-id="${esc(c.id)}">${pic}<b>${esc(c.name)}</b><small>${esc(slot === 'wrap' ? 'Weapon wrap' : SLOT_LABELS[slot])}</small>${tag}</button>`;
+    return `<button class="shop-card ${own ? 'owned' : ''} ${sel ? 'sel' : ''}" data-slot="${slot}" data-id="${esc(c.id)}">${pic}<b>${esc(c.name)}</b><small>${esc(slot === 'wrap' ? 'Weapon wrap' : slot === 'skin' ? `Gun skin · ${WEAPONS[c.gun] ? WEAPONS[c.gun].name : ''}` : SLOT_LABELS[slot])}</small>${tag}</button>`;
   }
 
   renderItems(main, detail) {
@@ -94,17 +95,18 @@ export class Shop {
     const s = this.sel;
     const all = s && (s.slot === 'wrap' ? CAMOS.find((c) => c.id === s.id) : (COSMETICS[s.slot] || []).find((c) => c.id === s.id));
     if (!all) { detail.innerHTML = '<div class="sv-empty">Pick something to see it here.</div>'; return; }
-    const c = all, own = ownsItem(s.slot, c.id), cos = getCos(), wearing = s.slot !== 'wrap' && cos[s.slot] === c.id;
+    const c = all, own = ownsItem(s.slot, c.id), cos = getCos(), wearing = s.slot === 'skin' ? cos.skins.includes(c.id) : s.slot !== 'wrap' && cos[s.slot] === c.id;
+    const put = (base) => (s.slot === 'skin' ? wearSkin(base, c.id) : { ...base, [s.slot]: c.id }); // gun skins: one per weapon
     let big;
     if (s.slot === 'banner') big = `<div class="shop-bnr">${bannerHtml(c.id, this.ctx.getName(), this.ctx.getColor(), 'KILLED YOU', '<span class="chip">Assault Rifle</span>')}</div>`;
     else if (s.slot === 'wrap') big = `<div class="shop-wrap big" style="background:${camoSwatch(c)}"></div>`;
-    else if (ICON_SLOTS.includes(s.slot)) big = `<div class="shop-icon big">${c.icon}</div><p class="note">${esc(c.desc || '')}</p>`;
+    else if (ICON_SLOTS.includes(s.slot) || s.slot === 'skin') big = `<div class="shop-icon big">${c.icon}</div><p class="note">${esc(c.desc || '')}</p>`;
     else big = '<canvas class="shop-avatar" width="200" height="262"></canvas>';
     const friends = this.ctx.social ? [...this.ctx.social.friends.values()].map((f) => f.tag) : [];
     const canGift = !c.reward && c.price > 0 && friends.length;
     detail.innerHTML = `${big}
       <h3>${esc(c.name)}</h3>
-      <small class="muted">${esc(s.slot === 'wrap' ? 'Weapon wrap · put it on any gun in Settings → Customize' : SLOT_LABELS[s.slot])}</small>
+      <small class="muted">${esc(s.slot === 'wrap' ? 'Weapon wrap · put it on any gun in Settings → Customize' : s.slot === 'skin' ? `Gun skin for the ${WEAPONS[c.gun] ? WEAPONS[c.gun].name : ''} · looks only` : SLOT_LABELS[s.slot])}</small>
       ${c.reward ? `<p class="note">🔒 Can't be bought. ${esc(c.how || 'Earned in the game.')}</p>` : ''}
       <div class="shop-actions">
         ${own ? (s.slot === 'wrap' ? '<span class="cz-tag">Owned</span>' : wearing ? '<span class="cz-tag on">Wearing</span>' : '<button class="primary" data-wear>Wear</button>')
@@ -113,18 +115,18 @@ export class Shop {
       ${canGift ? `<div class="shop-gift"><b>🎁 Gift it to a friend</b><div class="shop-gift-row"><select data-gto>${friends.map((t) => `<option>${esc(t)}</option>`).join('')}</select><button data-gift ${getTokens() < c.price ? 'disabled' : ''}>Send · 🪙 ${c.price}</button></div><small class="muted">If they already have it, they get the tokens instead.</small></div>` : ''}
       <p class="shop-msg note"></p>`;
     const cv = detail.querySelector('.shop-avatar');
-    if (cv) drawAvatar(cv, { ...cos, [s.slot]: c.id }, this.ctx.getColor());
+    if (cv) drawAvatar(cv, put(cos), this.ctx.getColor());
     const msg = (t) => { detail.querySelector('.shop-msg').textContent = t; };
     const b = detail.querySelector('[data-buy]');
     if (b) b.onclick = () => {
       const ok = s.slot === 'wrap' ? buyWrap(c.id) : buy(s.slot, c.id);
       if (!ok) { msg('Not enough tokens.'); return; }
-      if (s.slot !== 'wrap') { const next = { ...getCos(), [s.slot]: c.id }; setCos(next); if (this.ctx.onCos) this.ctx.onCos(next); }
+      if (s.slot !== 'wrap') { const next = put(getCos()); setCos(next); if (this.ctx.onCos) this.ctx.onCos(next); }
       this.ctx.toast(`Bought ${c.name}${s.slot === 'wrap' ? '. Put it on a gun in Settings → Customize' : ' and put it on'}!`);
       this.render();
     };
     const w = detail.querySelector('[data-wear]');
-    if (w) w.onclick = () => { const next = { ...getCos(), [s.slot]: c.id }; setCos(next); if (this.ctx.onCos) this.ctx.onCos(next); this.render(); };
+    if (w) w.onclick = () => { const next = put(getCos()); setCos(next); if (this.ctx.onCos) this.ctx.onCos(next); this.render(); };
     const g = detail.querySelector('[data-gift]');
     if (g) g.onclick = async () => {
       const to = detail.querySelector('[data-gto]').value;

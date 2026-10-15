@@ -8,6 +8,7 @@ import { POSE_ITEMS } from './poses.js';
 import { NAMETAG_ITEMS } from './nametags.js';
 import { CHARM_ITEMS } from './charms.js';
 import { COSTUME_ITEMS } from './costumes.js';
+import { SKIN_ITEMS, skinItem } from './gunskins.js';
 
 // Cosmetics shown on your character to other players. `free` items are owned from the start;
 // everything else is bought with tokens earned from missions (`price`).
@@ -114,6 +115,7 @@ export const COSMETICS = {
     { id: 'mega', name: 'Mega Burst', price: 450 },
     { id: 'staffhq', name: 'Command Center', price: 400 },
     { id: 'masquerade', name: 'Masquerade', price: 400 },
+    { id: 'armory', name: 'Armory', price: 400 },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },
     { id: 's1elite', name: 'Ignition Elite (S1)', reward: true, how: 'Season 1, tier 25' },
@@ -135,12 +137,14 @@ export const COSMETICS = {
   charm: CHARM_ITEMS,
   // A whole new look instead of your soldier, same size and hitbox (costumes.js).
   costume: COSTUME_ITEMS,
+  // A weapon's whole model (gunskins.js). Owned like other items; worn per weapon in cos.skins.
+  skin: SKIN_ITEMS,
 };
-export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect', pose: 'Victory pose', nametag: 'Name tag', charm: 'Weapon charm', costume: 'Costume' };
+export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect', pose: 'Victory pose', nametag: 'Name tag', charm: 'Weapon charm', costume: 'Costume', skin: 'Gun skin' };
 // Slots shown as an icon card instead of your character wearing the item.
 export const ICON_SLOTS = ['costume', 'killfx', 'pose', 'nametag', 'charm'];
 export const HAIR_COLORS = ['#3b2a1e', '#111111', '#e3c16f', '#b5462a', '#3d6fd8', '#e86fb6', '#e8e8e8'];
-export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none', pose: 'cheer', nametag: 'none', charm: 'none', costume: 'none' };
+export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none', pose: 'cheer', nametag: 'none', charm: 'none', costume: 'none', skin: 'none', skins: [] };
 
 // Each mission tracks one lifetime stat and pays tokens once when finished.
 export const MISSIONS = [
@@ -324,6 +328,7 @@ export function getCos() {
   const c = { ...DEFAULT_COS, ...store.get('cos', {}) };
   for (const slot of Object.keys(COSMETICS)) if (!isOwned(slot, c[slot])) c[slot] = DEFAULT_COS[slot];
   if (!HAIR_COLORS.includes(c.hairColor)) c.hairColor = DEFAULT_COS.hairColor;
+  c.skins = cleanSkins(c.skins).filter((id) => isOwned('skin', id));
   return c;
 }
 export function setCos(c) { store.set('cos', c); }
@@ -334,6 +339,7 @@ export function sanitizeCos(c) {
   if (!c || typeof c !== 'object') return out;
   for (const slot of Object.keys(COSMETICS)) if (COSMETICS[slot].some((x) => x.id === c[slot])) out[slot] = c[slot];
   if (HAIR_COLORS.includes(c.hairColor)) out.hairColor = c.hairColor;
+  out.skins = cleanSkins(c.skins);
   // Level shown by your name (progress.js).
   if (Number.isInteger(c.lvl) && c.lvl >= 1 && c.lvl <= 100) out.lvl = c.lvl;
   // Clan tag claimed by the player (shown only once the clan's member list confirms it: clans.js).
@@ -347,6 +353,18 @@ export function sanitizeCos(c) {
   if (typeof c.v === 'string' && /^\d{4}\.\d{1,2}\.\d{1,2}\.\d{1,4}$/.test(c.v)) out.v = c.v;
   return out;
 }
+// Gun skins worn (gunskins.js): known ids, one per weapon.
+export function cleanSkins(list) {
+  const out = [], guns = new Set();
+  for (const id of Array.isArray(list) ? list.slice(0, 40) : []) { const s = skinItem(id); if (s && !guns.has(s.gun)) { guns.add(s.gun); out.push(s.id); } }
+  return out;
+}
+// Put on a skin (replacing the one on its weapon), or take off whatever is on `gun` (id null).
+export function wearSkin(cos, id, gun = null) {
+  const s = id ? skinItem(id) : null, g = s ? s.gun : gun;
+  const skins = (cos.skins || []).filter((x) => { const k = skinItem(x); return k && k.gun !== g; });
+  return { ...cos, skins: s ? [...skins, s.id] : skins };
+}
 export function randomCos() {
   const pick = (a) => a[(Math.random() * a.length) | 0];
   const c = { hairColor: pick(HAIR_COLORS) };
@@ -356,6 +374,8 @@ export function randomCos() {
   if (Math.random() < 0.7) c.charm = 'none';
   const shopCostume = COSTUME_ITEMS.filter((x) => x.price);
   c.costume = Math.random() < 0.12 ? pick(shopCostume).id : 'none'; // a few bots wear a shop costume
+  c.skin = 'none';
+  c.skins = Math.random() < 0.15 ? [pick(SKIN_ITEMS.filter((x) => x.price)).id] : [];
   c.lvl = 1 + Math.floor(Math.random() ** 2 * 40); // bots show a level too
   return c;
 }
