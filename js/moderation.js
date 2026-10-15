@@ -21,6 +21,8 @@ const PERMA = V + 'permabans'; // staff-signed list of permanently banned player
 const P = V + 'modrec/', ANN = V + 'announce', REP = V + 'report/', PRES = V + 'pres/', FILTER = V + 'chatfilter', APPEAL = V + 'appeal/', STAFFCHAT = V + 'staffchat/', TAG = V + 'tag/';
 const STAFFCHAT_KEEP = 3 * 864e5; // staff chat history: 3 days
 const LOG_MAX = 30;
+const UNDO_MS = 10 * 60000; // staff can undo their own actions this long afterwards (the owner: anyone's)
+const UNDOABLE = ['warn', 'note', 'ban', 'mute', 'smute', 'rename', 'rankban', 'giftban', 'mapban'];
 const REPLAY = 'whffa/v1/replay/'; // report replay clips (replay.js)
 const REPDONE = 'whffa/v1/repdone/'; // "reviewed" notes for reporters (staff-signed, cleared by the reporter once seen)
 const REPORT_MAX_AGE = 7 * 864e5;
@@ -297,7 +299,7 @@ class Moderation {
   // ---------- Staff actions on a gamertag ----------
 
   // act: 'warn' | 'ban' | 'unban' | 'mute' | 'smute' (shadow mute) | 'unmute' | 'rename' | 'clearwarns' | 'note'.
-  async act(tag, act, { reason = '', hours = 0, clip: clipId = '' } = {}) {
+  async act(tag, act, { reason = '', hours = 0, clip: clipId = '', of = 0 } = {}) {
     const s = this.social, me = roles.myRole();
     if (!me) throw new Error('Only staff can do that.');
     const claim = await s.lookup(tag, true);
@@ -305,6 +307,7 @@ class Moderation {
     const target = claim.tag, k = low(target);
     if (k === low(s.tag)) throw new Error('You can\'t moderate yourself.');
     if (rank(me) <= rank(roles.roleOfTag(target))) throw new Error('You can only act on players ranked below you.');
+    if (act === 'undo') return this.undo(claim, of);
     if (ACT_PERM[act] === 'ban' && roles.myTrial()) return this.requestApproval(target, act, reason, hours); // trial mode
     if (ACT_PERM[act] && !roles.myCan(ACT_PERM[act])) throw new Error('The owner hasn\'t given you permission to do that.');
     reason = clip(reason, 140);
@@ -369,6 +372,45 @@ class Moderation {
       if (act === 'ban' && !until) next.set(k, claim.pub.x); else next.delete(k);
       await this.publishPerma(next);
     }
+    return this.records.get(k);
+  }
+
+  // ---------- Undo ----------
+  // A log entry this staff member may still undo: theirs (the owner: anyone's), recent, not undone yet,
+  // and still in effect (a ban that was replaced by a newer one can't be undone this way).
+  canUndo(rec, e) {
+    if (!rec || !e || e.undone || !UNDOABLE.includes(e.act) || Date.now() - e.ts > UNDO_MS) return false;
+    const me = roles.myRole();
+    if (!me || (me !== 'owner' && low(e.by) !== low(this.social.tag))) return false;
+    const kind = Object.keys(LIMITS).find((k) => LIMITS[k].act === e.act);
+    if (e.act === 'ban') return !!rec.ban && rec.ban.ts === e.ts;
+    if (e.act === 'mute' || e.act === 'smute') return !!rec.mute && rec.mute.ts === e.ts;
+    if (e.act === 'rename') return !!rec.rename && rec.rename.ts === e.ts;
+    if (kind) return !!(rec.limits && rec.limits[kind] && rec.limits[kind].ts === e.ts);
+    if (e.act === 'warn') return (rec.warns || []).some((w) => w.ts === e.ts);
+    if (e.act === 'note') return (rec.notes || []).some((n) => n.ts === e.ts);
+    return false;
+  }
+  async undo(claim, ts) {
+    const s = this.social, k = low(claim.tag), old = this.records.get(k);
+    const e = old && (old.log || []).find((l) => l.ts === Number(ts));
+    if (!this.canUndo(old, e)) throw new Error('That can\'t be undone any more (only your own actions, for 10 minutes).');
+    const rec = { ...old, warns: [...(old.warns || [])], notes: [...(old.notes || [])], limits: { ...(old.limits || {}) } };
+    delete rec.from; delete rec.ts;
+    const kind = Object.keys(LIMITS).find((x) => LIMITS[x].act === e.act);
+    if (e.act === 'ban') rec.ban = null;
+    else if (e.act === 'mute' || e.act === 'smute') rec.mute = null;
+    else if (e.act === 'rename') rec.rename = null;
+    else if (kind) delete rec.limits[kind];
+    else if (e.act === 'warn') rec.warns = rec.warns.filter((w) => w.ts !== e.ts);
+    else if (e.act === 'note') rec.notes = rec.notes.filter((n) => n.ts !== e.ts);
+    const now = Date.now();
+    rec.log = [...old.log.map((l) => (l === e ? { ...l, undone: now } : l)), { by: s.tag, act: 'undo', note: `${e.act} by ${e.by}${e.note ? ': ' + e.note : ''}`.slice(0, 160), ts: now }].slice(-LOG_MAX);
+    const text = await s.sign(rec);
+    s.relay.publish(P + k, text, { retain: true });
+    if (e.act === 'smute') await this.setShadow(k, null);
+    if (e.act === 'ban' && this.perma.has(k)) { const next = new Map(this.perma); next.delete(k); await this.publishPerma(next); }
+    await this.receive(k, text);
     return this.records.get(k);
   }
 

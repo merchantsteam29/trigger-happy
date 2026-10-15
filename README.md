@@ -663,6 +663,8 @@ becomes free again.
       **🗺 Map publish ban** stops them publishing community maps (hide the ones already up with 🚫 Hide in the map
       browser). **🎁 Gift freeze** (for scams) stops them sending gifts, and gifts they sent while frozen are thrown away unopened.
     - **Unban**, **Unmute**, **Clear warnings**, or **Join their match**.
+    - **↶ Undo:** in their History, your own warnings, notes, bans, mutes, forced gamertag changes and restrictions can
+      be taken back for **10 minutes** (the owner can undo anyone's). It's logged, and the undone line is crossed out.
 
     It also lists recent actions.
   - **Online:** **Live matches**: every public server plus any private match someone with a gamertag is in, with who's

@@ -943,3 +943,5 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-steps { margin: 8px 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
 .mp-steps li > * { margin-right: 6px; }
 .mp-steps select { width: auto; }
+.mp-log .undone { opacity: .5; text-decoration: line-through; }
+.mp-log [data-undo] { padding: 1px 8px; font-size: 11px; margin-left: 6px; }

@@ -18,7 +18,7 @@ import { leaderboard } from './leaderboard.js';
 const TIMES = [[1, '1 hour'], [24, '1 day'], [24 * 7, '7 days'], [24 * 30, '30 days'], [0, 'Permanent']];
 const ACT_LABEL = {
   warn: 'warned', ban: 'banned', unban: 'unbanned', mute: 'muted', smute: 'shadow-muted', unmute: 'unmuted',
-  rankban: 'banned from ranked', unrankban: 'lifted the ranked ban of', giftban: 'froze the gifts of', ungiftban: 'unfroze the gifts of', mapban: 'banned from publishing maps', unmapban: 'lifted the map ban of',
+  undo: 'undid an action on', rankban: 'banned from ranked', unrankban: 'lifted the ranked ban of', giftban: 'froze the gifts of', ungiftban: 'unfroze the gifts of', mapban: 'banned from publishing maps', unmapban: 'lifted the map ban of',
   rename: 'forced a new gamertag for', clearwarns: 'cleared warnings of', note: 'added a note on', denyappeal: 'denied the appeal of', kick: 'kicked',
 };
 // Quick reasons for actions (fill the reason box; it can still be edited).
@@ -226,7 +226,7 @@ export class ModPanel {
           ${on && on.mode === 'lobby' && may('kick') ? '<button data-act="kick" class="danger">⏏ Kick from match</button>' : ''}
         </div>` : `<div class="note">${role ? 'Staff can only be moderated by someone ranked above them.' : 'You can\'t moderate yourself.'}</div>`}
         ${log.length ? `<div class="mp-sub">History</div><div class="mp-list mp-log">${log.slice().reverse().map((l) =>
-          `<div><b>${esc(l.by)}</b> ${ACT_LABEL[l.act] || l.act} them${l.note ? ': ' + esc(l.note) : ''} <small>${ago(l.ts)}</small></div>`).join('')}</div>` : ''}
+          `<div class="${l.undone ? 'undone' : ''}"><b>${esc(l.by)}</b> ${ACT_LABEL[l.act] || l.act} them${l.note ? ': ' + esc(l.note) : ''} <small>${ago(l.ts)}${l.undone ? ' · undone' : ''}</small>${moderation.canUndo(rec, l) ? ` <button class="ghost sm" data-undo="${l.ts}" title="Take it back (for 10 minutes after)">↶ Undo</button>` : ''}</div>`).join('')}</div>` : ''}
       </div>`;
     box.querySelectorAll('input').forEach((i) => i.addEventListener('keydown', (e) => e.stopPropagation()));
     const quick = box.querySelector('#mp-quick');
@@ -254,6 +254,13 @@ export class ModPanel {
         if (!clip) { this.say('That clip couldn\'t be loaded.'); return; }
         this.say('');
         this.watchReplay(clip, { target: t.tag, reason: 'Evidence', from: b.dataset.by });
+      };
+    });
+    box.querySelectorAll('[data-undo]').forEach((b) => {
+      b.onclick = async () => {
+        if (!confirm('Undo this action?')) return;
+        b.disabled = true;
+        try { await moderation.act(t.tag, 'undo', { of: Number(b.dataset.undo) }); this.say('Undone.'); this.render(); } catch (err) { this.say(err.message); b.disabled = false; }
       };
     });
     const nextBtn = box.querySelector('[data-next]');
