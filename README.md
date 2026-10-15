@@ -619,7 +619,8 @@ becomes free again.
     optional details. A small **screenshot** of the reporter's screen goes with it as evidence (click it to enlarge),
     and a **replay of the last 30 seconds**: **🎬 Watch replay** opens it in the replay theater (follow anyone, see
     through their eyes, or fly a free camera). Staff see who reported whom, in which match, and can look either player
-    up, join that match or resolve the report.
+    up, join that match or resolve the report. The reporter sees their reports in **Friends → 🚩 Your reports**: waiting,
+    looked at by staff (with a thank-you pop-up when it happens), or not looked at within 7 days. They're never told what was done.
   - **Announce:** post a message, either Info or Important, for 1 hour up to "until cleared". Every player sees it at
     the top of the menu, and players in a match get it in chat when it's posted.
   - **Appeals:** banned players can send one appeal per ban from their ban screen. Staff can **Unban** or **Deny**,

@@ -1085,6 +1085,7 @@ function renderFriends() {
   renderInvite();
   devices.render($('devices-card'));
   renderClan();
+  renderMyReports();
   const n = social.pendingCount;
   $('nav-friends-count').textContent = n ? String(n) : '';
   $('fr-me').innerHTML = social.tag
@@ -1814,6 +1815,16 @@ watchEvents(() => gameNight.window(), (e) => {
 // Presence and reports can arrive in bursts: redraw at most a few times a second, and never
 // while something in the panel is being typed or picked (just the looked-up player then).
 let modRenderT = null;
+// Your reports (moderation.js myReports): whether staff have looked at them.
+function renderMyReports() {
+  const el = $('myreports-card'), list = moderation.myReports().slice(0, 10);
+  el.classList.toggle('hidden', !list.length);
+  if (!list.length) return;
+  const st = { sent: '⏳ Waiting for staff', reviewed: '✓ Looked at by staff', expired: '— Not looked at in time' };
+  el.innerHTML = `<h3>🚩 Your reports</h3><p class="note">Staff look at every report. You'll see when yours has been looked at (not what was done, that stays between staff and the player).</p>
+    <div class="mr-list">${list.map((r) => `<div class="mr-row ${r.status}"><b>${esc(r.target)}</b><small>${esc(r.reason)} · ${new Date(r.ts).toLocaleDateString()}</small><span>${st[r.status] || ''}</span></div>`).join('')}</div>`;
+}
+moderation.onReviewed = (r) => { toast(`✓ The staff looked at your report about ${r.target}. Thanks for helping keep the game fair!`); renderMyReports(); };
 moderation.onChange = () => {
   if (menuPane !== 'mod' || $('menu').classList.contains('hidden') || modRenderT) return;
   modRenderT = setTimeout(() => {

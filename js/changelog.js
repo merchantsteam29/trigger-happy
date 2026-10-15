@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.15', name: 'Your Reports', banner: 'matrix', notes: [
+    'Friends → Your reports shows the players you reported and whether the staff have looked at it yet',
+    'You get a thank-you pop-up when they do',
+  ] },
   { v: '2026.10.14.14', name: 'Moderation Tools', banner: 'matrix', notes: [
     'New tools for the staff to keep chat friendly',
   ] },

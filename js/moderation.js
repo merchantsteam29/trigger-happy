@@ -22,6 +22,7 @@ const P = V + 'modrec/', ANN = V + 'announce', REP = V + 'report/', PRES = V + '
 const STAFFCHAT_KEEP = 3 * 864e5; // staff chat history: 3 days
 const LOG_MAX = 30;
 const REPLAY = 'whffa/v1/replay/'; // report replay clips (replay.js)
+const REPDONE = 'whffa/v1/repdone/'; // "reviewed" notes for reporters (staff-signed, cleared by the reporter once seen)
 const REPORT_MAX_AGE = 7 * 864e5;
 const BUG = V + 'bug/'; // retained bug reports (signed by the sender), read by the owner
 const BUG_MAX_AGE = 30 * 864e5;
@@ -85,6 +86,7 @@ class Moderation {
     else if (t === ANN) this.receiveAnnouncement(text);
     else if (t === PERMA) this.receivePerma(text);
     else if (t === SHADOW) this.receiveShadow(text);
+    else if (t.startsWith(REPDONE)) this.receiveReviewed(t.slice(REPDONE.length), text);
     else if (t.startsWith(REP)) this.receiveReport(t.slice(REP.length), text);
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
@@ -101,6 +103,7 @@ class Moderation {
     const want = new Set([ANN, FILTER, PERMA, SHADOW]);
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
     if (roles.isOwner()) want.add(BUG + '+');
+    for (const r of this.myReports()) if (r.status === 'sent') want.add(REPDONE + r.id); // has staff looked at mine?
     if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+']) want.add(t);
     for (const w of this.watching) if (!want.has(w)) s.relay.unsubscribe(w);
     for (const w of want) if (!this.watching.has(w)) s.relay.subscribe(w);
@@ -366,12 +369,14 @@ class Moderation {
     if (!s.tag) throw new Error('Pick a gamertag first so staff know who sent the report.');
     if (Date.now() - (this.lastReport || 0) < 60000) throw new Error('You just sent a report. Wait a minute before sending another.');
     if (!REPORT_REASONS.includes(reason)) throw new Error('Pick a reason.');
-    const id = `${low(s.tag)}-${Date.now().toString(36)}`;
+    const id = `${low(s.tag)}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`; // unique even if sent in the same moment
     const shot = typeof img === 'string' && img.startsWith('data:image/jpeg;base64,') && img.length < 60000 ? img : undefined;
     const hasClip = typeof replay === 'string' && replay.length < 150000;
     if (hasClip) s.relay.publish(REPLAY + id, await s.sign({ id, clip: replay }), { retain: true });
     s.relay.publish(REP + id, await s.sign({ id, target: clip(target, 16), lobby: clip(lobby, 8), reason, details: clip(details, 200), img: shot, rp: hasClip ? 1 : 0 }), { retain: true });
     this.lastReport = Date.now();
+    store.set('myReports', [{ id, target: clip(target, 16), reason, ts: Date.now(), status: 'sent' }, ...this.myReports()].slice(0, 20));
+    this.sync();
   }
 
   async receiveReport(id, text) {
@@ -384,12 +389,32 @@ class Moderation {
   }
 
   // Staff: resolve a report (removes it for every staff member).
-  dismissReport(id) {
+  async dismissReport(id) {
     if (!roles.myRole()) return;
     this.social.relay.publish(REP + id, '', { retain: true });
     this.social.relay.publish(REPLAY + id, '', { retain: true });
     this.reports.delete(id);
     if (this.onChange) this.onChange(null);
+    this.social.relay.publish(REPDONE + id, await this.social.sign({ id }), { retain: true }); // tells the reporter it was looked at (not what was done)
+  }
+
+  // ---------- Your reports ----------
+  // The reports you sent: [{ id, target, reason, ts, status: 'sent' | 'reviewed' | 'expired', at }]. When
+  // staff resolve one, a staff-signed note says so (not who did what); after 7 days unanswered it expires.
+  myReports() {
+    const list = store.get('myReports', []);
+    return Array.isArray(list) ? list.filter((r) => r && typeof r.id === 'string').map((r) => (r.status === 'sent' && Date.now() - r.ts > REPORT_MAX_AGE ? { ...r, status: 'expired' } : r)) : [];
+  }
+  async receiveReviewed(id, text) {
+    if (!text) return;
+    const b = await this.staffSigned(text);
+    const list = this.myReports(), r = list.find((x) => x.id === id);
+    if (!b || b.id !== id || !r || r.status !== 'sent') return;
+    r.status = 'reviewed'; r.at = Number(b.ts) || Date.now();
+    store.set('myReports', list);
+    this.social.relay.publish(REPDONE + id, '', { retain: true }); // seen: clean it up
+    this.sync();
+    if (this.onReviewed) this.onReviewed(r);
   }
 
   // Staff: the replay clip sent with a report (signed by the reporter), or null.

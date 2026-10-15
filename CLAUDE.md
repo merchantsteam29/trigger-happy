@@ -105,6 +105,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver) | gifts.js |
 | `ref/…` | invite rewards | invites.js |
 | `gamenight` | Game Night schedule (owner-signed) | gamenight.js |
+| `repdone/<report id>` | staff-signed "reviewed" note for the reporter (they clear it once seen) | moderation.js |
 | `replay/<report id>` | replay clip sent with a report (signed by the reporter, cleared on resolve) | moderation.js, replay.js |
 | `cmap/<tag>-<id>`, `cmaplike/<id>/<tag>`, `cmaphide` | community maps (signed, retained; staff-signed hide list) | community.js |
 | `link/<chan>/r`, `link/<chan>/a` | linking a device (not retained, encrypted with the QR's one-time secret) | devices.js |
