@@ -4,6 +4,8 @@ import { esc } from './util.js';
 import { validTag, TAG_RULES } from './social.js';
 import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './gamenight.js';
 import { leaderboard } from './leaderboard.js';
+import { gifts, grantable, GRANT_MAX } from './gifts.js';
+import { COSMETICS, SLOT_LABELS } from './missions.js';
 
 // The Mod Panel menu section (staff only), in tabs:
 //  Players   look up a gamertag: warnings, ban, chat mute, forced gamertag change, staff notes, history
@@ -18,7 +20,7 @@ import { leaderboard } from './leaderboard.js';
 const TIMES = [[1, '1 hour'], [24, '1 day'], [24 * 7, '7 days'], [24 * 30, '30 days'], [0, 'Permanent']];
 const ACT_LABEL = {
   warn: 'warned', ban: 'banned', unban: 'unbanned', mute: 'muted', smute: 'shadow-muted', unmute: 'unmuted',
-  undo: 'undid an action on', rankban: 'banned from ranked', unrankban: 'lifted the ranked ban of', giftban: 'froze the gifts of', ungiftban: 'unfroze the gifts of', mapban: 'banned from publishing maps', unmapban: 'lifted the map ban of',
+  undo: 'undid an action on', grant: 'gave a gift to', rankban: 'banned from ranked', unrankban: 'lifted the ranked ban of', giftban: 'froze the gifts of', ungiftban: 'unfroze the gifts of', mapban: 'banned from publishing maps', unmapban: 'lifted the map ban of',
   rename: 'forced a new gamertag for', clearwarns: 'cleared warnings of', note: 'added a note on', denyappeal: 'denied the appeal of', kick: 'kicked',
 };
 // Quick reasons for actions (fill the reason box; it can still be edited).
@@ -225,6 +227,11 @@ export class ModPanel {
           ${on && on.lobby && this.joinLobby ? `<button data-join="${esc(on.lobby)}">▶ Join their match</button><button data-spec="${esc(on.lobby)}">👁 Spectate</button>` : ''}
           ${on && on.mode === 'lobby' && may('kick') ? '<button data-act="kick" class="danger">⏏ Kick from match</button>' : ''}
         </div>` : `<div class="note">${role ? 'Staff can only be moderated by someone ranked above them.' : 'You can\'t moderate yourself.'}</div>`}
+        ${roles.isOwner() && k !== String(this.social.tag).toLowerCase() ? `<div class="mp-sub">🎁 Give (owner)</div>
+        <div class="mp-give"><input id="mp-give-n" type="number" min="1" max="${GRANT_MAX}" placeholder="Tokens"><span class="muted">or</span>
+          <select id="mp-give-item"><option value="">An item…</option>${Object.keys(SLOT_LABELS).map((slot) => `<optgroup label="${SLOT_LABELS[slot]}">${COSMETICS[slot].filter((c) => grantable(slot, c.id)).map((c) => `<option value="${slot}:${esc(c.id)}">${esc(c.name)}</option>`).join('')}</optgroup>`).join('')}</select>
+          <button class="primary" data-give>Give</button></div>
+        <small class="muted">For prizes or making up for a bug. The reason box above is sent as a note; it's logged on their record.</small>` : ''}
         ${log.length ? `<div class="mp-sub">History</div><div class="mp-list mp-log">${log.slice().reverse().map((l) =>
           `<div class="${l.undone ? 'undone' : ''}"><b>${esc(l.by)}</b> ${ACT_LABEL[l.act] || l.act} them${l.note ? ': ' + esc(l.note) : ''} <small>${ago(l.ts)}${l.undone ? ' · undone' : ''}</small>${moderation.canUndo(rec, l) ? ` <button class="ghost sm" data-undo="${l.ts}" title="Take it back (for 10 minutes after)">↶ Undo</button>` : ''}</div>`).join('')}</div>` : ''}
       </div>`;
@@ -264,6 +271,20 @@ export class ModPanel {
         try { await moderation.act(t.tag, 'undo', { of: Number(b.dataset.undo) }); this.say('Undone.'); this.render(); } catch (err) { this.say(err.message); b.disabled = false; }
       };
     });
+    const give = box.querySelector('[data-give]');
+    if (give) give.onclick = async () => {
+      const n = Number(box.querySelector('#mp-give-n').value), it = box.querySelector('#mp-give-item').value, note = box.querySelector('#mp-reason').value.trim();
+      const item = it ? { slot: it.split(':')[0], id: it.split(':')[1] } : null;
+      if (!item && !(n >= 1)) { this.say('Type a number of tokens or pick an item.'); return; }
+      const what = item ? (COSMETICS[item.slot].find((c) => c.id === item.id) || {}).name : `${n} tokens`;
+      if (!confirm(`Give ${t.tag} ${what}?`)) return;
+      give.disabled = true;
+      try {
+        await gifts.grant(t.tag, item ? { item } : { tokens: n }, note);
+        await moderation.act(t.tag, 'grant', { reason: `🎁 ${what}${note ? ': ' + note : ''}` });
+        this.say(`Sent ${what} to ${t.tag}. They get it next time they play.`); this.render();
+      } catch (err) { this.say(err.message); give.disabled = false; }
+    };
     const nextBtn = box.querySelector('[data-next]');
     if (nextBtn) nextBtn.onclick = async () => {
       const ns = moderation.nextStep(t.tag), reason = box.querySelector('#mp-reason').value.trim() || box.querySelector('#mp-quick').value;

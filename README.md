@@ -663,6 +663,9 @@ becomes free again.
       **🗺 Map publish ban** stops them publishing community maps (hide the ones already up with 🚫 Hide in the map
       browser). **🎁 Gift freeze** (for scams) stops them sending gifts, and gifts they sent while frozen are thrown away unopened.
     - **Unban**, **Unmute**, **Clear warnings**, or **Join their match**.
+    - **🎁 Give** (owner only): up to 10,000 tokens or any item (earn-only ones too), for prizes or to make up for a
+      bug. The reason box goes with it as a note, it's logged on their record, and they get it the next time they play
+      ("♛ The owner sent you…"). It's signed with the owner's key, so nobody else can fake one.
     - **↶ Undo:** in their History, your own warnings, notes, bans, mutes, forced gamertag changes and restrictions can
       be taken back for **10 minutes** (the owner can undo anyone's). It's logged, and the undone line is crossed out.
 

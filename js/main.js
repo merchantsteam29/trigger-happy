@@ -212,8 +212,9 @@ const shop = new Shop({
 gifts.init(social);
 gifts.onGift = (g) => {
   const what = g.tokens ? `🪙 ${g.tokens} tokens` : `${shop.itemName(g.item)}${g.refunded ? ' (you had it, so you got its price in tokens)' : ''}`;
-  if (game.active) chat.system(`🎁 ${g.from} sent you ${what}!${g.note ? ` “${g.note}”` : ''}`);
-  else toast(`🎁 ${g.from} sent you ${what}!`);
+  const from = g.owner ? `♛ The owner (${g.from})` : g.from;
+  if (game.active) chat.system(`🎁 ${from} sent you ${what}!${g.note ? ` “${g.note}”` : ''}`);
+  else toast(`🎁 ${from} sent you ${what}!${g.note ? ` “${g.note}”` : ''}`);
   renderChip();
   if (!game.active && menuPane === 'shop') shop.render();
 };

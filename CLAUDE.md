@@ -111,7 +111,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |
 | `clan/<TAG>`, `clanreq/…`, `clanleave/…`, `clanchat/…`, `clanwar/…`, `clanwarok/…`, `clanwargo/<TAG>` | clans, clan wars | clans.js |
-| `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver) | gifts.js |
+| `gift/<tag>/<id>` | gifts (claimed and cleared by the receiver); `grant: 1` ones are the owner's (`gifts.grant`: checked against `OWNER.pub`, up to `GRANT_MAX` tokens or any `grantable` item; logged on the record as act `grant`) | gifts.js |
 | `ref/…` | invite rewards | invites.js |
 | `gamenight` | Game Night schedule (owner-signed) | gamenight.js |
 | `repdone/<report id>` | staff-signed "reviewed" note for the reporter (they clear it once seen) | moderation.js |

@@ -947,3 +947,6 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-log [data-undo] { padding: 1px 8px; font-size: 11px; margin-left: 6px; }
 .mp-ovlog { border-left: 3px solid #ffd23f; padding-left: 8px; }
 .mp-ov { font-style: normal; font-size: 11px; color: #ffd23f; margin-left: 6px; }
+.mp-give { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
+.mp-give input { width: 110px; }
+.mp-give select { width: auto; flex: 1; }

@@ -1,6 +1,7 @@
 import { store } from './util.js';
 import { getTokens, spendTokens, addTokens, grantItem, grantWrap, COSMETICS, isOwned, ownsWrap } from './missions.js';
 import { camoOf } from './camos.js';
+import { OWNER, verifyWith } from './roles.js';
 
 // Gifts: send tokens, or buy a shop item for a friend. The sender's game takes the tokens and
 // posts a signed gift as a retained message at whffa/v1/gift/<friend>/<id>; the friend's game
@@ -10,6 +11,7 @@ import { camoOf } from './camos.js';
 const V = 'whffa/v1/gift/';
 const low = (s) => String(s || '').toLowerCase();
 export const GIFT_MIN = 10, GIFT_MAX = 1000, GIFTS_PER_DAY = 5;
+export const GRANT_MAX = 10000; // the owner's grants (prizes, making up for bugs): up to this many tokens at once
 const today = () => new Date().toISOString().slice(0, 10);
 const randId = () => Math.random().toString(36).slice(2, 10);
 
@@ -18,6 +20,12 @@ export function giftable(slot, id) {
   if (slot === 'wrap') { const c = camoOf(id); return c.id === id && c.price > 0 && !c.reward ? c : null; }
   const c = (COSMETICS[slot] || []).find((x) => x.id === id);
   return c && c.price > 0 && !c.reward ? c : null;
+}
+// Anything the owner may hand out: any cosmetic (earn-only ones too) except the owner's own name tag.
+export function grantable(slot, id) {
+  if (slot === 'wrap') { const c = camoOf(id); return c.id === id ? c : null; }
+  const c = (COSMETICS[slot] || []).find((x) => x.id === id);
+  return c && !(slot === 'nametag' && id === 'owner') ? c : null;
 }
 export const ownsItem = (slot, id) => (slot === 'wrap' ? ownsWrap(id) : isOwned(slot, id));
 
@@ -74,6 +82,21 @@ class Gifts {
     return cost;
   }
 
+  // Owner: give a player tokens or an item (no friend / daily limits, costs nothing). Signed with the
+  // owner's key and checked against it on arrival.
+  async grant(toTag, gift, note = '') {
+    const s = this.social;
+    let body;
+    if (gift.item) { if (!grantable(gift.item.slot, gift.item.id)) throw new Error("That item can't be given."); body = { item: { slot: gift.item.slot, id: gift.item.id } }; }
+    else {
+      const n = Math.round(Number(gift.tokens) || 0);
+      if (n < 1 || n > GRANT_MAX) throw new Error(`Give between 1 and ${GRANT_MAX} tokens.`);
+      body = { tokens: n };
+    }
+    const id = randId();
+    s.relay.publish(V + low(toTag) + '/' + id, await s.sign({ ...body, grant: 1, id, to: low(toTag), note: String(note || '').replace(/[\u0000-\u001f]/g, '').slice(0, 60) }), { retain: true });
+  }
+
   async receive(topic, text) {
     if (!text) return;
     const id = topic.split('/').pop();
@@ -87,7 +110,18 @@ class Gifts {
     this.claimed.add(id);
     store.set('giftsClaimed', [...this.claimed].slice(-300));
     let got = null;
-    if (b.item && giftable(b.item.slot, b.item.id)) {
+    let owner = false; // a grant from the owner: bigger amounts and any item
+    if (b.grant && low(b.from) === low(OWNER.tag)) { try { owner = await verifyWith(OWNER.pub, JSON.parse(text)); } catch { owner = false; } }
+    if (owner && b.item && grantable(b.item.slot, b.item.id)) {
+      const had = ownsItem(b.item.slot, b.item.id);
+      if (!had) { if (b.item.slot === 'wrap') grantWrap(b.item.id); else grantItem(b.item.slot, b.item.id); }
+      got = { from: b.from, item: b.item, owner: true, note: b.note || '', ts: Date.now() };
+    } else if (owner) {
+      const n = Math.max(0, Math.min(GRANT_MAX, Math.round(Number(b.tokens) || 0)));
+      if (n) { addTokens(n); got = { from: b.from, tokens: n, owner: true, note: b.note || '', ts: Date.now() }; }
+    } else if (b.grant) {
+      got = null; // claims to be a grant but isn't the owner's
+    } else if (b.item && giftable(b.item.slot, b.item.id)) {
       const owned = ownsItem(b.item.slot, b.item.id);
       if (owned) addTokens(giftable(b.item.slot, b.item.id).price); // already had it: its price in tokens instead
       else if (b.item.slot === 'wrap') grantWrap(b.item.id); else grantItem(b.item.slot, b.item.id);

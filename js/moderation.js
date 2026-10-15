@@ -306,7 +306,7 @@ class Moderation {
     if (!claim) throw new Error(`Nobody has the gamertag "${tag}".`);
     const target = claim.tag, k = low(target);
     if (k === low(s.tag)) throw new Error('You can\'t moderate yourself.');
-    if (rank(me) <= rank(roles.roleOfTag(target))) throw new Error('You can only act on players ranked below you.');
+    if (rank(me) <= rank(roles.roleOfTag(target)) && act !== 'grant') throw new Error('You can only act on players ranked below you.');
     if (act === 'undo') return this.undo(claim, of);
     if (ACT_PERM[act] === 'ban' && roles.myTrial()) return this.requestApproval(target, act, reason, hours); // trial mode
     if (ACT_PERM[act] && !roles.myCan(ACT_PERM[act])) throw new Error('The owner hasn\'t given you permission to do that.');
@@ -355,6 +355,9 @@ class Moderation {
       if (on) rec.limits[kind] = { by: s.tag, reason: reason || LIMITS[kind].why, until, ts: now };
       else delete rec.limits[kind];
       note = on ? `${span}${reason ? ' · ' + reason : ''}` : reason;
+    } else if (act === 'grant') { // the owner gave them something (gifts.js grant): logged only
+      if (me !== 'owner') throw new Error('Only the owner can give things.');
+      note = reason;
     } else if (act === 'note') {
       if (!reason) throw new Error('Type the note first.');
       rec.notes = [...rec.notes, { by: s.tag, text: reason, ts: now, ...(/^[a-z0-9]{4,12}$/.test(clipId) ? { clip: clipId } : {}) }].slice(-20);
