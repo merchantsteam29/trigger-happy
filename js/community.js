@@ -79,6 +79,8 @@ class Community {
   async publish(map) {
     const s = this.social;
     if (!s || !s.tag) throw new Error('Get a gamertag first (Friends) to publish maps.');
+    const mb = moderation.myLimit('maps'); // staff banned you from publishing (moderation.js LIMITS)
+    if (mb) throw new Error(`Staff banned you from publishing maps${mb.until ? ' until ' + new Date(mb.until).toLocaleString() : ''}: ${mb.reason}`);
     const m = cleanMap(map);
     if (!m.boxes.length) throw new Error('Draw something first!');
     const ids = store.get('cmapIds', {}), tag = low(s.tag);

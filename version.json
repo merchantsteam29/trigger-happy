@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.17",
+  "version": "2026.10.15.18",
   "notes": [
-    "Staff can freeze a player's gifts"
+    "Staff can stop a player publishing maps"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

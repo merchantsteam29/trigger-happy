@@ -43,6 +43,7 @@ export const AUTO_FLAG = 'Auto-flag: suspicious stats';
 // act(tag, LIMITS[kind].act) and lifted with 'un' + that.
 export const LIMITS = {
   ranked: { act: 'rankban', icon: '🏆', name: 'Ranked ban', lift: 'Lift ranked ban', why: 'Ranked misconduct', you: 'You\'re banned from ranked' },
+  maps: { act: 'mapban', icon: '🗺', name: 'Map publish ban', lift: 'Lift map ban', why: 'Inappropriate maps', you: 'You\'re banned from publishing maps' },
   gifts: { act: 'giftban', icon: '🎁', name: 'Gift freeze', lift: 'Unfreeze gifts', why: 'Gift scams', you: 'Your gifts are frozen' },
 };
 const LIMIT_OF = Object.fromEntries(Object.entries(LIMITS).map(([k, v]) => [v.act, k]));
