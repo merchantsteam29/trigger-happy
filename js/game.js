@@ -469,6 +469,7 @@ export class Game {
     if (opts.killcam === false || this.rules.mode === 'practice' || this.spectating || !kh || kh.length < 8 || !mh || !this.remotes.get(killer)) return;
     const meP = this.players.get(this.myId);
     const ghost = new RemotePlayer(this.scene, 'killcam-me', meP ? meP.name : 'You', meP ? this.colorFor(meP) : '#fff', getCos(), this.mods);
+    if (meP && meP.role) ghost.setIdentity(meP.name, meP.role); // owner-only looks on your kill-cam ghost too
     ghost.hasState = true; ghost.alive = true; ghost.replay = true;
     ghost.setWeapon(this.curW); ghost.swapT = 0;
     this.killcam = { killer, head, at: now, t0: now - 2600, ghost, died: false, s: {} };
@@ -531,6 +532,7 @@ export class Game {
     if (!spot) return;
     const p = this.players.get(mvp.id);
     const g = new RemotePlayer(this.scene, 'stage', mvp.name, p ? this.colorFor(p) : mvp.color || '#fff', cos, {});
+    if (p && p.role) g.setIdentity(mvp.name, p.role); // the MVP on stage keeps owner-only looks
     g.hasState = true; g.alive = true; g.replay = true;
     g.pos.set(spot.s.x, spot.s.y, spot.s.z); g.prev.copy(g.pos); g.yaw = spot.s.yaw;
     g.setWeapon('ar'); g.swapT = 0;

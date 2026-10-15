@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.28', name: 'Costume Party', banner: 'masquerade', notes: [
+  { v: '2026.10.15.29', name: 'Costume Party', banner: 'masquerade', notes: [
     '## Costumes',
     'A whole new look for your character, same size and hitbox: pick one in Character → Costumes',
     'In the shop: Skeleton, Cyber Samurai, Astronaut Cat, Party Llama, Junk Robot, Lava Golem, Ice Golem, Banana, Ninja, Mummy and Deep Sea Diver',
@@ -18,6 +18,8 @@ export const UPDATES = [
     'Your color always shows on your costume, and Settings can turn other players\' costumes off',
     '## New Banner',
     'Masquerade, the banner of this update, is in the shop',
+    '## Fixes',
+    'Owner-only looks now show in the Character preview, the kill cam and on the MVP stage',
   ] },
   { v: '2026.10.15.27', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',

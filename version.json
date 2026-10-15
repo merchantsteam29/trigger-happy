@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.28",
+  "version": "2026.10.15.29",
   "notes": [
-    "Costumes: a whole new look for your character"
+    "Small fixes"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

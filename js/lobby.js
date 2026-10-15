@@ -3,6 +3,7 @@ import { RemotePlayer } from './remote.js';
 import { EMOTES } from './emotes.js';
 import { POSE_ITEMS } from './poses.js';
 import { esc } from './util.js';
+import { roles } from './roles.js';
 
 // The Character screen's live preview: your 3D character (the same model everyone sees in matches)
 // in what you're wearing or trying on, holding your main gun with its charm, slowly turning (drag to
@@ -53,6 +54,7 @@ export class Lobby3D {
     const flat = stage.querySelector('canvas:not(.cz-3d)');
     if (flat) flat.style.display = 'none';
     if (this.canvas.parentElement !== stage) stage.appendChild(this.canvas);
+    this.r.setIdentity('', roles.myRole()); // owner-only items (the owner name tag and costume) show for the owner
     this.r.setCosmetics(cos);
     if (color !== this.color) { this.color = color; this.r.setLook(color, false, false); }
     this.r.setWeapon(gun || 'ar'); this.r.swapT = 0;
