@@ -348,6 +348,7 @@ export class ModPanel {
       <div class="seg mp-repshow">${[['all', `All ${all.length}`], ['open', `Not taken ${all.filter((r) => !claimer(r)).length}`], ['mine', `Mine ${all.filter((r) => claimer(r).toLowerCase() === me).length}`]].map(([id, n]) => `<button data-show="${id}" class="${show === id ? 'sel' : ''}">${n}</button>`).join('')}</div>
       <div class="mp-reports">${reports.length ? reports.map((r) => {
         const c = claimer(r), mine = c && c.toLowerCase() === me;
+        const quick = validTag(r.target) && rank(roles.myRole()) > rank(roles.roleOfTag(r.target)) && r.target.toLowerCase() !== me;
         return `
         <div class="mp-report ${r.reason === AUTO_FLAG ? 'auto' : ''} ${c ? (mine ? 'mine' : 'taken') : ''}">
           <div class="mp-report-head"><b>${esc(r.target)}</b><em>${esc(r.reason)}</em>${c ? `<span class="mp-claim">${mine ? '✋ You\'ve got this' : `🔒 ${esc(c)} has this`}</span>` : ''}<small>${ago(r.ts)}</small></div>
@@ -356,6 +357,7 @@ export class ModPanel {
           <small class="muted">${r.reason === AUTO_FLAG ? `Flagged automatically by ${esc(r.from)}'s game (the host)` : `Reported by ${esc(r.from)}`}${r.lobby ? ` in match ${esc(r.lobby)}` : ''}</small>
           <div class="mp-actions">
             ${validTag(r.target) ? `<button class="primary" data-look="${esc(r.target)}">Look up ${esc(r.target)}</button>` : ''}
+            ${quick ? `<span class="mp-quickacts" title="Uses the report as the reason, then resolves it">${roles.myCan('warn') ? `<button class="warn" data-qact="warn" data-rid="${esc(r.id)}">⚠ Warn</button>` : ''}${roles.myCan('mute') ? `<button data-qact="mute" data-rid="${esc(r.id)}">🔇 Mute 1 day</button>` : ''}${roles.myCan('ban') || roles.myTrial() ? `<button class="danger" data-qact="ban" data-rid="${esc(r.id)}">🚫 ${roles.myTrial() ? 'Ask to ban' : 'Ban'} 1 day</button>` : ''}</span>` : ''}
             ${r.lobby && this.joinLobby ? `<button data-spec="${esc(r.lobby)}">👁 Spectate that match</button><button data-join="${esc(r.lobby)}">▶ Join</button>` : ''}
             ${r.rp && this.watchReplay ? `<button data-replay="${esc(r.id)}" title="The last 30 seconds before they reported, from any angle">🎬 Watch replay</button>` : ''}
             <button data-look="${esc(r.from)}">Look up reporter</button>
@@ -365,6 +367,23 @@ export class ModPanel {
         </div>`;
       }).join('') : `<div class="sv-empty">${all.length ? 'Nothing here.' : 'No reports. 🎉'}</div>`}</div>
     </div>`;
+    // Quick actions: the report becomes the reason, and the report is resolved afterwards.
+    body.querySelectorAll('[data-qact]').forEach((b) => {
+      b.onclick = async () => {
+        const r = all.find((x) => x.id === b.dataset.rid), act = b.dataset.qact;
+        if (!r) return;
+        const reason = `${r.reason === AUTO_FLAG ? 'Anti-cheat' : r.reason}${r.details ? ': ' + r.details : ''}`.slice(0, 140);
+        const what = { warn: 'Warn', mute: 'Mute the chat of (1 day)', ban: 'Ban (1 day)' }[act];
+        if (!confirm(`${what} ${r.target}?\nReason: ${reason}`)) return;
+        b.disabled = true;
+        try {
+          const res = await moderation.act(r.target, act, { reason, hours: act === 'warn' ? 0 : 24 });
+          await moderation.dismissReport(r.id);
+          this.say(res && res.pending ? 'Sent to the owner for approval, and the report is resolved.' : `${{ warn: 'Warned', mute: 'Muted', ban: 'Banned' }[act]} ${r.target} and resolved the report.`);
+          this.render();
+        } catch (err) { this.say(err.message); b.disabled = false; }
+      };
+    });
     body.querySelectorAll('[data-show]').forEach((b) => { b.onclick = () => { this.repShow = b.dataset.show; this.render(); }; });
     body.querySelectorAll('[data-claim]').forEach((b) => { b.onclick = async () => { await moderation.claimReport(b.dataset.claim, true); this.say('It\'s yours: other staff see you\'re on it.'); this.render(); }; });
     body.querySelectorAll('[data-unclaim]').forEach((b) => { b.onclick = async () => { await moderation.claimReport(b.dataset.unclaim, false); this.render(); }; });
