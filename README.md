@@ -686,7 +686,10 @@ becomes free again.
     shows how many reports came in for each reason (cheating, chat, names, griefing, spam, anti-cheat flags) with ▲ / ▼
     against the week before, and the most reported players. It counts every report your device has seen, resolved ones too. The reporter sees their reports in **Friends → 🚩 Your reports**: waiting,
     looked at by staff (with a thank-you pop-up when it happens), or not looked at within 7 days. They're never told what was done.
-  - **Announce:** post a message, either Info or Important, for 1 hour up to "until cleared". Every player sees it at
+  - **Announce:** (owner) **🎉 Run an event**: a name, **2x or 3x tokens** on everything players earn (not gifts), and / or
+    a featured **map** and **mode**, for 1 hour up to 7 days. Everyone gets a row on the Play screen with a **Play** button
+    (joins or starts a server with the event's mode and map), and Quick Play's new servers use the event map. **End it now**
+    stops it early. Below that, post a message, either Info or Important, for 1 hour up to "until cleared". Every player sees it at
     the top of the menu, and players in a match get it in chat when it's posted.
   - **Appeals:** banned players can send one appeal per ban from their ban screen. Staff can **Unban** or **Deny**,
     and denied players see it was denied.

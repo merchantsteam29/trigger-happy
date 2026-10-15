@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.21', name: 'Staff HQ Update', banner: 'staffhq', notes: [
+  { v: '2026.10.15.22', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
     'Updates are now one big log each, with a heading for every new feature',
     '## 4 New Banners',
@@ -54,6 +54,8 @@ export const UPDATES = [
     "When the owner reverses a moderator's action it's logged with a note, in its own list in the Log tab",
     '## Owner Gifts',
     'The owner can give players tokens or items as prizes or to make up for bugs',
+    '## Live Events',
+    "The owner can start an event any time: double or triple tokens, a featured map or mode, shown on everyone's Play screen",
   ] },
   { v: '2026.10.14.26', name: 'The Mega Update', banner: 'mega', notes: [
     '## Smoother Replays',

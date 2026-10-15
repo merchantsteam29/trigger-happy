@@ -6,6 +6,9 @@ import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './game
 import { leaderboard } from './leaderboard.js';
 import { gifts, grantable, GRANT_MAX } from './gifts.js';
 import { COSMETICS, SLOT_LABELS } from './missions.js';
+import { liveEvent, EVENT_HOURS } from './liveevent.js';
+import { MAPS, MAP_ORDER } from './maps.js';
+import { MODES, MODE_ORDER } from './host.js';
 
 // The Mod Panel menu section (staff only), in tabs:
 //  Players   look up a gamertag: warnings, ban, chat mute, forced gamertag change, staff notes, history
@@ -518,7 +521,33 @@ export class ModPanel {
     };
     const clear = body.querySelector('#mp-ann-clear');
     if (clear) clear.onclick = async () => { try { await moderation.clearAnnouncement(); this.say('Announcement cleared.'); this.render(); } catch (err) { this.say(err.message); } };
-    if (roles.myRole() === 'owner') this.renderGameNight(body);
+    if (roles.myRole() === 'owner') { this.renderEvent(body); this.renderGameNight(body); }
+  }
+
+  // Owner: run an event (liveevent.js) — double tokens, a featured map / mode — for a while.
+  renderEvent(body) {
+    const e = liveEvent.live();
+    const card = document.createElement('div');
+    card.className = 'card mp-gap mp-event';
+    card.innerHTML = `<h3>🎉 Run an event</h3>
+      <div class="note">Starts for everyone straight away, no update needed: a row on everyone's home screen, extra tokens on everything players earn, and a featured map / mode (its Play button, and Quick Play's new servers). It ends by itself.</div>
+      ${e ? `<div class="mp-ann info"><b>🎉 ${esc(e.name)}</b><small>${e.tokens > 1 ? `${e.tokens}x tokens · ` : ''}${MAPS[e.map] ? `${esc(MAPS[e.map].name)} · ` : ''}${MODES[e.mode] ? `${esc(MODES[e.mode].name)} · ` : ''}ends ${when(e.until)}</small><button class="danger" id="mp-ev-end">End it now</button></div>` : '<div class="note">No event running.</div>'}
+      <div class="mp-actions mp-ev-form"><input id="mp-ev-name" maxlength="40" placeholder="Event name, e.g. Double Token Weekend">
+        <select id="mp-ev-tok"><option value="1">Normal tokens</option><option value="2" selected>🪙 2x tokens</option><option value="3">🪙 3x tokens</option></select>
+        <select id="mp-ev-map"><option value="">Any map</option>${MAP_ORDER.map((id) => `<option value="${id}">🗺 ${esc(MAPS[id].name)}</option>`).join('')}</select>
+        <select id="mp-ev-mode"><option value="">Any mode</option>${MODE_ORDER.filter((id) => MODES[id] && !MODES[id].event).map((id) => `<option value="${id}">🎮 ${esc(MODES[id].name)}</option>`).join('')}</select>
+        <select id="mp-ev-time">${opts(EVENT_HOURS, 72)}</select>
+        <button class="primary" id="mp-ev-go">${e ? 'Replace it' : 'Start event'}</button></div>`;
+    body.appendChild(card);
+    card.querySelectorAll('input').forEach((i) => i.addEventListener('keydown', (ev) => ev.stopPropagation()));
+    card.querySelector('#mp-ev-go').onclick = async () => {
+      const v = (id) => card.querySelector(id).value;
+      const name = v('#mp-ev-name').trim();
+      if (!confirm(`Start "${name || '?'}" for everyone?`)) return;
+      try { await liveEvent.start({ name, tokens: Number(v('#mp-ev-tok')), map: v('#mp-ev-map'), mode: v('#mp-ev-mode'), hours: Number(v('#mp-ev-time')) }); this.say('Event started for everyone.'); this.render(); } catch (err) { this.say(err.message); }
+    };
+    const end = card.querySelector('#mp-ev-end');
+    if (end) end.onclick = async () => { if (!confirm('End the event for everyone?')) return; try { await liveEvent.end(); this.say('Event ended.'); this.render(); } catch (err) { this.say(err.message); } };
   }
 
   // Owner: when Game Night happens (everyone sees it in their own time zone).

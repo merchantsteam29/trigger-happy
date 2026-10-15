@@ -118,17 +118,17 @@ class Gifts {
       got = { from: b.from, item: b.item, owner: true, note: b.note || '', ts: Date.now() };
     } else if (owner) {
       const n = Math.max(0, Math.min(GRANT_MAX, Math.round(Number(b.tokens) || 0)));
-      if (n) { addTokens(n); got = { from: b.from, tokens: n, owner: true, note: b.note || '', ts: Date.now() }; }
+      if (n) { addTokens(n, true); got = { from: b.from, tokens: n, owner: true, note: b.note || '', ts: Date.now() }; }
     } else if (b.grant) {
       got = null; // claims to be a grant but isn't the owner's
     } else if (b.item && giftable(b.item.slot, b.item.id)) {
       const owned = ownsItem(b.item.slot, b.item.id);
-      if (owned) addTokens(giftable(b.item.slot, b.item.id).price); // already had it: its price in tokens instead
+      if (owned) addTokens(giftable(b.item.slot, b.item.id).price, true); // already had it: its price in tokens instead
       else if (b.item.slot === 'wrap') grantWrap(b.item.id); else grantItem(b.item.slot, b.item.id);
       got = { from: b.from, item: b.item, refunded: owned, note: b.note || '', ts: Date.now() };
     } else {
       const n = Math.max(0, Math.min(GIFT_MAX, Math.round(Number(b.tokens) || 0)));
-      if (n) { addTokens(n); got = { from: b.from, tokens: n, note: b.note || '', ts: Date.now() }; }
+      if (n) { addTokens(n, true); got = { from: b.from, tokens: n, note: b.note || '', ts: Date.now() }; }
     }
     s.relay.publish(topic, '', { retain: true }); // claimed: take it off the relay
     if (!got) return;

@@ -950,3 +950,6 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-give { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
 .mp-give input { width: 110px; }
 .mp-give select { width: auto; flex: 1; }
+.hs-event { border-color: #ffd23f88; background: linear-gradient(100deg, #3a1f00aa, #5a0f4aaa); }
+.mp-ev-form input { flex: 1; min-width: 200px; }
+.mp-ev-form select { width: auto; }

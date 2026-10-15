@@ -11,7 +11,7 @@ import { HostPanel } from './hostpanel.js';
 import { modelQuality } from './models.js';
 import { SettingsUI, drawAvatar } from './settingsui.js';
 import { cardHtml, paintCard, cardImage, myCard } from './playercard.js';
-import { getCos, ownsWrap, MISSIONS, missionDone, getTokens } from './missions.js';
+import { getCos, ownsWrap, MISSIONS, missionDone, getTokens, setTokenBoost } from './missions.js';
 import { opts, onOpts } from './settings.js';
 import { ServerBrowser, ServerAnnouncer, REGIONS, guessRegion } from './servers.js';
 import { Updater } from './updater.js';
@@ -59,6 +59,7 @@ import { Theater, encodeClip, decodeClip, listReplays, loadReplay } from './repl
 import { Lobby3D } from './lobby.js';
 import { challenges, renderChallenges } from './challenges.js';
 import { clanBaseMap } from './clanbase.js';
+import { liveEvent } from './liveevent.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -278,6 +279,7 @@ function renderHome() {
       </div>
     </div>
     ${(() => { const w = motwNow(), p = motwProgress(); return `<div class="hs-tile banner-row hs-motw"><span class="hs-ic">${w.icon}</span><span class="hs-txt"><b>Mode of the week: ${esc(w.name)}</b><small>${esc(w.desc)} · ${p.paid ? '✓ reward earned' : `play ${MOTW_MATCHES} matches: ${p.n}/${MOTW_MATCHES} · 🪙 ${MOTW_TOKENS}`} · new mode in ${fmtDuration(motwEnds() - Date.now())}</small></span><button class="primary sm" data-motw>Play</button></div>`; })()}
+    ${eventRow()}
     ${holidayRow()}
     ${replayCount || store.get('matchHistory', []).length ? `<button class="hs-tile banner-row hs-replay" data-lastreplay><span class="hs-ic">🎬</span><span class="hs-txt"><b>Match history & replays</b><small>Your last matches: results, scores, and replays from any angle</small></span><span class="hm-arrow">›</span></button>` : ''}
     ${!tutorialDone() ? '<button class="hs-tile hs-tutorial banner-row" data-tutorial><span class="hs-ic">🎓</span><span class="hs-txt"><b>New here? Take the 1-minute tutorial</b><small>Learn the controls in the Practice Range · 🪙 ' + TUTORIAL_TOKENS + '</small></span><span class="hm-arrow">›</span></button>' : ''}
@@ -308,6 +310,8 @@ function renderHome() {
   el.querySelector('[data-ranked]').onclick = playRanked;
   el.querySelector('[data-feat]').onclick = playFeatured;
   el.querySelector('[data-motw]').onclick = playMotw;
+  const evBtn = el.querySelector('[data-event]');
+  if (evBtn) evBtn.onclick = playEvent;
   const ins = el.querySelector('[data-install]');
   if (ins) ins.onclick = installApp;
   const g = el.querySelector('[data-gn]');
@@ -344,7 +348,8 @@ async function quickPlay() {
     status('Finding a match…');
   }
   status('');
-  hostLobby({ name: `${settings.name || 'Player'}'s Quick Play`, mode: 'ffa', map: randomMap(), max: 12, bots: 6, rotate: true, vis: 'public' });
+  const ev = liveEvent.live(); // an owner event's map goes first
+  hostLobby({ name: `${settings.name || 'Player'}'s Quick Play`, mode: 'ffa', map: ev && MAPS[ev.map] ? ev.map : randomMap(), max: 12, bots: 6, rotate: true, vis: 'public' });
 }
 // Ranked: a ranked server near your rating (busiest first), or a new one.
 async function playRanked() {
@@ -361,6 +366,25 @@ async function playRanked() {
   status('');
   hostLobby({ name: `🏆 Ranked · ${me.div.name}`, mode: RANKED_MATCH.mode, map: randomMap(), max: RANKED_MATCH.max, bots: RANKED_MATCH.bots, rotate: true, vis: 'public', ranked: true });
 }
+// The owner's event (liveevent.js): a row on the home screen while it runs.
+function eventRow() {
+  const e = liveEvent.live();
+  if (!e) return '';
+  const bits = [e.tokens > 1 ? `🪙 ${e.tokens}x tokens on everything you earn` : '', MAPS[e.map] ? `🗺 ${esc(MAPS[e.map].name)}` : '', MODES[e.mode] ? `🎮 ${esc(MODES[e.mode].name)}` : ''].filter(Boolean).join(' · ');
+  return `<div class="hs-tile banner-row hs-event"><span class="hs-ic">🎉</span><span class="hs-txt"><b>${esc(e.name)}</b><small>${bits} · ends in ${fmtDuration(e.until - Date.now())}</small></span>${MAPS[e.map] || MODES[e.mode] ? '<button class="primary sm" data-event>Play</button>' : ''}</div>`;
+}
+// Join a server playing the event's mode / map, or start one.
+async function playEvent() {
+  const e = liveEvent.live();
+  if (busy || !e) return;
+  const mode = MODES[e.mode] ? e.mode : 'ffa', map = MAPS[e.map] ? e.map : null;
+  status(`Finding a ${e.name} server…`);
+  const s = (await freshServers()).filter((x) => x.mode === mode && (!map || x.mapId === map || x.map === MAPS[map].name) && x.players < x.max)[0];
+  if (s) return joinCode(s.code);
+  status('');
+  hostLobby({ name: `🎉 ${e.name}`, mode, map: map || randomMap(), max: 12, bots: 6, rotate: !map, vis: 'public' });
+}
+
 // Today's featured mode: a public server already playing it, or a new one with bots.
 async function playFeatured() {
   if (busy) return;
@@ -1802,6 +1826,12 @@ setInterval(() => {
   rkHourWas = live;
 }, 30000);
 gameNight.init(social);
+liveEvent.init(social);
+setTokenBoost(() => liveEvent.tokenBoost()); // owner events: double / triple tokens
+liveEvent.onChange = (e, started) => {
+  if (started && e) toast(`🎉 Event: ${e.name}${e.tokens > 1 ? ` · 🪙 ${e.tokens}x tokens` : ''}`);
+  if (!game.active && menuPane === 'play') showPane('play');
+};
 leaderboard.init(social);
 challenges.init(social);
 challenges.onNotice = (t) => toast(t);

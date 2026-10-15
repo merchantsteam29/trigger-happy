@@ -293,8 +293,11 @@ export function buyWrap(id) {
   return true;
 }
 
-// Rewards from progress.js (levels, daily login, challenges, game night, leaderboard).
-export function addTokens(n) { if (n > 0) { tokens += Math.round(n); save(); } }
+// Rewards from progress.js (levels, daily login, challenges, game night, leaderboard). Earned tokens
+// are multiplied during an owner event (liveevent.js, wired in main.js); raw: gifts and refunds aren't.
+let tokenBoost = () => 1;
+export const setTokenBoost = (fn) => { tokenBoost = fn; };
+export function addTokens(n, raw = false) { if (n > 0) { tokens += Math.round(raw ? n : n * tokenBoost()); save(); } }
 // Gifts (gifts.js): take tokens if there are enough.
 export function spendTokens(n) { n = Math.round(n); if (!(n > 0) || tokens < n) return false; tokens -= n; save(); return true; }
 // Gives an earned cosmetic (e.g. a season banner). Returns true if it's new.
