@@ -1,6 +1,6 @@
 import { roles, badge, rank, PERMS } from './roles.js';
 import { moderation, fmtHours, AUTO_FLAG, DEFAULT_LADDER, LIMITS } from './moderation.js';
-import { esc } from './util.js';
+import { esc, store } from './util.js';
 import { validTag, TAG_RULES } from './social.js';
 import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './gamenight.js';
 import { leaderboard } from './leaderboard.js';
@@ -39,6 +39,26 @@ const when = (ts) => new Date(ts).toLocaleString([], { dateStyle: 'medium', time
 // "Mute 1 day", "Ban (permanent)" for a punishment ladder step.
 const stepName = (s) => (s.act === 'warn' ? 'Warn' : `${s.act === 'mute' ? 'Mute' : 'Ban'} ${s.h ? fmtHours(s.h) : 'permanently'}`);
 const nth = (n) => n + (n % 100 > 10 && n % 100 < 14 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+// ---------- Owner dashboard (📊 Stats tab) ----------
+// While the owner's game is open it samples, once a minute, who's online (presence) and the public
+// servers, into hourly buckets kept 14 days on this device (store 'dashStats'):
+// { h: { 'YYYY-MM-DDTHH': { peak, sum, n, modes: { name: player-minutes }, maps: {…} } }, d: { 'YYYY-MM-DD': [tags] } }
+const hourKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}`; };
+function dashSample(servers) {
+  const st = store.get('dashStats', { h: {}, d: {} }), now = Date.now(), hk = hourKey(now), dk = hk.slice(0, 10);
+  const online = moderation.onlineNow(), list = servers ? servers.list() : [];
+  const playing = list.reduce((a, s) => a + (s.players || 0), 0), count = Math.max(online.length, playing);
+  const b = st.h[hk] || (st.h[hk] = { peak: 0, sum: 0, n: 0, modes: {}, maps: {} });
+  b.peak = Math.max(b.peak, count); b.sum += count; b.n++;
+  for (const s of list) if (s.players) { b.modes[s.mode] = (b.modes[s.mode] || 0) + s.players; b.maps[s.map] = (b.maps[s.map] || 0) + s.players; }
+  const day = new Set(st.d[dk] || []);
+  for (const o of online) if (day.size < 3000) day.add(o.tag.toLowerCase());
+  st.d[dk] = [...day];
+  const cut = hourKey(now - 14 * 864e5);
+  for (const k of Object.keys(st.h)) if (k < cut) delete st.h[k];
+  for (const k of Object.keys(st.d)) if (k < cut.slice(0, 10)) delete st.d[k];
+  store.set('dashStats', st);
+}
 const opts = (list, sel) => list.map(([v, n]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${n}</option>`).join('');
 
 export class ModPanel {
@@ -52,6 +72,8 @@ export class ModPanel {
     this.tab = 'players';
     this.target = null; // { tag, since } of the looked-up player
     this.msg = '';
+    // Owner dashboard: sample once a minute (dashSample) while the owner has the game open.
+    setInterval(() => { if (roles.isOwner()) { if (this.servers) this.servers.start(); dashSample(this.servers); } }, 60000);
   }
 
   say(t) { this.msg = t; const m = this.el.querySelector('#mp-msg'); if (m) m.textContent = t; }
@@ -65,6 +87,7 @@ export class ModPanel {
     const bans = [...moderation.records.values()].filter((r) => moderation.activeBan(r)).length;
     const appeals = moderation.openAppeals();
     const tabs = [['players', '👤 Players'], ['online', `🟢 Online <b>${online.length}</b>`], ['reports', `🚩 Reports ${reports.length ? `<b class="alert">${reports.length}</b>` : ''}`], ...(roles.isOwner() ? [['bugs', `🐞 Bugs ${moderation.bugs.size ? `<b class="alert">${moderation.bugs.size}</b>` : ''}`]] : []), ['appeals', `⚖ Appeals ${appeals.length ? `<b class="alert">${appeals.length}</b>` : ''}`], ...(roles.myCan('announce') ? [['announce', '📣 Announce']] : []), ['recent', '🕘 Recent'], ['staffchat', `💬 Staff chat ${this.unread ? `<b class="alert">${this.unread}</b>` : ''}`], ...(roles.myCan('tools') ? [['filter', '🤐 Chat filter']] : []), ['log', '📜 Log']];
+    if (owner) tabs.push(['dash', '📊 Stats']);
     if (owner) tabs.push(['staff', `🛡 Staff ${moderation.approvals.size ? `<b class="alert">${moderation.approvals.size}</b>` : ''}`]);
     if (!tabs.some(([id]) => id === this.tab)) this.tab = 'players';
     this.el.innerHTML = `
@@ -90,6 +113,7 @@ export class ModPanel {
     else if (this.tab === 'log') this.renderLog(body);
     else if (this.tab === 'staffchat') this.renderStaffChat(body);
     else if (this.tab === 'recent') this.renderRecent(body);
+    else if (this.tab === 'dash') this.renderDash(body, online);
     else this.renderStaff(body);
     if (this.tab === 'filter') this.renderGlobalChat(body); // chat lock / slow mode for every match, above the filter
     this.el.querySelectorAll('input, textarea').forEach((i) => i.addEventListener('keydown', (e) => e.stopPropagation()));
@@ -722,6 +746,44 @@ export class ModPanel {
     </div>`;
     body.querySelector('#mp-log-by').onchange = (e) => { this.logBy = e.target.value; this.render(); };
     body.querySelectorAll('[data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.look(a.dataset.look); }; });
+  }
+
+  // ---------- 📊 Stats (owner) ----------
+  renderDash(body, online) {
+    if (this.servers) this.servers.start();
+    dashSample(this.servers); // fresh numbers when opened
+    const st = store.get('dashStats', { h: {}, d: {} }), now = Date.now(), today = hourKey(now).slice(0, 10);
+    const list = this.servers ? this.servers.list() : [];
+    const inMatch = online.filter((o) => o.mode === 'lobby').length, playing = list.reduce((a, s) => a + (s.players || 0), 0);
+    const hours = Object.entries(st.h);
+    const peakToday = Math.max(0, ...hours.filter(([k]) => k.startsWith(today)).map(([, b]) => b.peak));
+    const week = hours.filter(([k]) => k >= hourKey(now - 7 * 864e5));
+    // Busiest hours of the day (average players over the last 7 days)
+    const byHour = Array.from({ length: 24 }, (_, h) => { const bs = week.filter(([k]) => Number(k.slice(11)) === h); const n = bs.reduce((a, [, b]) => a + b.n, 0); return n ? bs.reduce((a, [, b]) => a + b.sum, 0) / n : 0; });
+    const top = (key) => { const m = {}; for (const [, b] of week) for (const [k, v] of Object.entries(b[key] || {})) m[k] = (m[k] || 0) + v; return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 6); };
+    const modes = top('modes'), maps = top('maps');
+    const days = Object.entries(st.d).sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-7);
+    const hmax = Math.max(1, ...byHour), dmax = Math.max(1, ...days.map(([, t]) => t.length));
+    const bars = (rows) => { const mx = Math.max(1, ...rows.map((r) => r[1])); return rows.length ? rows.map(([n, v]) => `<div class="mp-bar"><span>${esc(n)}</span><i style="--w:${(v / mx) * 100}%"></i><b>${Math.round(v)}</b></div>`).join('') : '<div class="note">No data yet.</div>'; };
+    const fmtH = (h) => new Date(2000, 0, 1, h).toLocaleTimeString([], { hour: 'numeric' });
+    body.innerHTML = `<div class="mp-stats mp-dash-top">
+        <div><b>${Math.max(online.length, playing)}</b><small>online now</small></div>
+        <div><b>${Math.max(inMatch, playing)}</b><small>in matches</small></div>
+        <div><b>${list.length}</b><small>public servers</small></div>
+        <div><b>${peakToday}</b><small>today's peak</small></div>
+        <div><b>${(st.d[today] || []).length}</b><small>gamertags seen today</small></div>
+      </div>
+      <div class="mp-grid">
+        <div class="card"><h3>Busiest hours <span class="muted">(average players, last 7 days, your time)</span></h3>
+          <div class="mp-hours">${byHour.map((v, h) => `<i title="${fmtH(h)}: ${v.toFixed(1)} on average" style="--h:${(v / hmax) * 100}%"></i>`).join('')}</div>
+          <div class="mp-hours-lbl"><span>${fmtH(0)}</span><span>${fmtH(6)}</span><span>${fmtH(12)}</span><span>${fmtH(18)}</span><span>${fmtH(23)}</span></div>
+          <h3 class="mp-gap">Players per day <span class="muted">(gamertags seen)</span></h3>
+          <div class="mp-days">${days.length ? days.map(([d, t]) => `<div><i style="--h:${(t.length / dmax) * 100}%"></i><b>${t.length}</b><small>${new Date(d + 'T12:00').toLocaleDateString([], { weekday: 'short' })}</small></div>`).join('') : '<div class="note">No data yet.</div>'}</div>
+        </div>
+        <div class="card"><h3>Most played modes <span class="muted">(player-minutes, 7 days)</span></h3><div class="mp-bars">${bars(modes)}</div>
+          <h3 class="mp-gap">Most played maps</h3><div class="mp-bars">${bars(maps)}</div></div>
+      </div>
+      <div class="note">Counted by your game once a minute while it's open (public servers and everyone online with a gamertag), and kept 14 days on this device. The more you have the game open, the fuller it gets.</div>`;
   }
 
   // ---------- Punishment ladder (owner, in the Staff tab) ----------

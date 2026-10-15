@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.22",
+  "version": "2026.10.15.23",
   "notes": [
-    "The owner can run events: extra tokens, a featured map or mode"
+    "The owner gets a stats dashboard"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

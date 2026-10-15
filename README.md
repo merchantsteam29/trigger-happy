@@ -86,6 +86,9 @@ real match. Replay it any time from **Keyboard & mouse → Play the tutorial** i
 map, and stay inside the closing purple storm; last one standing wins) and the **Tournament** (knockout free-for-all
 rounds, then a 1v1 final). See [Game Night](#quick-play--game-night).
 
+**🎉 Events:** sometimes the owner runs an event (like a Double Token Weekend, or a featured map or mode). It shows as a
+row on the Play screen with a **Play** button, and while it runs, everything you earn gives extra tokens.
+
 **🎪 Mode of the week:** every Monday a new mix of a mode and silly rules, the same for everyone (Moon Snipers, Knife
 Frenzy, Tank Rockets, Pistol Panic, One-Shot Gun Game, Chaos CTF, Headshot Hill, Moon Zombies). **Play** on the home
 screen joins or starts a server playing it. Finish 3 matches of it in a week for 🪙 150.
@@ -701,6 +704,9 @@ becomes free again.
     its time, filterable by moderator. **♛ Owner overrides** lists every time the owner reversed or changed a moderator's
     action (unban, unmute, lifting a restriction, clearing their warnings, changing their ban or mute, undoing it), with the
     owner's note: the owner has to type one in the reason box first.
+  - **📊 Stats** (owner only): players online now, in matches, public servers, today's peak and gamertags seen today;
+    the busiest hours of the day and players per day over the last week; the most played modes and maps. The owner's
+    game counts them once a minute while it's open and keeps 14 days on that device.
   - **Staff** (owner only): appoint and remove moderators, permanently or for 1, 7 or 30 days, and tick what each one
     may do: warn, mute, kick, ban / unban, force a new gamertag, announcements, and match tools (freeze, end / restart /
     change map, chat lock, the chat filter, hiding from the leaderboard or community maps). Buttons they aren't allowed
