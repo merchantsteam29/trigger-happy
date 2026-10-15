@@ -208,6 +208,7 @@ export class HostLogic {
     if (opts.rules) Object.assign(this.s, cleanRules(opts.rules), { rulesName: String(opts.rules.rulesName || '').slice(0, 24) }); // custom rules preset
     if (WEATHER[opts.weather] || opts.weather === 'random') this.s.weather = opts.weather;
     if (opts.watch === false) this.s.watch = false;
+    if (opts.staffOnly) this.s.staffOnly = true; // staff test server: only verified staff may stay (addPlayer)
     this.botCount = 0;
     this.botFill = Math.max(0, Math.min(12, opts.botFill || 0)); // keep humans + bots at this many
     this.botDiff = BOT_DIFFS.includes(opts.botDiff) ? opts.botDiff : 'auto'; // fill bots' difficulty (Create server / host panel)
@@ -407,6 +408,14 @@ export class HostLogic {
     this.players.set(id, p);
     // Names of the owner and moderators are only for them: whoever uses one has a few seconds to
     // prove it (the 'staff' message) before being renamed.
+    // Staff-only test server: players who haven't proved they're staff (the 'staff' message) are removed.
+    if (this.s.staffOnly && id !== 'host') {
+      setTimeout(() => {
+        if (this.players.get(id) !== p || p.role) return;
+        this.broadcast({ t: 'notice', text: `${p.name} isn't staff and was removed` });
+        this.kick(id, 'This is a staff-only test server.');
+      }, 5000);
+    }
     if (roles.reserved(p.name)) {
       setTimeout(() => {
         if (this.players.get(id) !== p || p.role) return;
@@ -455,7 +464,7 @@ export class HostLogic {
 
   // Can people 👁 Watch this server? Game Night events always; otherwise the host's `watch` rule
   // (never ranked or clan-war servers).
-  watchable() { return !!(this.tour || this.mode.br || (this.s.watch !== false && !this.s.ranked && !this.s.war)); }
+  watchable() { return !this.s.staffOnly && !!(this.tour || this.mode.br || (this.s.watch !== false && !this.s.ranked && !this.s.war)); }
 
   // Staff can watch a match invisibly. They prove who they are when connecting (signed lobby code).
   async addSpectator(id, proof) {

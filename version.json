@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.26",
+  "version": "2026.10.15.27",
   "notes": [
-    "Before an update, everyone gets a countdown and a refresh prompt"
+    "Staff can host hidden staff-only test servers"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

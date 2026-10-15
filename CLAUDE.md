@@ -77,6 +77,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 - Host → client messages (`game.js` `onNet`): `welcome`, `snap`, `spawn`, `dmg`, `hitc`, `kill`,
   `notice`, `start`, `end`, `settings`, `pjoin`, `pleave`, `loadout`, `pickup`, `propbreak`, `wallbreak`, `spray`,
   `ping`, `kicked` (with `reason`), `warend`, `tourney`, `vc`, `votes` / `voted`, staff messages.
+- Staff test servers: settings `staffOnly` (Create server's 🛡 Staff only): `addPlayer` removes anyone without a staff proof after 5 s, `watchable()` is false, `setPublic` refuses.
 - Spectators: `HostLogic.addSpectator` takes staff (signed proof, invisible) and viewers (`'watch'`, no slot, up to 30) when
   `watchable()` (host rule `watch`, never ranked / clan wars; Game Night events always). The camera is `game.js` `specCam`.
 - Bots (`bot.js`) run inside the host (`p.bot`), with A* paths over `nav.js` and "Auto" skill that

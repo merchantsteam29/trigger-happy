@@ -765,7 +765,9 @@ becomes free again.
   **restart** or **change the map** of the match, even when someone else is hosting, and **lock chat** or turn on
   **slow mode** (one message per 5 seconds) for everyone except staff. **🎬 Clip** next to a player (or **F9** while
   spectating someone) saves the last 60 seconds of the match as **evidence** on their record: it shows as a staff note
-  with **🎬 Watch**, which opens it in the replay theater. While spectating, each player has **👁 Go to** (and a **Find a
+  with **🎬 Watch**, which opens it in the replay theater. **🛡 Staff only** (a third Visibility choice in Create server,
+  only staff see it) hosts a hidden test server: anyone who isn't verified staff is removed after 5 seconds, nobody can
+  watch it, and it can't be switched to public. While spectating, each player has **👁 Go to** (and a **Find a
   player** box when there are several; Enter jumps to the first match) to move the camera straight to them.
   - Moderators can act on regular players.
   - The owner can also act on moderators.

@@ -1380,10 +1380,13 @@ function renderCreateForm() {
   $('sv-regionpick').innerHTML = REGIONS.map((r) => `<option ${r === serverCfg.region ? 'selected' : ''}>${r}</option>`).join('');
   $('sv-rotate').checked = serverCfg.rotate;
   $('sv-watch').checked = serverCfg.watch !== false;
+  $('sv-vis-staff').classList.toggle('hidden', !roles.myRole()); // staff-only test servers
+  if (serverCfg.vis === 'staff' && !roles.myRole()) serverCfg.vis = 'private';
   document.querySelectorAll('#sv-vis button').forEach((b) => b.classList.toggle('sel', b.dataset.v === serverCfg.vis));
   $('sv-vis-hint').textContent = serverCfg.vis === 'public'
     ? 'Anyone can find it in Find Servers.'
-    : 'Hidden from the list. Friends join with the code or invite link.';
+    : serverCfg.vis === 'staff' ? 'A hidden test server: only the owner and moderators can join (anyone else is removed after a few seconds), and nobody can watch it.'
+      : 'Hidden from the list. Friends join with the code or invite link.';
 }
 $('sv-name').addEventListener('input', () => { serverCfg.name = $('sv-name').value.trim(); saveCfg(); });
 $('sv-max').onchange = () => { serverCfg.max = Number($('sv-max').value); saveCfg(); };
@@ -1480,11 +1483,12 @@ function listingInfo() {
 }
 function setPublic(v) {
   if (!hosting || !net) return;
+  if (v && net.logic && net.logic.s.staffOnly) { toast('Staff-only test servers stay hidden.'); v = false; if ($('hp-public')) $('hp-public').checked = false; }
   hosting.public = v;
   announcer.live = net.reachable;
   if (v) announcer.start(net.code, listingInfo).then((ok) => { if (!ok && hosting) chat.system('Could not reach the server list. Friends can still join with the code.'); });
   else announcer.stop();
-  $('pause-vis').textContent = v ? '🌐 Public' : '🔒 Private';
+  $('pause-vis').textContent = v ? '🌐 Public' : net.logic && net.logic.s.staffOnly ? '🛡 Staff only' : '🔒 Private';
 }
 
 // Menu sections. Phones show the section buttons as a bottom bar.
@@ -2367,7 +2371,7 @@ async function hostLobby(preset = null) {
     try {
       await net.host(code, settings.name || 'Player', settings.color,
         preset ? { map: preset.map, mode: preset.mode, maxPlayers: preset.max, botFill: Math.min(preset.bots, preset.max), gn: !!preset.gn, ranked: !!preset.ranked, war: preset.war || null, rules: preset.rules || null, motw: preset.motw || null, customMap: preset.customMap || null }
-          : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, weather: serverCfg.weather, watch: serverCfg.watch !== false, rules }, myCos());
+          : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, weather: serverCfg.weather, watch: serverCfg.watch !== false, rules, staffOnly: serverCfg.vis === 'staff' && !!roles.myRole() }, myCos());
       net.logic.s.rotate = preset ? preset.rotate : serverCfg.rotate;
       net.logic.onFlag = (p, details) => moderation.autoFlag({ target: p.name, lobby: net.code, details, replay: encodeClip(game.recorder.latest(), 30) });
       hosting = preset
