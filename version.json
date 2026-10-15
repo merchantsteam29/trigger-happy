@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.19",
+  "version": "2026.10.15.20",
   "notes": [
-    "Staff can undo their actions for 10 minutes"
+    "The owner's overrides of moderators are logged"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -360,7 +360,8 @@ class Moderation {
       rec.notes = [...rec.notes, { by: s.tag, text: reason, ts: now, ...(/^[a-z0-9]{4,12}$/.test(clipId) ? { clip: clipId } : {}) }].slice(-20);
       note = reason;
     } else throw new Error('Unknown action.');
-    rec.log = [...rec.log, { by: s.tag, act, note, ts: now }].slice(-LOG_MAX);
+    const ov = this.overrides(old, act);
+    rec.log = [...rec.log, { by: s.tag, act, note, ts: now, ...(ov ? { ov } : {}) }].slice(-LOG_MAX);
     const text = await s.sign(rec);
     s.relay.publish(P + k, text, { retain: true });
     if (act === 'unban' || act === 'denyappeal') this.clearAppeal(k); // the appeal is answered
@@ -374,6 +375,26 @@ class Moderation {
     }
     return this.records.get(k);
   }
+
+  // ---------- Owner overrides ----------
+  // The owner reversing a moderator's action (unban, unmute, lifting a restriction, clearing their
+  // warnings, denying... ) is marked on the log entry (`ov`: the moderator) and listed in the Log tab.
+  overrides(old, act) {
+    if (roles.myRole() !== 'owner' || !old) return '';
+    const me = low(this.social.tag), not = (x) => (x && x.by && low(x.by) !== me ? x.by : '');
+    if (act === 'unban') return not(old.ban);
+    if (act === 'unmute') return not(old.mute);
+    if (act === 'clearwarns') return not((old.warns || []).find((w) => low(w.by) !== me));
+    const kind = act.startsWith('un') && Object.keys(LIMITS).find((k) => 'un' + LIMITS[k].act === act);
+    if (kind) return not(old.limits && old.limits[kind]);
+    if (act === 'ban' && this.activeBan(old)) return not(old.ban); // changed their ban's length
+    if ((act === 'mute' || act === 'smute') && this.activeMute(old)) return not(old.mute);
+    return '';
+  }
+  // Every override, newest first: { by, ov, act, note, ts, target }.
+  overrideLog() { return this.actionLog().filter((l) => l.ov); }
+  // Would this action override a moderator? (the panel asks the owner for a note)
+  wouldOverride(tag, act) { return this.overrides(this.records.get(low(tag)), act); }
 
   // ---------- Undo ----------
   // A log entry this staff member may still undo: theirs (the owner: anyone's), recent, not undone yet,
@@ -405,7 +426,8 @@ class Moderation {
     else if (e.act === 'warn') rec.warns = rec.warns.filter((w) => w.ts !== e.ts);
     else if (e.act === 'note') rec.notes = rec.notes.filter((n) => n.ts !== e.ts);
     const now = Date.now();
-    rec.log = [...old.log.map((l) => (l === e ? { ...l, undone: now } : l)), { by: s.tag, act: 'undo', note: `${e.act} by ${e.by}${e.note ? ': ' + e.note : ''}`.slice(0, 160), ts: now }].slice(-LOG_MAX);
+    const ov = roles.myRole() === 'owner' && low(e.by) !== low(s.tag) ? e.by : '';
+    rec.log = [...old.log.map((l) => (l === e ? { ...l, undone: now } : l)), { by: s.tag, act: 'undo', note: `${e.act} by ${e.by}${e.note ? ': ' + e.note : ''}`.slice(0, 160), ts: now, ...(ov ? { ov } : {}) }].slice(-LOG_MAX);
     const text = await s.sign(rec);
     s.relay.publish(P + k, text, { retain: true });
     if (e.act === 'smute') await this.setShadow(k, null);

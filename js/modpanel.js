@@ -258,7 +258,8 @@ export class ModPanel {
     });
     box.querySelectorAll('[data-undo]').forEach((b) => {
       b.onclick = async () => {
-        if (!confirm('Undo this action?')) return;
+        const e = (rec.log || []).find((l) => l.ts === Number(b.dataset.undo));
+        if (!confirm(e && roles.myRole() === 'owner' && e.by.toLowerCase() !== String(this.social.tag).toLowerCase() ? `Undo ${e.by}'s action? It goes in the override log.` : 'Undo this action?')) return;
         b.disabled = true;
         try { await moderation.act(t.tag, 'undo', { of: Number(b.dataset.undo) }); this.say('Undone.'); this.render(); } catch (err) { this.say(err.message); b.disabled = false; }
       };
@@ -295,6 +296,8 @@ export class ModPanel {
           ...Object.fromEntries(Object.values(LIMITS).flatMap((L) => [[L.act, `${L.name.toLowerCase()} (${span})`], ['un' + L.act, L.lift.toLowerCase()]])),
         }[act];
         if ((act === 'warn' || act === 'note') && !reason) { this.say(act === 'warn' ? 'Type a reason for the warning first.' : 'Type the note first.'); return; }
+        const ov = moderation.wouldOverride(t.tag, act);
+        if (ov && !reason) { this.say(`This overrides ${ov}'s action: type a note in the reason box first (it goes in the override log).`); return; }
         if (act !== 'note' && !confirm(`${what[0].toUpperCase() + what.slice(1)}${LIMITS[act.replace(/^un/, '')] || Object.values(LIMITS).some((L) => L.act === act || 'un' + L.act === act) ? ': ' : ' '}${t.tag}?`)) return;
         b.disabled = true;
         try {
@@ -656,10 +659,16 @@ export class ModPanel {
       <h3>Moderator activity</h3>
       <table class="mp-stats-table"><tr><th>Staff</th><th>Actions</th><th>Warns</th><th>Bans</th><th>Mutes</th><th>Kicks</th><th>Last</th></tr>${moderation.staffStats().map((s) =>
         `<tr><td>${esc(s.by)}${badge(roles.roleOfTag(s.by), true)}</td><td>${s.total}</td><td>${s.warn}</td><td>${s.ban}</td><td>${s.mute}</td><td>${s.kick}</td><td>${ago(s.last)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">No actions yet.</td></tr>'}</table>
+      ${(() => {
+        const ov = moderation.overrideLog().slice(0, 50);
+        return ov.length ? `<h3 class="mp-gap">♛ Owner overrides <span class="muted">(${ov.length})</span></h3>
+      <div class="note">Times the owner reversed or changed a moderator's action, with the owner's note.</div>
+      <div class="mp-list mp-log mp-ovlog">${ov.map((l) => `<div><small>${when(l.ts)}</small> <b>${esc(l.by)}</b> overrode <b>${esc(l.ov)}</b>: ${ACT_LABEL[l.act] || l.act} <a href="#" data-look="${esc(l.target)}">${esc(l.target)}</a>${l.note ? ` <i>“${esc(l.note)}”</i>` : ''}</div>`).join('')}</div>` : '';
+      })()}
       <h3 class="mp-gap">Staff action log</h3>
       <div class="mp-actions"><select id="mp-log-by"><option value="">Everyone (${log.length})</option>${who.map((w) => `<option value="${esc(w)}" ${w === sel ? 'selected' : ''}>${esc(w)}</option>`).join('')}</select></div>
       <div class="mp-list mp-log mp-biglog">${rows.length ? rows.map((l) =>
-        `<div><small>${when(l.ts)}</small> <b>${esc(l.by)}</b> ${ACT_LABEL[l.act] || l.act} <a href="#" data-look="${esc(l.target)}">${esc(l.target)}</a>${l.note ? ': ' + esc(l.note) : ''}</div>`).join('') : '<small class="muted">No actions yet.</small>'}</div>
+        `<div class="${l.undone ? 'undone' : ''}"><small>${when(l.ts)}</small> <b>${esc(l.by)}</b> ${ACT_LABEL[l.act] || l.act} <a href="#" data-look="${esc(l.target)}">${esc(l.target)}</a>${l.note ? ': ' + esc(l.note) : ''}${l.ov ? ` <em class="mp-ov">♛ overrode ${esc(l.ov)}</em>` : ''}</div>`).join('') : '<small class="muted">No actions yet.</small>'}</div>
     </div>`;
     body.querySelector('#mp-log-by').onchange = (e) => { this.logBy = e.target.value; this.render(); };
     body.querySelectorAll('[data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.look(a.dataset.look); }; });

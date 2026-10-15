@@ -106,7 +106,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `chatall` | staff-signed chat lock / slow mode for every match (`moderation.setGlobalChat`; hosts check `HostLogic.chatMode()`) | moderation.js, host.js |
 | `ladder` | the owner-signed punishment ladder (`moderation.nextStep(tag)` suggests a player's next punishment) | moderation.js |
 | (in `modrec/<tag>`) `limits` | restrictions on one part of the game: `LIMITS` in moderation.js (`ranked`, `maps`: community.js `publish`, `gifts`: gifts.js `frozen` / `senderFrozen`, wired in main.js), set by `act(tag, 'rankban')` / lifted by `'un' + act`; `moderation.limited(rec, kind)` / `myLimit(kind)` | moderation.js, host.js |
-| (in `modrec/<tag>`) undo | `act(tag, 'undo', { of: log entry ts })` within `UNDO_MS` (`canUndo`: your own, the owner anyone's); the entry gets `undone`, an `undo` entry is logged | moderation.js |
+| (in `modrec/<tag>`) undo | `act(tag, 'undo', { of: log entry ts })` within `UNDO_MS` (`canUndo`: your own, the owner anyone's); the entry gets `undone`, an `undo` entry is logged; the owner reversing a moderator's action marks the entry `ov` (`moderation.overrides` / `overrideLog`) | moderation.js |
 | `approve/<id>` | a trial moderator's ban / unban request (signed, retained; the owner approves or denies, then clears it) | moderation.js |
 | `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |

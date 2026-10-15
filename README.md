@@ -692,7 +692,9 @@ becomes free again.
     and tells its players; staff can still chat. Below it, a built-in swear word and slur list (can be switched off) plus your own words. They're starred out
     in lobby and party chat for everyone, and spellings like "sh1t" and "fuuuck" are caught too.
   - **Log:** moderator activity (actions, warns, bans, mutes and kicks per staff member), then every staff action with
-    its time, filterable by moderator.
+    its time, filterable by moderator. **♛ Owner overrides** lists every time the owner reversed or changed a moderator's
+    action (unban, unmute, lifting a restriction, clearing their warnings, changing their ban or mute, undoing it), with the
+    owner's note: the owner has to type one in the reason box first.
   - **Staff** (owner only): appoint and remove moderators, permanently or for 1, 7 or 30 days, and tick what each one
     may do: warn, mute, kick, ban / unban, force a new gamertag, announcements, and match tools (freeze, end / restart /
     change map, chat lock, the chat filter, hiding from the leaderboard or community maps). Buttons they aren't allowed

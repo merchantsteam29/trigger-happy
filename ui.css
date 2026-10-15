@@ -945,3 +945,5 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-steps select { width: auto; }
 .mp-log .undone { opacity: .5; text-decoration: line-through; }
 .mp-log [data-undo] { padding: 1px 8px; font-size: 11px; margin-left: 6px; }
+.mp-ovlog { border-left: 3px solid #ffd23f; padding-left: 8px; }
+.mp-ov { font-style: normal; font-size: 11px; color: #ffd23f; margin-left: 6px; }
