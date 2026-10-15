@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.12",
+  "version": "2026.10.14.13",
   "notes": [
-    "Smarter bots: they throw frags, use the grappling hook and ziplines, and take the high ground"
+    "Anti-cheat flags now include a replay for the staff"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

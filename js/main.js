@@ -1658,7 +1658,7 @@ var modPanel = new ModPanel($('mod-pane'), social, {
     if (game.active) { toast('Leave the match first to watch replays.'); return; }
     const rec = decodeClip(clip);
     if (!rec) { toast('That replay is broken.'); return; }
-    openTheater(rec, `Report: ${r.target} · ${r.reason} · by ${r.from}`);
+    openTheater(rec, `Report: ${r.target} · ${r.reason} · by ${r.from}`, r.target); // follow the reported player
   },
   servers: { list: () => browser.list(), start: () => browser.start() },
 });
@@ -2018,9 +2018,9 @@ async function openReplays() {
     b.onclick = async () => { const rec = await loadReplay(Number(b.dataset.at)); pop.remove(); if (rec) openTheater(rec, new Date(rec.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })); else toast('That replay is gone.'); };
   });
 }
-function openTheater(rec, title) {
+function openTheater(rec, title, focus = null) {
   if (!rec || game.active || game.theater) return;
-  const th = new Theater(game, rec, { title, onClose: () => { $('menu').classList.remove('hidden'); countReplays(); renderHome(); } });
+  const th = new Theater(game, rec, { title, focus, onClose: () => { $('menu').classList.remove('hidden'); countReplays(); renderHome(); } });
   if (!th.open()) { toast('Could not open that replay.'); return; }
   $('menu').classList.add('hidden');
 }
@@ -2134,7 +2134,7 @@ async function hostLobby(preset = null) {
         preset ? { map: preset.map, mode: preset.mode, maxPlayers: preset.max, botFill: Math.min(preset.bots, preset.max), gn: !!preset.gn, ranked: !!preset.ranked, war: preset.war || null, rules: preset.rules || null, motw: preset.motw || null, customMap: preset.customMap || null }
           : { map: settings.map, mode: settings.mode, maxPlayers: serverCfg.max, botFill: Math.min(serverCfg.bots, serverCfg.max), botDiff: serverCfg.botDiff, weather: serverCfg.weather, watch: serverCfg.watch !== false, rules }, myCos());
       net.logic.s.rotate = preset ? preset.rotate : serverCfg.rotate;
-      net.logic.onFlag = (p, details) => moderation.autoFlag({ target: p.name, lobby: net.code, details });
+      net.logic.onFlag = (p, details) => moderation.autoFlag({ target: p.name, lobby: net.code, details, replay: encodeClip(game.recorder.latest(), 30) });
       hosting = preset
         ? { public: false, name: preset.name, max: preset.max, region: serverCfg.region, gn: !!preset.gn }
         : { public: false, name: $('sv-name').value.trim() || `${settings.name || 'Player'}'s server`, max: serverCfg.max, region: serverCfg.region };

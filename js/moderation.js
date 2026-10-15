@@ -498,11 +498,14 @@ class Moderation {
   // ---------- Auto-flags ----------
 
   // Filed by the host's game when a player's stats look impossible (see host.js `checkFlags`).
-  async autoFlag({ target, lobby, details }) {
+  // replay: the host's last 30 s (replay.js encodeClip), so staff can watch what set it off.
+  async autoFlag({ target, lobby, details, replay }) {
     const s = this.social;
     if (!s.tag) return; // reports are signed with a gamertag
     const id = `${low(s.tag)}-${Date.now().toString(36)}`;
-    s.relay.publish(REP + id, await s.sign({ id, target: clip(target, 16), lobby: clip(lobby, 8), reason: AUTO_FLAG, details: clip(details, 200) }), { retain: true });
+    const hasClip = typeof replay === 'string' && replay.length < 150000;
+    if (hasClip) s.relay.publish(REPLAY + id, await s.sign({ id, clip: replay }), { retain: true });
+    s.relay.publish(REP + id, await s.sign({ id, target: clip(target, 16), lobby: clip(lobby, 8), reason: AUTO_FLAG, details: clip(details, 200), rp: hasClip ? 1 : 0 }), { retain: true });
   }
 
   // ---------- Staff chat ----------

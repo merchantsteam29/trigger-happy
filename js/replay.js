@@ -191,9 +191,9 @@ function cr(p0, p1, p2, p3, t0, t1, t2, t3, k) {
 }
 
 export class Theater {
-  // title: shown at the top. onClose(): back to the menu.
-  constructor(game, rec, { title = 'Replay', onClose } = {}) {
-    this.g = game; this.rec = rec; this.title = title; this.onClose = onClose;
+  // title: shown at the top. focus: a player's name to follow first. onClose(): back to the menu.
+  constructor(game, rec, { title = 'Replay', focus = null, onClose } = {}) {
+    this.g = game; this.rec = rec; this.title = title; this.focus = focus; this.onClose = onClose;
   }
 
   open() {
@@ -215,7 +215,18 @@ export class Theater {
     this.i = 0; this.ev = 0; this.speed = 1; this.playing = true;
     this.buildUi();
     document.body.classList.add('in-theater');
+    if (this.focus) this.follow(this.focus);
     return true;
+  }
+
+  // Follow a player by name (the spectator camera picks from the players alive, sorted by id).
+  follow(name) {
+    const g = this.g, id = this.rec.ids.find((x) => this.rec.pl[x] && this.rec.pl[x].n.toLowerCase() === String(name).toLowerCase());
+    if (!id) return;
+    this.frame(0); // place everyone first
+    const list = [...g.remotes.values()].filter((r) => r.alive).sort((a, b) => a.id.localeCompare(b.id));
+    const i = list.findIndex((r) => r.id === id);
+    if (i >= 0) { g.specIdx = i; g.specFree = false; }
   }
 
   close() {

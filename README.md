@@ -658,7 +658,7 @@ becomes free again.
 
   Auto-flags: when you host, your game reports players with impossible-looking stats against real players (85%+
   headshot kills, or 8+ kills a minute, over 25+ kills on players). Kills on bots don't count, Gun Game and one-hit modes
-  are skipped, and staff and the host aren't checked.
+  are skipped, and staff and the host aren't checked. Every auto-flag carries a **replay of the last 30 seconds**: 🎬 Watch replay opens it following the flagged player.
 
   Moderation tools still work while spectating.
 
