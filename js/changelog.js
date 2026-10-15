@@ -7,6 +7,11 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.23', name: 'Clan Bases', banner: 'gold', notes: [
+    'Every clan has a base: open it from your clan card for a private match on your own map',
+    'Your clan tag in lights, your clan spray on the walls and your war record on a plaque',
+    'Clan members get a Join button when someone opens it',
+  ] },
   { v: '2026.10.14.22', name: 'Friend Challenges', banner: 'blood', notes: [
     'Challenge a friend to a race this week: first to so many kills, headshots, wins, matches or kills on real players',
     'You both see both progress bars, and the winner gets 100 tokens',

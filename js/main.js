@@ -58,6 +58,7 @@ import { clanPoints, clanStandings, CLAN_POINTS, CLAN_REWARDS } from './clanseas
 import { Theater, encodeClip, decodeClip, listReplays, loadReplay } from './replay.js';
 import { Lobby3D } from './lobby.js';
 import { challenges, renderChallenges } from './challenges.js';
+import { clanBaseMap } from './clanbase.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -945,6 +946,7 @@ function renderClan() {
       ${lead ? '<button class="danger" id="cl-disband">Disband</button>' : '<button id="cl-leave">Leave</button>'}</div>
     ${lead && reqs.length ? `<div class="cl-reqs">${reqs.map((r) => `<div class="fr-row"><span class="fr-name pf-link" data-profile="${esc(r.tag)}">${esc(r.tag)}</span><small>wants to join</small><button class="primary" data-cacc="${esc(r.tag)}">Accept</button><button data-cdeny="${esc(r.tag)}">Deny</button></div>`).join('')}</div>` : ''}
     ${clanSeasonCard(c)}
+    ${clanBaseHtml(c)}
     ${warHtml(c, lead)}
     <div class="cl-spray">${c.spray ? `<canvas class="cl-spray-img" width="16" height="16" data-spray="${c.spray}"></canvas><small>Clan spray · press <kbd>${esc(keysLabel('spray'))}</kbd> in a match to spray it</small>` : `<small class="muted">${lead ? 'No clan spray yet.' : 'Your leader hasn\'t made a clan spray yet.'}</small>`}${lead ? `<button id="cl-spray">🎨 ${c.spray ? 'Edit' : 'Make'} clan spray</button>` : ''}</div>
     <div class="cl-members">${c.members.map((m) => `<span class="cl-m"><span class="pf-link" data-profile="${esc(m)}">${m.toLowerCase() === c.leader.toLowerCase() ? '👑 ' : ''}${esc(m)}</span><small class="cl-pts" title="Clan points this week">${(clanPoints(c, 'cur').members.find((x) => x.tag === m) || { pts: 0 }).pts}</small>${lead && m.toLowerCase() !== c.leader.toLowerCase() ? `<button class="ghost" data-ckick="${esc(m)}" title="Remove from clan">✕</button>` : ''}</span>`).join('')}</div>
@@ -961,6 +963,8 @@ function renderClan() {
   el.querySelectorAll('[data-warhost]').forEach((b) => { b.onclick = () => hostWar(b.dataset.warhost); });
   if ($('cl-war-join')) $('cl-war-join').onclick = () => { $('join-code').value = clans.liveWar().code; showPane('play'); joinLobby(); };
   if ($('cl-spray')) $('cl-spray').onclick = () => openSprayEditor(c.spray);
+  if ($('cl-base')) $('cl-base').onclick = () => openClanBase(c);
+  if ($('cl-basejoin')) $('cl-basejoin').onclick = () => { $('join-code').value = $('cl-basejoin').dataset.code; joinLobby(); };
   if ($('cl-leave')) $('cl-leave').onclick = async () => { if (confirm(`Leave [${c.tag}]?`)) try { await clans.leave(); } catch (e) { toast(e.message); } };
   if ($('cl-disband')) $('cl-disband').onclick = async () => { if (confirm(`Disband [${c.tag}] for everyone? The tag becomes free.`)) await clans.disband(); };
   el.querySelectorAll('[data-cacc]').forEach((b) => { b.onclick = async () => { try { await clans.accept(b.dataset.cacc); } catch (e) { toast(e.message); } }; });
@@ -1093,6 +1097,27 @@ function clanSeasonHtml() {
   const prev = clanRows('prev').slice(0, 3);
   return `<div class="cs-head"><small>Clan season: points this week from members' kills (${CLAN_POINTS.kill}), wins (${CLAN_POINTS.win}) and clan wars won (${CLAN_POINTS.war}). The top 3 clans' members get 🪙 ${CLAN_REWARDS.join(' / ')}; #1 also gets the Top Clan banner.</small>
     ${prev.length ? `<div class="cs-podium">${prev.map((r) => `<span><b>${['🥇', '🥈', '🥉'][r.rank - 1]} [${esc(r.clan)}]</b> ${Number(r.value).toLocaleString()}</span>`).join('')}<small>last week</small></div>` : ''}</div>`;
+}
+// ---------- Clan bases (clanbase.js) ----------
+// Open: host a private server on the clan's own map, and tell the clan in clan chat (with the code).
+const BASE_MSG = /^🏠 .+ opened the clan base · code ([A-Z0-9]{5})$/;
+function clanBaseOpen(c) { // the newest "base is open" message from someone else in the last 3 hours
+  const m = [...clans.chat].reverse().find((x) => BASE_MSG.test(x.text) && Date.now() - x.ts < 3 * 3600e3);
+  return m && m.from.toLowerCase() !== String(social.tag).toLowerCase() ? { code: BASE_MSG.exec(m.text)[1], by: m.from } : null;
+}
+function clanBaseHtml(c) {
+  const open = clanBaseOpen(c);
+  return `<div class="cl-base"><b>🏠 Clan base</b><small>Your own private map with the [${esc(c.tag)}] sign, your spray and your record on the walls</small>
+    ${open ? `<button class="primary" id="cl-basejoin" data-code="${open.code}">🏠 Join ${esc(open.by)} at the base</button>` : ''}<button id="cl-base">Open the base</button></div>`;
+}
+async function openClanBase(c) {
+  if (net || busy) return;
+  const r = clanRows('cur').find((x) => x.clan === c.tag), p = clanPoints(c, 'cur');
+  const plaque = `⚔ ${c.warW || 0} wins · ${c.warL || 0} losses${r ? ` · Clan season #${r.rank} · ${p.total} pts` : ''}`;
+  const map = clanBaseMap({ tag: c.tag, name: c.name, color: c.color, spray: c.spray }, plaque);
+  registerCustomMap(map);
+  await hostLobby({ map: 'custom', mode: 'ffa', max: 12, bots: 0, vis: 'private', name: map.name, rotate: false, customMap: map });
+  if (net && net.code) { try { await clans.say(`🏠 ${social.tag} opened the clan base · code ${net.code}`); } catch { /* muted: they can share the code */ } }
 }
 // The clan card's season line: rank, points and who earned them.
 function clanSeasonCard(c) {

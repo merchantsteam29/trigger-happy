@@ -1,5 +1,6 @@
 import { MAPS, MAP_BLURB } from './maps.js';
 import { store, esc } from './util.js';
+import { cleanClanDeco, clanDecor } from './clanbase.js';
 
 // Map editor: draw your own map from above (blocks, stairs, ramps, jump pads, spawn points, team
 // spawns, pickups), save up to 5, share them as a code, and host a private server on one. The host
@@ -61,6 +62,7 @@ export function cleanMap(d) {
     if (!Array.isArray(k) || !PICKUP_KINDS.some(([id]) => id === k[0])) continue;
     out.pickups.push([k[0], clamp(snap(num(k[1])), -HALF_W + 1, HALF_W - 1), clamp(num(k[2]), 0, 22), clamp(snap(num(k[3])), -HALF_D + 1, HALF_D - 1)]);
   }
+  if (d.clan) { const c = cleanClanDeco(d.clan); if (c) out.clan = c; } // a clan base (clanbase.js)
   return out;
 }
 
@@ -82,6 +84,7 @@ export function registerCustomMap(d) {
     // Objective spots: the middle, then the spawn points.
     hills: [[0, 0, 0, 3], ...spawns.slice(0, 4).map(([x, y, z]) => [x * 0.6, 0, z * 0.6, 3])],
     pickups: m.pickups.length ? m.pickups.map((k) => k.slice()) : null, // host.js setupPickups
+    decor: m.clan ? (g) => clanDecor(g, m.clan) : undefined, // a clan base: sign, sprays, plaque
     build({ add, spawn, stairs }) {
       add(-HALF_W, -1, -HALF_D, HALF_W, 0, HALF_D, T.floor);
       add(-HALF_W, 0, HALF_D - 0.3, HALF_W, 6, HALF_D, 'concreteWall');

@@ -423,6 +423,10 @@ matches), and the **Clans** tab on the weekly leaderboard ranks clans by their *
 - **Clan wars:** a leader types another clan's tag and presses **⚔ Challenge**; their leader accepts or declines.
   Then the challenger's leader presses **Start the war**: a private Team Deathmatch with your clan in red and theirs in
   blue (nobody else can join). Both clans get a **Join the war** button. Each clan's record shows its wins and losses.
+- **🏠 Clan base:** any member presses **Open the base** on the clan card to host a private match on the clan's own map:
+  your **[TAG]** and name in lights over the stage, your clan spray on the walls, a plaque with your war record and clan
+  season rank, towers, cover, a jump pad, pickups, and red / blue sides for practice scrims. The clan gets a message in
+  clan chat, and members see a **Join … at the base** button.
 - **Clan sprays:** the leader draws a 16×16 pixel spray (**🎨 Make clan spray**). Members press **X** in a match to
   spray it on a wall within 5 m, once every 8 seconds. Everyone in the match sees it.
 
