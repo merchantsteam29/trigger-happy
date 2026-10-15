@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.11",
+  "version": "2026.10.14.12",
   "notes": [
-    "Ranked revival: everyone meets on the busiest ranked server, weekly reward, daily Ranked Hour and a Ranked leaderboard"
+    "Smarter bots: they throw frags, use the grappling hook and ziplines, and take the high ground"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

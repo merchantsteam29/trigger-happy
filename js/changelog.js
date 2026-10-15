@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.12', name: 'Smarter Bots', banner: 'storm', notes: [
+    'Bots throw frag grenades where you just took cover',
+    'Bots go for high ground, ride ziplines, and better bots use a grappling hook to get up walls',
+  ] },
   { v: '2026.10.14.11', name: 'Ranked Revival', banner: 'blood', notes: [
     'Ranked now puts everyone on the busiest ranked server, so you play real people instead of waiting with bots',
     'The Ranked tile shows how many are playing ranked right now',

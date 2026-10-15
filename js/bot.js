@@ -1,8 +1,12 @@
 import { moveBody, raycast, rayAABB } from './physics.js';
 import { WEAPONS } from './weapons.js';
 import { MAPS, boxes } from './maps.js';
+import { zipNear, zipFeet, zipLength, ZIP_SPEED, HANG } from './ziplines.js';
 
 const WALK = 5.6, JUMP = 8, EYE = 1.62;
+const NADE_G = 18, GRAPPLE_PULL = 20; // frag lob gravity (game.js BOUNCE_GRAVITY); grappling hook pull speed
+const SNIPERS = ['sniper', 'dmr', 'amr', 'railgun', 'p_railcannon'];
+const r2 = (v) => Math.round(v * 100) / 100;
 const DIFF = {
   easy: { react: 1.4, err: 0.2, turn: 2.2, see: 26, pause: 1.1, fov: 1.2, head: 0, forget: 0.5 },
   normal: { react: 0.85, err: 0.11, turn: 4, see: 38, pause: 0.55, fov: 1.4, head: 0.03, forget: 0.25 },
@@ -68,6 +72,9 @@ export class Bot {
 
   spawn(s, loadout) {
     this.hide = null;
+    this.nades = 2; this.nadeCd = 4 + Math.random() * 4; // frags (thrown at enemies who duck behind cover)
+    this.grap = null; this.grapCd = 2; // grappling hook up to higher ground
+    this.zip = null; this.zipPlan = null; // ziplines (ziplines.js)
     const b = this.body;
     b.pos.x = s.x; b.pos.y = s.y; b.pos.z = s.z;
     b.vel.x = b.vel.y = b.vel.z = 0;
@@ -127,6 +134,13 @@ export class Bot {
     const w = stats(this.weapon);
     const melee = w.type === 'melee';
     const eye = { x: b.pos.x, y: b.pos.y + EYE, z: b.pos.z };
+    if (this.zip && this.rideZip(dt)) return;
+    // Zipline: at the end of the one we were heading for, grab it.
+    const zips = MAPS[L.s.map] && MAPS[L.s.map].ziplines;
+    if (zips && this.zipPlan && !this.target) {
+      const n = zipNear(zips, b.pos);
+      if (n && n.i === this.zipPlan.i) { this.zip = { i: n.i, t: n.t, dir: this.zipPlan.dir }; this.zipPlan = null; this.goal = null; this.path = null; this.rideZip(dt); return; }
+    }
 
     // ---- Perception ----
     let best = null, bestD = Infinity;
@@ -221,7 +235,7 @@ export class Bot {
         // Team modes: usually move up with a teammate instead of wandering off alone.
         const mates = L.mode.teams && !p.zombie ? [...L.players.values()].filter((q) => q !== p && q.alive && q.team === p.team && !q.zombie) : [];
         const mate = mates.length && Math.random() < 0.6 ? mates[(Math.random() * mates.length) | 0] : null;
-        const n = mate ? { x: mate.st[0] + (Math.random() - 0.5) * 8, y: mate.st[1], z: mate.st[2] + (Math.random() - 0.5) * 8 } : L.nav && L.nav.random();
+        const n = mate ? { x: mate.st[0] + (Math.random() - 0.5) * 8, y: mate.st[1], z: mate.st[2] + (Math.random() - 0.5) * 8 } : this.wanderSpot();
         this.goal = n ? { x: n.x, y: n.y, z: n.z } : null;
         this.pathT = 0;
       }
@@ -259,14 +273,28 @@ export class Bot {
     const ml = Math.hypot(mx, mz);
     if (ml > 0.01) { mx /= ml; mz /= ml; }
 
+    // Grappling hook: a better bot whose route goes up a wall it can't climb pulls itself up.
+    this.grapCd -= dt;
+    const up = this.path && this.path[0];
+    if (!this.grap && up && this.grapCd <= 0 && this.skill >= 0.5 && !melee && up.y - b.pos.y > 1.6 && Math.hypot(up.x - b.pos.x, up.z - b.pos.z) < 14) this.startGrapple(up, eye);
+    if (this.grap) { this.pullGrapple(dt); mx = 0; mz = 0; }
+    // Frag: lob one where an enemy just ducked out of sight.
+    this.nadeCd -= dt;
+    if (this.nades > 0 && this.nadeCd <= 0 && this.skill >= 0.3 && !this.target && !melee && this.lastSeen && this.lastSeenT > 1.5 && this.lastSeenT < 4.5 && this.canNade()) {
+      const dd = Math.hypot(this.lastSeen.x - b.pos.x, this.lastSeen.z - b.pos.z);
+      if (dd > 7 && dd < 26) this.throwNade(this.lastSeen);
+    }
+
     // Better bots crouch now and then in a long-range fight (smaller target).
     this.crouchT -= dt;
     if (this.target && !melee && !this.retreat && bestD > 12 && this.crouchT < -1.5 && Math.random() < dt * 0.6 * this.skill) this.crouchT = 0.8 + Math.random() * 1.2;
     const crouching = this.crouchT > 0 && this.target && !melee;
     const speed = WALK * (w.speedMul || 1) * L.s.moveSpeed * (this.target && !melee ? 0.85 : 1) * (p.speedK || 1) * (crouching ? 0.45 : 1);
     const a = b.onGround ? 1 - Math.exp(-dt * 12) : 1 - Math.exp(-dt * 2);
-    b.vel.x += (mx * speed - b.vel.x) * a;
-    b.vel.z += (mz * speed - b.vel.z) * a;
+    if (!this.grap) { // the rope pulls on its own
+      b.vel.x += (mx * speed - b.vel.x) * a;
+      b.vel.z += (mz * speed - b.vel.z) * a;
+    }
 
     // Stuck: jump and repath.
     this.stuckT += dt;
@@ -350,6 +378,105 @@ export class Bot {
 
     const flags = (this.reloadT > 0 ? 1 : 0) | (b.onGround ? 0 : 4);
     p.st = [b.pos.x, b.pos.y, b.pos.z, this.yaw, this.pitch, this.weapon, crouching ? 1 : 0, flags];
+  }
+
+  // Where to wander: usually anywhere, sometimes high ground (more often with a sniper), and on maps
+  // with ziplines sometimes the end of one (rode from there: ziplines.js).
+  wanderSpot() {
+    const L = this.logic, nav = L.nav;
+    if (!nav) return null;
+    const zips = MAPS[L.s.map] && MAPS[L.s.map].ziplines;
+    if (zips && zips.length && this.skill >= 0.3 && Math.random() < 0.25) {
+      const i = (Math.random() * zips.length) | 0, l = zips[i], end = Math.random() < 0.5 ? 0 : 1;
+      this.zipPlan = { i, dir: end ? -1 : 1 }; // from this end toward the other
+      return { x: end ? l[3] : l[0], y: (end ? l[4] : l[1]) - HANG - 0.45, z: end ? l[5] : l[2] };
+    }
+    this.zipPlan = null;
+    if (Math.random() < (SNIPERS.includes(this.weapon) ? 0.5 : 0.25)) {
+      let best = null;
+      for (let k = 0; k < 10; k++) { const n = nav.random(); if (n && n.y > 2 && (!best || n.y > best.y)) best = n; }
+      if (best) return best;
+    }
+    return nav.random();
+  }
+
+  // Riding a zipline: along the cable at ZIP_SPEED, letting go at the far end.
+  rideZip(dt) {
+    const L = this.logic, b = this.body, z = this.zip, zips = MAPS[L.s.map] && MAPS[L.s.map].ziplines, l = zips && zips[z.i];
+    if (!l) { this.zip = null; return false; }
+    const len = zipLength(l);
+    z.t += (z.dir * ZIP_SPEED * dt) / len;
+    const end = z.t <= 0 || z.t >= 1;
+    z.t = Math.max(0, Math.min(1, z.t));
+    const f = zipFeet(l, z.t, { set(x, y, zz) { this.x = x; this.y = y; this.z = zz; return this; } });
+    b.pos.x = f.x; b.pos.y = f.y; b.pos.z = f.z;
+    b.vel.x = ((l[3] - l[0]) / len) * ZIP_SPEED * z.dir; b.vel.y = 0; b.vel.z = ((l[5] - l[2]) / len) * ZIP_SPEED * z.dir;
+    this.yaw = Math.atan2(-b.vel.x, -b.vel.z);
+    b.onGround = false;
+    if (end) this.zip = null; // let go, keeping the speed
+    this.p.st = [b.pos.x, b.pos.y, b.pos.z, this.yaw, this.pitch, this.weapon, 0, 4];
+    return true;
+  }
+
+  // Grappling hook toward a point just above the next waypoint (the lowest one in sight, so the rope
+  // clears the ledge's edge).
+  startGrapple(n, eye) {
+    const L = this.logic, tx = n.x, tz = n.z;
+    const ty = [0.6, 1.3, 2, 2.8].map((h) => n.y + h).find((y) => { const dx = tx - eye.x, dy = y - eye.y, dz = tz - eye.z, d = Math.hypot(dx, dy, dz); return d > 2 && !raycast(eye.x, eye.y, eye.z, dx / d, dy / d, dz / d, d - 0.4); });
+    if (ty === undefined) { this.grapCd = 1.5; return; }
+    this.grap = { x: tx, y: ty, z: tz, t: 0 };
+    this.grapCd = 6 + Math.random() * 4;
+    L.broadcast({ t: 'fx', k: 'rope', id: this.p.id, p: [r2(tx), r2(ty), r2(tz)] });
+  }
+  pullGrapple(dt) {
+    const b = this.body, g = this.grap;
+    g.t += dt;
+    const dx = g.x - b.pos.x, dy = g.y - (b.pos.y + 1), dz = g.z - b.pos.z, d = Math.hypot(dx, dy, dz);
+    if (d < 1.4 || g.t > 1.5) {
+      this.grap = null;
+      const hl = Math.hypot(dx, dz) || 1;
+      b.vel.y = JUMP * 0.6; b.vel.x = (dx / hl) * 4.5; b.vel.z = (dz / hl) * 4.5; // a little hop over the ledge, not a launch
+      this.logic.broadcast({ t: 'fx', k: 'rope', id: this.p.id });
+      return;
+    }
+    const k = 1 - Math.exp(-dt * 7);
+    b.vel.x += ((dx / d) * GRAPPLE_PULL - b.vel.x) * k;
+    b.vel.z += ((dz / d) * GRAPPLE_PULL - b.vel.z) * k;
+    b.vel.y += ((dy / d) * GRAPPLE_PULL + 4 - b.vel.y) * k;
+    b.onGround = false;
+  }
+
+  // Frags only where players could have them (not with a set loadout that has none, not in Prop Hunt).
+  canNade() {
+    const L = this.logic;
+    if (L.mode.prop || this.p.zombie || L.mode.practice) return false;
+    return !this.loadout || this.loadout.includes('frag');
+  }
+
+  // Lobs a frag to land at `at`; it goes off after its fuse, hurting everyone in range and in sight.
+  throwNade(at) {
+    const L = this.logic, b = this.body, W = WEAPONS.frag, self = this.p;
+    const o = [b.pos.x, b.pos.y + 1.5, b.pos.z];
+    const dx = at.x - o[0], dy = at.y + 0.3 - o[1], dz = at.z - o[2], d = Math.hypot(dx, dz), t = Math.max(0.6, d / 14);
+    const v = [dx / t, dy / t + 0.5 * NADE_G * t, dz / t];
+    const pid = 1e6 + ((Math.random() * 1e8) | 0);
+    this.nades--;
+    this.nadeCd = 10 + Math.random() * 8;
+    L.handle(self.id, { t: 'proj', pid, k: 'frag', p: o.map(r2), v: v.map(r2) });
+    const land = { x: at.x, y: at.y + 0.3, z: at.z };
+    setTimeout(() => {
+      if (L.phase !== 'playing' || !L.players.has(self.id)) return;
+      L.handle(self.id, { t: 'boom', pid, p: [r2(land.x), r2(land.y), r2(land.z)], k: 'frag' });
+      for (const e of [...L.players.values()]) {
+        if (!e.alive) continue;
+        const ex = e.st[0], ey = e.st[1] + 0.9, ez = e.st[2], dd = Math.hypot(ex - land.x, ey - land.y, ez - land.z);
+        if (dd >= W.radius) continue;
+        const ux = ex - land.x, uy = ey - land.y, uz = ez - land.z, ul = Math.hypot(ux, uy, uz) || 1;
+        if (ul > 0.3 && raycast(land.x, land.y, land.z, ux / ul, uy / ul, uz / ul, ul - 0.2)) continue; // behind cover
+        const dmg = Math.round(W.splash * (1 - dd / W.radius) * (e === self ? 0.5 : 1));
+        if (dmg > 0) L.hit(self, { v: e.id, dmg, w: 'frag', head: false });
+      }
+    }, W.fuse * 1000);
   }
 
   // A nav spot 6–18 m away, further from the enemy than we are and out of their sight.

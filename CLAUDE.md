@@ -78,7 +78,8 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 - Spectators: `HostLogic.addSpectator` takes staff (signed proof, invisible) and viewers (`'watch'`, no slot, up to 30) when
   `watchable()` (host rule `watch`, never ranked / clan wars; Game Night events always). The camera is `game.js` `specCam`.
 - Bots (`bot.js`) run inside the host (`p.bot`), with A* paths over `nav.js` and "Auto" skill that
-  follows how real players are doing (`HostLogic.botSkill`).
+  follows how real players are doing (`HostLogic.botSkill`). They throw frags (`throwNade`: the host sends `proj` / `boom`
+  and applies the splash), grapple up to higher waypoints, ride ziplines (`wanderSpot` / `rideZip`) and like high ground.
 - Modes are entries in `MODES` (`host.js`) with flags: `teams`, `redBlue`, `infect` (Infection
   rules), `prop` (Prop Hunt, `prophunt.js`), `duel`, `snd` (Search & Destroy: rounds, bomb, sites from the map's hills), `horror`, `br`, `event` (Game Night only, hidden from pickers), `coop`, `loadout`, `practice`.
 

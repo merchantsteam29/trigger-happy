@@ -142,7 +142,9 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
 - Bots: add, fill to 8, change difficulty (one bot, or all of them with the difficulty picker), remove. Presets go up to
   **Expert** and **Nightmare** (near-instant reactions, aims for the head). **Auto** (the default)
   gets better when players are beating the bots and eases off when the bots are winning, up to an expert level.
-  Bots back off to cover when hurt, grab health, check corners, crouch in long fights and stick with their team
+  Bots back off to cover when hurt, grab health, check corners, crouch in long fights and stick with their team.
+  From Normal up they also lob frags where you just ducked out of sight (2 per life), go for high ground (snipers
+  most of all), ride ziplines, and use a grappling hook to pull themselves up walls on the way.
 - Players: kick, swap teams
 
 ## Maps
