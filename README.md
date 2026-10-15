@@ -607,6 +607,8 @@ becomes free again.
     - **Add note:** staff-only, not shown to the player.
     - **Mute chat** or **Ban:** 1 hour, 1 day, 7 days, 30 days or permanent. A ban kicks them out of matches and
       blocks hosting and joining until it ends.
+    - **👻 Shadow mute** (same lengths): they can still chat and see their own messages, but nobody else sees them, in
+      matches, party chat or clan chat. They aren't told. **Unmute** lifts it.
     - **Force a new gamertag:** their tag is released and they must pick another.
     - **Unban**, **Unmute**, **Clear warnings**, or **Join their match**.
 

@@ -685,7 +685,7 @@ export class HostLogic {
         break;
       case 'vc': { // Game Night voice: "I'm in voice" (verified gamertags only, not muted players)
         const now = Date.now();
-        if (!this.s.gn || !p.tag || p.muted || now - (p.lastVc || 0) < 1500) break;
+        if (!this.s.gn || !p.tag || p.muted || p.shadow || now - (p.lastVc || 0) < 1500) break;
         p.lastVc = now;
         this.broadcast({ t: 'vc', id, gt: p.tag, in: !!m.in });
         break;
@@ -713,6 +713,7 @@ export class HostLogic {
             break;
           }
         }
+        if (p.shadow) { this.sendTo(id, { t: 'chat', id, name: p.name, color: p.color, text, role: null }); break; } // shadow-muted: only they see it
         this.broadcast({ t: 'chat', id, name: p.name, color: p.color, text, role: p.role || null });
         break;
       }
@@ -867,6 +868,8 @@ export class HostLogic {
       this.broadcast({ t: 'notice', text: `${p.name} is banned and was removed` });
       if (p.id === 'host') return; // can't remove the host from their own match (their game shows the ban screen)
       this.kick(p.id);
+    } else if (mute && mute.shadow) {
+      p.shadow = true; // nobody is told, them included
     } else if (mute && !p.muted) {
       p.muted = true;
       this.broadcast({ t: 'pmute', id: p.id, muted: true });

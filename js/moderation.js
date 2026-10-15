@@ -16,6 +16,7 @@ import { store } from './util.js';
 // game itself — clearing site data or a new gamertag gets around it.
 
 const V = 'whffa/v1/';
+const SHADOW = V + 'shadowmutes'; // staff-signed list of shadow-muted players: [{ t: lower tag, u: until (0 = no end) }]
 const PERMA = V + 'permabans'; // staff-signed list of permanently banned players: [{ t: lower tag, x: their key }]
 const P = V + 'modrec/', ANN = V + 'announce', REP = V + 'report/', PRES = V + 'pres/', FILTER = V + 'chatfilter', APPEAL = V + 'appeal/', STAFFCHAT = V + 'staffchat/', TAG = V + 'tag/';
 const STAFFCHAT_KEEP = 3 * 864e5; // staff chat history: 3 days
@@ -42,6 +43,7 @@ class Moderation {
     this.records = new Map(); // lower tag -> verified record body
     this.announcement = null; // verified announcement body
     this.perma = new Map(); // lower tag -> key x of a permanently banned player
+    this.shadow = new Map(); // lower tag -> until (0: no end): shadow-muted, their chat only reaches themselves
     this.onPerma = null;
     this.annRaw = null;
     this.reports = new Map(); // report id -> { id, from, target, lobby, reason, details, ts }
@@ -71,6 +73,7 @@ class Moderation {
   init(social) {
     this.social = social;
     social.isGoneClaim = (k, c) => this.isGoneClaim(k, c);
+    social.isShadow = (tag) => this.isShadowMuted(tag); // party chat drops their messages (social.js)
     social.relay.onMessage((t, payload, packet) => this.route(t, payload.toString(), packet));
     const prev = social.relay.onConnect;
     social.relay.onConnect = () => { if (prev) prev(); for (const w of this.watching) social.relay.subscribe(w); };
@@ -81,6 +84,7 @@ class Moderation {
     if (t.startsWith(P)) this.receive(t.slice(P.length), text);
     else if (t === ANN) this.receiveAnnouncement(text);
     else if (t === PERMA) this.receivePerma(text);
+    else if (t === SHADOW) this.receiveShadow(text);
     else if (t.startsWith(REP)) this.receiveReport(t.slice(REP.length), text);
     else if (t.startsWith(BUG) && roles.isOwner()) this.receiveBug(t.slice(BUG.length), text);
     else if (t.startsWith(PRES) && roles.myRole()) this.receivePresence(t.slice(PRES.length), text, packet);
@@ -94,7 +98,7 @@ class Moderation {
   sync() {
     const s = this.social;
     if (!s) return;
-    const want = new Set([ANN, FILTER, PERMA]);
+    const want = new Set([ANN, FILTER, PERMA, SHADOW]);
     if (s.tag) { want.add(P + low(s.tag)); want.add(APPEAL + low(s.tag)); }
     if (roles.isOwner()) want.add(BUG + '+');
     if (roles.myRole()) for (const t of [P + '+', REP + '+', PRES + '+', APPEAL + '+', STAFFCHAT + '+', TAG + '+']) want.add(t);
@@ -106,6 +110,7 @@ class Moderation {
     this.reverify();
     if (this.filterRaw) this.receiveFilter(this.filterRaw);
     if (this.permaRaw) this.receivePerma(this.permaRaw);
+    if (this.shadowRaw) this.receiveShadow(this.shadowRaw);
     // Staff: bring the list up to date with the records (bans from before the list existed).
     if (roles.myRole()) { clearTimeout(this.permaT); this.permaT = setTimeout(() => this.syncPerma(), 8000); }
   }
@@ -126,6 +131,27 @@ class Moderation {
     if (this.onPerma) this.onPerma();
     if (this.onChange) this.onChange(null);
   }
+  // ---------- Shadow mutes ----------
+  // A shadow-muted player can chat as usual, but only they see it: hosts send their match chat back
+  // to them alone, and everyone's game drops their party and clan chat. They aren't told.
+  isShadowMuted(tag) { const u = tag ? this.shadow.get(low(tag)) : undefined; return u !== undefined && (!u || u > Date.now()); }
+  async receiveShadow(text) {
+    this.shadowRaw = text || null;
+    const body = text ? await this.staffSigned(text) : null;
+    if (!body || !Array.isArray(body.list)) return;
+    if (this.shadowTs && Number(body.ts) < this.shadowTs) return;
+    this.shadowTs = Number(body.ts) || 0;
+    this.shadow = new Map(body.list.filter((x) => x && typeof x.t === 'string').slice(0, 2000).map((x) => [low(x.t), Math.max(0, Number(x.u) || 0)]));
+    if (this.onChange) this.onChange(null);
+  }
+  async setShadow(tag, until) { // until: null to lift it
+    const next = new Map([...this.shadow].filter(([, u]) => !u || u > Date.now()));
+    if (until === null) next.delete(low(tag)); else next.set(low(tag), until);
+    const signed = await this.social.sign({ list: [...next].map(([t, u]) => ({ t, u })) });
+    this.social.relay.publish(SHADOW, signed, { retain: true });
+    await this.receiveShadow(signed);
+  }
+
   async publishPerma(map) {
     const bans = [...map].map(([t, x]) => ({ t, x }));
     const signed = await this.social.sign({ bans });
@@ -199,7 +225,7 @@ class Moderation {
   activeMute(rec) { return this.active(rec && rec.mute); }
   mine() { const s = this.social; return s && s.tag ? this.records.get(low(s.tag)) : null; }
   myBan() { return this.activeBan(this.mine()); }
-  myMute() { return this.activeMute(this.mine()); }
+  myMute() { const m = this.activeMute(this.mine()); return m && !m.shadow ? m : null; } // a shadow mute is never shown to them
 
   applyMine() {
     const rec = this.mine();
@@ -208,7 +234,7 @@ class Moderation {
     const fresh = ((rec && rec.warns) || []).filter((w) => w.ts > seen);
     if (fresh.length && this.onWarn) this.onWarn(fresh[fresh.length - 1], fresh.length);
     // Ban / mute start or end.
-    const ban = this.activeBan(rec), mute = this.activeMute(rec);
+    const ban = this.activeBan(rec), mute = this.myMute();
     const banKey = ban ? ban.ts + (ban.appealDenied ? 'd' : '') : null; // a denied appeal updates the ban screen
     if (banKey !== this.lastBan) { this.lastBan = banKey; if (this.onBan) this.onBan(ban); }
     if ((mute ? mute.ts : null) !== this.lastMute) { this.lastMute = mute ? mute.ts : null; if (this.onMute) this.onMute(mute); }
@@ -232,7 +258,7 @@ class Moderation {
 
   // ---------- Staff actions on a gamertag ----------
 
-  // act: 'warn' | 'ban' | 'unban' | 'mute' | 'unmute' | 'rename' | 'clearwarns' | 'note'.
+  // act: 'warn' | 'ban' | 'unban' | 'mute' | 'smute' (shadow mute) | 'unmute' | 'rename' | 'clearwarns' | 'note'.
   async act(tag, act, { reason = '', hours = 0 } = {}) {
     const s = this.social, me = roles.myRole();
     if (!me) throw new Error('Only staff can do that.');
@@ -263,6 +289,9 @@ class Moderation {
     } else if (act === 'mute') {
       rec.mute = { by: s.tag, reason: reason || 'Chat abuse', until, ts: now };
       note = `${span}${reason ? ' · ' + reason : ''}`;
+    } else if (act === 'smute') {
+      rec.mute = { by: s.tag, reason: reason || 'Chat abuse', until, ts: now, shadow: true };
+      note = `${span}${reason ? ' · ' + reason : ''}`;
     } else if (act === 'unmute') {
       rec.mute = null;
       note = reason;
@@ -287,6 +316,8 @@ class Moderation {
     const text = await s.sign(rec);
     s.relay.publish(P + k, text, { retain: true });
     if (act === 'unban' || act === 'denyappeal') this.clearAppeal(k); // the appeal is answered
+    if (act === 'smute') await this.setShadow(k, until);
+    else if ((act === 'mute' || act === 'unmute') && this.shadow.has(k)) await this.setShadow(k, null);
     await this.receive(k, text);
     if (act === 'ban' || act === 'unban') {
       const next = new Map(this.perma);

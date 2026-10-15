@@ -380,6 +380,7 @@ class Clans {
     if (!c || !text) return;
     const b = await this.social.verify(text);
     if (!b || !c.members.some((m) => low(m) === low(b.from)) || this.chat.some((x) => x.id === b.id)) return;
+    if (moderation.isShadowMuted(b.from) && low(b.from) !== low(this.social.tag)) return; // shadow-muted
     this.chat.push({ id: String(b.id), from: b.from, text: clip(b.text, 200), ts: Number(b.ts) || Date.now() });
     this.chat = this.chat.slice(-60);
     if (this.onChat) this.onChat(this.chat[this.chat.length - 1]);

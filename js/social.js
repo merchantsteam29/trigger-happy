@@ -488,6 +488,7 @@ export class Social {
         if (this.onVoice) this.onVoice(b.from, b.in !== false);
       } else if (sub === 'chat') {
         if (!p.members.some((m) => low(m) === from) || from === this.me) return;
+        if (this.isShadow && this.isShadow(from)) return; // shadow-muted (moderation.js)
         if (this.seenChat(String(b.id || ''))) return;
         this.logParty(b.from, clip(b.text, 160));
       }

@@ -97,7 +97,7 @@ node tools/release.mjs 2026.10.10.15 "Player-facing note" ["Another note"]
 | `pres/<tag>`, `inbox/<tag>`, `req/…`, `acc/…`, `rm/…`, `party/<id>/…` | presence, friends, party, party chat and voice | social.js |
 | `servers/<CODE>` | public server list (its own relay connection: `ServerAnnouncer`) | servers.js |
 | `role/…` | moderator appointments (owner-signed) | roles.js |
-| `modrec/<tag>`, `report/<id>`, `appeal/<tag>`, `announce`, `chatfilter`, `staffchat/…`, `permabans`, `pres/…` | moderation | moderation.js |
+| `modrec/<tag>`, `report/<id>`, `appeal/<tag>`, `announce`, `chatfilter`, `staffchat/…`, `permabans`, `shadowmutes` (staff-signed: hosts send their match chat back to them only, clients drop their party / clan chat), `pres/…` | moderation | moderation.js |
 | `bug/<id>` | bug reports (only the owner reads them) | moderation.js |
 | `lb/<week>/<tag>`, `lb/all/<tag>` (also `sr` / `srp` for the Ranked board), `lb/aim/<tag>`, `lb/hide` | weekly / all-time / training-course leaderboards (`aim`: Gridshot, `tr`: the other courses) | leaderboard.js |
 | `prof/<tag>` | public profiles | profiles.js |

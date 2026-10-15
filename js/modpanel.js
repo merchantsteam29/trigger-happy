@@ -17,7 +17,7 @@ import { leaderboard } from './leaderboard.js';
 
 const TIMES = [[1, '1 hour'], [24, '1 day'], [24 * 7, '7 days'], [24 * 30, '30 days'], [0, 'Permanent']];
 const ACT_LABEL = {
-  warn: 'warned', ban: 'banned', unban: 'unbanned', mute: 'muted', unmute: 'unmuted',
+  warn: 'warned', ban: 'banned', unban: 'unbanned', mute: 'muted', smute: 'shadow-muted', unmute: 'unmuted',
   rename: 'forced a new gamertag for', clearwarns: 'cleared warnings of', note: 'added a note on', denyappeal: 'denied the appeal of', kick: 'kicked',
 };
 // Quick reasons for actions (fill the reason box; it can still be edited).
@@ -174,7 +174,7 @@ export class ModPanel {
         <button class="mp-watch ${moderation.isWatched(t.tag) ? 'on' : ''}" data-watch title="Get a pop-up when they come online (this device)">${moderation.isWatched(t.tag) ? '★ Watching' : '☆ Watch'}</button>
         <small class="muted">Gamertag since ${t.since ? when(t.since) : 'unknown'}${rec.rename ? ` · new gamertag requested ${ago(rec.rename.ts)}` : ''}</small>
         ${ban ? `<div class="mp-flag bad">🚫 Banned ${until(ban)} by ${esc(ban.by)}: ${esc(ban.reason)}</div>` : ''}
-        ${mute ? `<div class="mp-flag mute">🔇 Chat muted ${until(mute)} by ${esc(mute.by)}: ${esc(mute.reason)}</div>` : ''}
+        ${mute ? `<div class="mp-flag mute">${mute.shadow ? '👻 Shadow-muted (they don\'t know)' : '🔇 Chat muted'} ${until(mute)} by ${esc(mute.by)}: ${esc(mute.reason)}</div>` : ''}
         <div class="mp-sub">Warnings (${warns.length})</div>
         <div class="mp-list">${warns.length ? warns.slice().reverse().map((w) => `<div>⚠ ${esc(w.reason)} <small>— ${esc(w.by)}, ${ago(w.ts)}</small></div>`).join('') : '<small class="muted">None</small>'}</div>
         <div class="mp-sub">Staff notes <small>(the player isn't shown these)</small></div>
@@ -187,7 +187,7 @@ export class ModPanel {
           <button data-act="note">📝 Add note</button>
           <button data-act="rename">✎ Force new gamertag</button>
           <span class="mp-timed"><select id="mp-time">${opts(TIMES, 24)}</select>
-            <button data-act="mute">🔇 Mute chat</button><button data-act="ban" class="danger">🚫 Ban</button></span>
+            <button data-act="mute">🔇 Mute chat</button><button data-act="smute" title="They can still type and see their own messages, but nobody else does. They aren't told.">👻 Shadow mute</button><button data-act="ban" class="danger">🚫 Ban</button></span>
           ${ban ? '<button data-act="unban">Unban</button>' : ''}
           ${mute ? '<button data-act="unmute">Unmute</button>' : ''}
           ${warns.length ? '<button data-act="clearwarns" class="ghost">Clear warnings</button>' : ''}
@@ -218,7 +218,7 @@ export class ModPanel {
         const act = b.dataset.act, reason = box.querySelector('#mp-reason').value.trim();
         const hours = Number(box.querySelector('#mp-time').value), span = hours ? fmtHours(hours) : 'permanently';
         const what = {
-          warn: 'warn', note: 'add this note to', rename: 'force a new gamertag for', ban: `ban (${span})`, mute: `mute the chat of (${span})`,
+          warn: 'warn', note: 'add this note to', rename: 'force a new gamertag for', ban: `ban (${span})`, mute: `mute the chat of (${span})`, smute: `shadow mute (${span}: they won't know)`,
           unban: 'unban', unmute: 'unmute', clearwarns: 'clear the warnings of', kick: 'kick from their match',
         }[act];
         if ((act === 'warn' || act === 'note') && !reason) { this.say(act === 'warn' ? 'Type a reason for the warning first.' : 'Type the note first.'); return; }
@@ -228,7 +228,7 @@ export class ModPanel {
           await moderation.act(t.tag, act, { reason, hours });
           this.say({
             warn: `Warned ${t.tag}.`, note: 'Note added.', rename: `${t.tag} will have to pick a new gamertag.`, ban: `Banned ${t.tag}.`,
-            mute: `Muted ${t.tag}'s chat.`, unban: `Unbanned ${t.tag}.`, unmute: `Unmuted ${t.tag}.`, clearwarns: 'Warnings cleared.', kick: `${t.tag} will be removed from their match.`,
+            mute: `Muted ${t.tag}'s chat.`, smute: `Shadow-muted ${t.tag}. Their messages now only reach themselves.`, unban: `Unbanned ${t.tag}.`, unmute: `Unmuted ${t.tag}.`, clearwarns: 'Warnings cleared.', kick: `${t.tag} will be removed from their match.`,
           }[act]);
           this.render();
         } catch (err) { this.say(err.message); b.disabled = false; }

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.13",
+  "version": "2026.10.14.14",
   "notes": [
-    "Anti-cheat flags now include a replay for the staff"
+    "New moderation tools for the staff"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
