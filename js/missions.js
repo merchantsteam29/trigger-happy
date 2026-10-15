@@ -330,6 +330,8 @@ export function sanitizeCos(c) {
   // Ranked skill rating (ranked.js) and whether they're still in placement matches.
   if (Number.isInteger(c.sr) && c.sr >= 0 && c.sr <= 5000) out.sr = c.sr;
   if (c.srp === 1) out.srp = 1;
+  // Party id (social.js): the host puts a party on the same team.
+  if (typeof c.party === 'string' && /^[A-Za-z0-9_-]{3,24}$/.test(c.party)) out.party = c.party;
   // Game version (so a host can tell who is out of date).
   if (typeof c.v === 'string' && /^\d{4}\.\d{1,2}\.\d{1,2}\.\d{1,4}$/.test(c.v)) out.v = c.v;
   return out;

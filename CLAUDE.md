@@ -136,6 +136,8 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
   travels in the settings as `customMap` and is registered as map `custom` by `registerCustomMap`)
 
 ### Where to add things
+- **Party matchmaking:** a player's `cos.party` (their party id) makes `HostLogic.autoTeam` / `partyTeams` keep a party on one
+  team; `social.onLeaderLobby` (main.js) follows the leader into matches.
 - **Mode:** `MODES` and `MODE_ORDER` in `host.js`, the objective text in `game.js` `modeBar()`, the score
   label in `hud.js`, and kill handling in `HostLogic.kill` if it scores differently.
 - **Setting:** default in `settings.js`, a row in `TABS` in `settingsui.js` (types: check, range, swatch, choice, special).

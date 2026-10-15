@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.20",
+  "version": "2026.10.14.21",
   "notes": [
-    "Your character in 3D on the Character screen, with emote and victory pose buttons"
+    "Parties play together: follow your leader into matches, and stay on one team"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

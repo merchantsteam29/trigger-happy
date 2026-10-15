@@ -229,7 +229,7 @@ function updateMissionCount() {
 }
 
 // Your cosmetics plus the level shown next to your name (sent to the host).
-const myCos = () => { const c = clans.myClan(), r = myRanked(); return { ...getCos(), lvl: myLevel().level, sr: r.sr, v: APP_VERSION, ...(r.placing ? { srp: 1 } : {}), ...(c ? { clan: c.tag } : {}) }; };
+const myCos = () => { const c = clans.myClan(), r = myRanked(); return { ...getCos(), lvl: myLevel().level, sr: r.sr, v: APP_VERSION, ...(r.placing ? { srp: 1 } : {}), ...(c ? { clan: c.tag } : {}), ...(social.party ? { party: social.party.id } : {}) }; };
 // Versions look like 2026.10.08.42: compare them number by number.
 const cmpVersion = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 4; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 
@@ -1242,6 +1242,15 @@ social.onChange = () => {
 };
 let lastTag = social.tag, lastRole = null;
 social.onNotice = (text) => toast(text);
+// Party matchmaking: when your party leader goes into a match, you follow (Settings → Gameplay: Follow my
+// party leader). Returns true if we're joining.
+social.onLeaderLobby = (code, leader) => {
+  if (opts.partyFollow === false || net || busy || game.theater || game.active) return false;
+  toast(`Following ${leader} into their match…`);
+  $('join-code').value = code;
+  joinLobby();
+  return true;
+};
 // Party chat also shows up in the match chat; "/p message" in match chat talks to your party.
 social.onPartyChat = ({ from, text, mine }) => { if (from && net && !mine) chat.add(`[Party] ${from}`, '#c9a2ff', moderation.clean(text)); };
 applyGamertag();

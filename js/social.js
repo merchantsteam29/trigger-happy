@@ -467,7 +467,9 @@ export class Social {
         }
         p.confirmed = true;
         const lobby = /^[A-Z0-9]{5}$/.test(b.lobby || '') ? b.lobby : null;
-        if (lobby && lobby !== p.lobby && !this.isLeader) this.notice(`${p.leader} is in a match — join from Friends`);
+        if (lobby && lobby !== p.lobby && !this.isLeader) {
+          if (this.onLeaderLobby && this.onLeaderLobby(lobby, p.leader)) { /* following them in (main.js) */ } else this.notice(`${p.leader} is in a match — join from Friends`);
+        }
         p.members = members;
         p.lobby = lobby;
         this.changed();

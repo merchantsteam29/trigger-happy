@@ -521,11 +521,27 @@ export class HostLogic {
     return !w || !c ? 0 : c === w.a ? 1 : c === w.b ? 2 : 0;
   }
 
+  // Red and blue for a new match: each party as one group, groups (biggest first) to the smaller team.
+  partyTeams(list) {
+    const groups = new Map();
+    for (const p of list) { const k = p.cos && p.cos.party ? 'p:' + p.cos.party : 'x:' + p.id; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); }
+    const out = new Map(), size = [0, 0, 0];
+    for (const g of [...groups.values()].sort((a, b) => b.length - a.length)) {
+      const t = size[1] <= size[2] ? 1 : 2;
+      for (const p of g) out.set(p, t);
+      size[t] += g.length;
+    }
+    return out;
+  }
+
   autoTeam(p) {
     if (this.s.war && this.warTeam(p)) return this.warTeam(p);
     if (this.mode.redBlue) {
       let red = 0, blue = 0;
       for (const q of this.players.values()) if (q !== p) { if (q.team === 1) red++; else if (q.team === 2) blue++; }
+      // Party matchmaking: join your party's team (unless that would make it 3+ players bigger).
+      const pt = p.cos && p.cos.party, mate = pt && [...this.players.values()].find((q) => q !== p && q.cos && q.cos.party === pt && (q.team === 1 || q.team === 2));
+      if (mate && (mate.team === 1 ? red - blue : blue - red) < 3) return mate.team;
       return red <= blue ? 1 : 2;
     }
     if (this.mode.infect) return this.infected ? 2 : 1;
@@ -1850,11 +1866,12 @@ export class HostLogic {
     }
     this.beginMatchState();
     const list = [...this.players.values()].sort(() => Math.random() - 0.5);
+    const teamOf = this.mode.redBlue ? this.partyTeams(list) : null; // parties stay together
     list.forEach((p, i) => {
       p.kills = 0; p.deaths = 0; p.level = 0;
       p.heads = 0; p.streak = 0; p.bestStreak = 0;
       p.score = this.s.mode === 'lms' ? Math.max(1, this.s.scoreLimit) : 0;
-      p.team = this.s.war && this.warTeam(p) ? this.warTeam(p) : this.mode.redBlue ? (i % 2) + 1 : this.mode.infect || this.s.mode === 'zombies' ? 1 : 0;
+      p.team = this.s.war && this.warTeam(p) ? this.warTeam(p) : this.mode.redBlue ? teamOf.get(p) : this.mode.infect || this.s.mode === 'zombies' ? 1 : 0;
       p.alive = false;
       p.respawnAt = 0;
     });

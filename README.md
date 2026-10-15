@@ -599,8 +599,9 @@ whatever capitals they use) and you only get one. In **Friends**:
 - Type someone's gamertag and **Send friend request**; they accept or decline it (requests wait for them if they're
   offline). Friends show as online / in the menu / in a match, with **Join game** when they're playing.
 - **Invite to party** starts a party (you lead it). The party chats together in the Friends screen, and in matches
-  by starting a message with `/p`. When the leader starts or joins a match, party members get a
-  **Join the party leader's match** button.
+  by starting a message with `/p`. When the leader starts or joins a match, party members in the menu **follow them in
+  automatically** (turn it off in Settings → **Follow my party leader**; there's still a **Join** button). In team modes the
+  host keeps a party on the **same team**.
 - **Voice chat:** in the party card press **🎤 Join voice** (allow the microphone). Everyone in the party who joined voice
   can hear each other, in the menu and in matches. Mute any time; turn on **Push to talk** (hold **V**) and set the voice
   volume in Settings → HUD & Audio. In matches, the top-left shows who's talking. Voice goes straight between players

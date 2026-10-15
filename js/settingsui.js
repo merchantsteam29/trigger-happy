@@ -61,6 +61,7 @@ const TABS = [
     { key: 'killcam', label: 'Kill cam', hint: 'When you die, replay the last few seconds from your killer\'s eyes (any key or tap skips it)', type: 'check' },
     { key: 'blood', label: 'Blood effects', hint: 'Off: hits and kills show grey sparks instead of red blood', type: 'check' },
     { key: 'showFps', label: 'Show FPS counter', type: 'check' },
+    { key: 'partyFollow', label: 'Follow my party leader', hint: 'In a party, join the leader\'s match automatically when they start or join one', type: 'check' },
     { key: 'weatherFx', label: 'Weather effects', hint: 'Rain and lightning flashes. Off keeps only the fog and darker light', type: 'check' },
   ] },
   { name: 'HUD & Audio', rows: [
