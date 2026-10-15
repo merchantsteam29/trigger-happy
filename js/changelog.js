@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.26', name: 'Foundry', banner: 'storm', notes: [
+    'New map: Foundry. Ride elevators up to the high decks and moving bridges out to the tower in the middle',
+    'Moving platforms carry you (and the bots) along',
+  ] },
   { v: '2026.10.14.25', name: 'Glass', banner: 'storm', notes: [
     'Building windows now have glass: see through it, then shoot it out. One shot shatters a pane',
     'Bots see through glass too, and shoot or barge their way through',

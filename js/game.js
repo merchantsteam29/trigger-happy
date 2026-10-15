@@ -33,6 +33,7 @@ import { buildBoards, applyBoards, boardById, boardCenter, setBroken } from './w
 import { buildZiplines, zipNear, zipFeet, zipLength, ZIP_SPEED } from './ziplines.js';
 import { bracketPair, bracketHtml, roundName } from './bracket.js';
 import { Recorder } from './replay.js';
+import { buildMovers, updateMovers, carry } from './movers.js';
 
 const JUMP = 8, WALK = 5.6, SPRINT = 1.35, CROUCH_SPD = 0.55, PAD_JUMP = 14;
 // Jump forgiveness: jump shortly after walking off a ledge (coyote) or pressed just before landing (buffer).
@@ -334,6 +335,7 @@ export class Game {
     this.mapGroup = buildMapScene(this.scene, id);
     buildBoards(this.mapGroup);
     buildZiplines(this.mapGroup, MAPS[id].ziplines);
+    buildMovers(this.mapGroup);
     spookySky(this.scene);
     this.mapId = id;
     this.pumpkins.place(id);
@@ -1379,6 +1381,11 @@ export class Game {
 
   update(dt, now) {
     if (this.onTick) this.onTick(dt);
+    // Moving platforms (movers.js) on the host's clock; standing on one carries you.
+    const mt = Date.now() - (netClock.off || 0);
+    updateMovers(mt);
+    carry(this.me, this.lastMoverT || mt, mt);
+    this.lastMoverT = mt;
     const charm = getCos().charm || 'none';
     if (this.vm.charm !== charm) this.vm.setCharm(charm); // weapon charm changed (charms.js)
     const me = this.me;

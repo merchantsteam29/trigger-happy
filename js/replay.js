@@ -6,6 +6,7 @@ import { registerCustomMap } from './editor.js';
 import { esc } from './util.js';
 import { WEAPONS } from './weapons.js';
 import { sfx } from './audio.js';
+import { updateMovers } from './movers.js';
 
 // Replay theater. Every client records the matches it plays or watches: every host snapshot
 // (20 a second: where everyone is, their aim, gun and state), the shots (with tracers), thrown and
@@ -323,6 +324,7 @@ export class Theater {
       this.t += dt * 1000 * this.speed;
       if (this.t >= this.t1) { this.t = this.t1; this.playing = false; this.el.querySelector('[data-play]').textContent = '▶'; }
     }
+    updateMovers(this.t); // moving platforms where they were (host time)
     while (this.i < f.length - 2 && f[this.i + 1].t <= this.t) this.i++;
     const i = this.i, fa = f[i], fb = f[Math.min(f.length - 1, i + 1)];
     const fp = f[Math.max(0, i - 1)], fn = f[Math.min(f.length - 1, i + 2)];

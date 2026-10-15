@@ -6,7 +6,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 export const boxes = [];
 export const spawns = [];
 export const breakables = []; // wooden boards (mat 'boards', id `brk`): see walls.js
-export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets', 'manor', 'skyline', 'farm'];
+export const movers = []; // moving platforms: { box, at (start coords), d (offset), period, pause, phase }: see movers.js
+export const MAP_ORDER = ['warehouse', 'yard', 'town', 'pit', 'outpost', 'docks', 'arena', 'compound', 'rooftops', 'station', 'canyon', 'construction', 'castle', 'hangar', 'mall', 'temple', 'oilrig', 'subway', 'skyislands', 'arctic', 'neonstreets', 'manor', 'skyline', 'farm', 'foundry'];
 // Short descriptions for the map pickers and the end-of-match vote.
 export const MAP_BLURB = {
   warehouse: 'Indoor · mezzanines', yard: 'Outdoor · containers', town: 'Rooftops · houses', pit: 'Small · jump pads',
@@ -16,7 +17,7 @@ export const MAP_BLURB = {
   castle: 'Keep · ramparts', hangar: 'Plane · catwalks', mall: 'Shops · 2 floors',
   temple: 'Pyramid · jungle', oilrig: 'Decks · derrick', subway: 'Tracks · platforms',
   skyislands: 'Floating · don\'t fall', arctic: 'Snow · big base', neonstreets: 'Night city · highway', manor: 'Night · graveyard · roof',
-  skyline: 'City · ziplines', farm: 'Farm · barn · silos',
+  skyline: 'City · ziplines', farm: 'Farm · barn · silos', foundry: 'Industrial · lifts · moving bridges',
 };
 // Render quality (lowered on mobile before any map is built).
 export const quality = { shadowSize: 2048, pointLights: true, decor: true }; // decor: off in Low-end graphics
@@ -1418,6 +1419,43 @@ export const MAPS = {
     },
   },
 
+  // An industrial yard: high decks you reach by elevator (or stairs), and bridges that shuttle out to
+  // a tower in the middle (movers.js).
+  foundry: {
+    name: 'Foundry',
+    theme: { sky: '#8d9bb0', fog: [45, 130], hemi: ['#e9eef7', '#5a4a3a', 1.9], sun: ['#ffe1b8', 2.6, [28, 36, -18]] },
+    bounds: 32,
+    hills: [[0, 6, 0, 3], [-16, 0, 0, 3.5], [16, 0, 0, 3.5], [-16, 6, 16, 3], [16, 6, -16, 3]],
+    // elevators by the decks' far ends, bridges from the decks to the tower (each with its 180° twin)
+    movers: [
+      [-29.5, -0.25, 8, -26.5, 0.15, 11, [0, 5.85, 0], 9, 0.18, 0], [26.5, -0.25, -11, 29.5, 0.15, -8, [0, 5.85, 0], 9, 0.18, 4.5], // a step up, so you stand on the lift
+      [-7.5, 5.6, 9, -4.5, 6, 12, [3.5, 0, -5], 8, 0.16, 0], [4.5, 5.6, -12, 7.5, 6, -9, [-3.5, 0, 5], 8, 0.16, 4],
+    ],
+    build({ add, add2, crate2, spawn2, stairs }) {
+      add(-32, -1, -22, 32, 0, 22, 'metalFloor');
+      add(-32, 0, 21, 32, 10, 22, 'steelDark');
+      add(-32, 0, -22, 32, 10, -21, 'steelDark');
+      add(31, 0, -21, 32, 10, 21, 'steelDark');
+      add(-32, 0, -21, -31, 10, 21, 'steelDark');
+      // High decks (north-west, south-east) with rails, stairs up their inner end
+      add2(-26, 5.6, 12, -6, 6, 21, 'grate');
+      for (const x of [-24, -16, -8]) add2(x - 0.3, 0, 12.2, x + 0.3, 5.6, 12.8, 'pillar');
+      add2(-26, 6, 12, -10, 7, 12.15, 'rail');
+      stairs(-6, 13, -4, 21, 0, 6, '-x', 'stairs');
+      // The tower in the middle (only the bridges reach its top)
+      add(-4, 0, -4, 4, 6, 4, 'tank');
+      add(-4, 6, -4, -3.85, 7, 4, 'rail'); add(3.85, 6, -4, 4, 7, 4, 'rail');
+      // Cover on the yard
+      add2(-20, 0, -4, -14, 2.6, -1.6, 'containerOrange');
+      add2(-12, 0, 4, -9.6, 2.6, 10, 'containerBlue');
+      add2(10, 0, 10, 12, 1.2, 12, 'crate');
+      crate2(-22, 4); crate2(-22, 4, 1.2); crate2(-6, -10);
+      add2(-28, 0, -14, -24, 3, -10, 'tank');
+      add2(-14, 0, 14, -12.6, 4, 15.4, 'pipe');
+      for (const [x, y, z] of [[-28, 0, -2], [-20, 0, -18], [-10, 0, -14], [-18, 6, 16], [-24, 0, 6], [-8, 0, 2], [-2, 0, -18], [-28, 0, 18]]) spawn2(x, y, z);
+    },
+  },
+
   rooftops: {
     name: 'Rooftops',
     theme: { sky: '#141a2e', fog: [30, 95], hemi: ['#8090c8', '#2a2430', 1.7], sun: ['#c8d2ff', 1.2, [-18, 40, 14]], night: true },
@@ -1494,6 +1532,15 @@ export function setMapData(id) {
   map.build(makeApi());
   breakables.length = 0;
   for (const b of boxes) if (b.mat === 'boards' || b.mat === 'glass') { b.brk = breakables.length + 1; breakables.push(b); }
+  // Moving platforms: [x0, y0, z0, x1, y1, z1, [dx, dy, dz], period s, pause (0..0.5), phase s]
+  movers.length = 0;
+  for (const [x0, y0, z0, x1, y1, z1, d, period, pause = 0.12, phase = 0] of map.movers || []) {
+    const box = { x0, y0, z0, x1, y1, z1, mat: 'lift' };
+    const m = { box, at: [x0, y0, z0, x1, y1, z1], d, period, pause, phase };
+    box.mover = m;
+    boxes.push(box);
+    movers.push(m);
+  }
   // Drop any spawn that ended up inside geometry.
   for (let i = spawns.length - 1; i >= 0; i--) {
     const s = spawns[i];
@@ -1884,7 +1931,7 @@ export function buildMapScene(scene, id) {
 
   const group = new THREE.Group();
   const byMat = {};
-  for (const b of boxes) (byMat[b.mat] ||= []).push(b);
+  for (const b of boxes) if (!b.mover) (byMat[b.mat] ||= []).push(b); // moving platforms: movers.js
   for (const [name, list] of Object.entries(byMat)) {
     if (name === 'invisible' || name === 'boards' || name === 'glass') continue; // collision only (e.g. walls that stop you falling overboard); boards: walls.js
     const def = M[name] || { color: '#ff00ff' };

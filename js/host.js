@@ -15,6 +15,7 @@ import { roles } from './roles.js';
 import { APP_VERSION } from './version.js';
 import { moderation } from './moderation.js';
 import { HIDE_MS, DISGUISES } from './prophunt.js';
+import { updateMovers, carry } from './movers.js';
 
 // redBlue: two balanced teams. hill: uses the moving zone. loadout: forced for everyone.
 // preset: physics/rule overrides applied when the mode is picked.
@@ -1949,6 +1950,9 @@ export class HostLogic {
       if (this.s.mode === 'rotation') this.tickRotation(now);
       if (this.flags) this.tickFlags(now);
       if (this.dom && this.phase === 'playing') this.tickDom(rdt);
+      updateMovers(now); // moving platforms (movers.js): bots standing on one ride along
+      for (const p of this.players.values()) if (p.bot && p.bot.body) carry(p.bot.body, this.moverT || now, now);
+      this.moverT = now;
       for (const p of this.players.values()) if (p.bot && !p.frozen) p.bot.update(dt);
       if (this.wallHp && this.wallHp.size) this.botBreach(dt);
       if (this.mode.practice) this.tickDummies(now);
