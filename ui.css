@@ -899,3 +899,6 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-sus-row { display: flex; gap: 6px; align-items: stretch; }
 .mp-sus-row .mp-rec { flex: 1; }
 .mp-rec em.on { color: #3bd16f; font-style: normal; }
+.mp-flag.alt { color: #ffcf7a; border-color: #ffb02066; }
+.mp-flag a { color: inherit; font-weight: 700; }
+.mp-flag [data-evade] { margin-left: 8px; padding: 4px 10px; font-size: 12px; }

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.4",
+  "version": "2026.10.15.5",
   "notes": [
-    "Staff can mark suspects and get a pop-up when they play"
+    "Staff can find and ban alt accounts of banned players"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

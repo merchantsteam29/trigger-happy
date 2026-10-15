@@ -642,7 +642,10 @@ becomes free again.
     the filter. **☆ Watch** a player to get a pop-up when they come online (saved on your device).
     **🎯 Mark suspect** puts them on the staff's shared list (with the reason box as the reason, shown in a 🎯 Suspects
     card next to the search): every staff member gets a pop-up when a suspect comes online or joins a match, with
-    **👁 Spectate** (invisible) and **Look up**. Players who never
+    **👁 Spectate** (invisible) and **Look up**.
+    **🚨 Ban evasion** (same card) lists gamertags made on the same device as a banned player (gamertags are claimed with
+    the device's key). A player's card shows **🔗 Same device as** with their other gamertags, and for an alt of a banned
+    player, **🚫 Ban as ban evasion** bans them until the original ban ends. Players who never
     claimed a gamertag can't be looked up and show as **guest** in a match's Moderation list. Open anyone to see their
     warnings, staff notes, ban / mute status and full history, then:
     - **Warn:** a pop-up they must acknowledge, shown next time they play if they're offline.

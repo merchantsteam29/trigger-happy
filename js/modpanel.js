@@ -108,6 +108,13 @@ export class ModPanel {
             return `<div class="mp-sus-row"><button class="mp-rec" data-look="${esc(s.tag)}"><b>${esc(s.tag)}</b>${on ? `<em class="on">● ${on.mode === 'lobby' ? 'in a match' : 'online'}</em>` : ''}
               <small>${esc(s.by)} · ${ago(s.ts)}${s.why ? ' · ' + esc(s.why) : ''}</small></button>${on && on.lobby && this.joinLobby ? `<button data-spec-sus="${esc(on.lobby)}" title="Spectate invisibly">👁</button>` : ''}</div>`;
           }).join('') || '<div class="note">No suspects. Open a player and press 🎯 Mark suspect (the reason box is saved with it).</div>'}</div>
+          ${(() => {
+            const ev = moderation.evaders();
+            return ev.length ? `<h3 class="mp-gap">🚨 Ban evasion <span class="muted">(${ev.length})</span></h3>
+          <div class="note">Gamertags made on the same device as a banned player.</div>
+          <div class="mp-recent">${ev.map((e) => `<button class="mp-rec" data-look="${esc(e.tag)}"><b>${esc(e.tag)}</b>${e.on ? '<em class="on">● online</em>' : ''}<em class="bad">ALT OF ${esc(e.of)}</em>
+            <small>last seen ${e.seen ? ago(e.seen) : 'unknown'}</small></button>`).join('')}</div>` : '';
+          })()}
           <h3 class="mp-gap">Recent actions</h3>
           <div class="mp-recent">${recs.length ? recs.map((r) => {
             const l = (r.log || [])[r.log.length - 1] || {};
@@ -174,6 +181,8 @@ export class ModPanel {
     const can = rank(roles.myRole()) > rank(role) && k !== String(this.social.tag).toLowerCase();
     const warns = rec.warns || [], log = rec.log || [], notes = rec.notes || [];
     const trial = roles.myTrial(); // trial mode: bans go to the owner first
+    const alts = moderation.altsOf(t.tag); // same device key (ban evasion)
+    const evadeOf = !ban ? alts.find((a) => moderation.activeBan(moderation.records.get(a.toLowerCase())) || moderation.isGone(a)) : null;
     const may = (p) => roles.myCan(p) || (p === 'ban' && trial && roles.permsOf(this.social.tag).includes('ban')); // moderator permissions (roles.js PERMS)
     const until = (x) => (x.until ? `until ${when(x.until)}` : 'permanently');
     box.innerHTML = `
@@ -184,6 +193,7 @@ export class ModPanel {
         <button class="mp-watch ${moderation.isWatched(t.tag) ? 'on' : ''}" data-watch title="Get a pop-up when they come online (this device)">${moderation.isWatched(t.tag) ? '★ Watching' : '☆ Watch'}</button>
         <button class="mp-watch mp-sus ${moderation.isSuspect(t.tag) ? 'on' : ''}" data-suspect title="Every staff member gets a pop-up when they come online or join a match, with a Spectate button">${moderation.isSuspect(t.tag) ? '🎯 Suspect' : '🎯 Mark suspect'}</button>
         ${moderation.isSuspect(t.tag) ? `<div class="mp-flag sus">🎯 Suspect (marked by ${esc(moderation.suspects.get(k).by)}, ${ago(moderation.suspects.get(k).ts)})${moderation.suspects.get(k).why ? ': ' + esc(moderation.suspects.get(k).why) : ''}</div>` : ''}
+        ${alts.length ? `<div class="mp-flag ${evadeOf ? 'bad' : 'alt'}">🔗 Same device as: ${alts.map((a) => `<a href="#" data-look="${esc(a)}">${esc(a)}</a>${moderation.activeBan(moderation.records.get(a.toLowerCase())) || moderation.isGone(a) ? ' <em class="bad">BANNED</em>' : ''}`).join(', ')}${evadeOf && can && may('ban') ? ` <button class="danger" data-evade="${esc(evadeOf)}">🚫 Ban as ban evasion</button>` : ''}</div>` : ''}
         <small class="muted">Gamertag since ${t.since ? when(t.since) : 'unknown'}${rec.rename ? ` · new gamertag requested ${ago(rec.rename.ts)}` : ''}</small>
         ${ban ? `<div class="mp-flag bad">🚫 Banned ${until(ban)} by ${esc(ban.by)}: ${esc(ban.reason)}</div>` : ''}
         ${mute ? `<div class="mp-flag mute">${mute.shadow ? '👻 Shadow-muted (they don\'t know)' : '🔇 Chat muted'} ${until(mute)} by ${esc(mute.by)}: ${esc(mute.reason)}</div>` : ''}
@@ -217,6 +227,17 @@ export class ModPanel {
     if (join) join.onclick = () => this.joinLobby(join.dataset.join);
     const watchBtn = box.querySelector('[data-watch]');
     if (watchBtn) watchBtn.onclick = () => { const on = moderation.toggleWatch(t.tag); this.say(on ? `Watching ${t.tag}: you'll get a pop-up when they come online.` : `Stopped watching ${t.tag}.`); this.renderPlayer(); this.renderResults(); };
+    box.querySelectorAll('.mp-flag [data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.look(a.dataset.look); }; });
+    const evade = box.querySelector('[data-evade]');
+    if (evade) evade.onclick = async () => {
+      const of = evade.dataset.evade, orig = moderation.activeBan(moderation.records.get(of.toLowerCase()));
+      const hours = orig && orig.until ? Math.max(1, Math.ceil((orig.until - Date.now()) / 3600e3)) : 0; // until the original ban ends
+      if (!confirm(`Ban ${t.tag} as an alt of ${of} (${hours ? fmtHours(hours) : 'permanently'})?`)) return;
+      try {
+        const res = await moderation.act(t.tag, 'ban', { reason: `Ban evasion (alt of ${of})`, hours });
+        this.say(res && res.pending ? 'Sent to the owner for approval.' : `Banned ${t.tag} as an alt of ${of}.`); this.render();
+      } catch (err) { this.say(err.message); }
+    };
     const susBtn = box.querySelector('[data-suspect]');
     if (susBtn) susBtn.onclick = async () => {
       const on = moderation.isSuspect(t.tag);

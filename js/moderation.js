@@ -649,11 +649,45 @@ class Moderation {
     if (!c || low(c.tag) !== k || !c.pub) return;
     const prev = this.directory.get(k);
     if (prev && prev.since && Number(c.since) > prev.since) return; // first claim wins, like social.lookup
-    this.directory.set(k, { tag: clip(c.tag, 16), since: Number(c.since) || 0, seen: Number(c.seen) || 0 });
+    this.directory.set(k, { tag: clip(c.tag, 16), since: Number(c.since) || 0, seen: Number(c.seen) || 0, x: typeof c.pub.x === 'string' ? c.pub.x : '' });
     if (this.onChange) this.onChange(null);
   }
 
   // Search by any part of a gamertag (case doesn't matter); newest activity first.
+  // ---------- Ban evasion ----------
+  // A gamertag is claimed with the device's key, so a new gamertag made on a banned player's device
+  // (or a device linked to it) has the same key as the banned one.
+
+  // Other gamertags with the same device key as `tag`.
+  altsOf(tag) {
+    const k = low(tag), me = this.directory.get(k);
+    const x = (me && me.x) || this.perma.get(k);
+    if (!x) return [];
+    return [...this.directory.values()].filter((p) => p.x === x && low(p.tag) !== k).map((p) => p.tag);
+  }
+
+  // Keys of banned players (permanent bans, and temporary bans still running) -> the banned gamertag.
+  bannedKeys() {
+    const keys = new Map();
+    for (const [t, x] of this.perma) keys.set(x, t);
+    for (const [k, rec] of this.records) {
+      const d = this.directory.get(k);
+      if (this.activeBan(rec) && d && d.x && !keys.has(d.x)) keys.set(d.x, rec.target || k);
+    }
+    return keys;
+  }
+
+  // Possible ban evaders: gamertags that aren't banned but share a banned player's key.
+  evaders() {
+    const keys = this.bannedKeys(), out = [];
+    for (const [k, p] of this.directory) {
+      const of = p.x && keys.get(p.x);
+      if (!of || low(of) === k || this.isGone(p.tag) || this.activeBan(this.records.get(k))) continue;
+      out.push({ tag: p.tag, of, seen: p.seen, on: this.online.has(k) });
+    }
+    return out.sort((a, b) => b.on - a.on || b.seen - a.seen);
+  }
+
   searchPlayers(q = '') {
     q = low(q).replace(/[^a-z0-9_]/g, '');
     return [...this.directory.values()]
