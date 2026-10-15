@@ -924,3 +924,10 @@ body.mobile:not(.tablet) .ed-panel { width: auto; max-height: 40vh; }
 .mp-most .mp-rec em { margin-left: auto; font-style: normal; color: #ff8a8a; }
 @media (max-width: 800px) { .mp-trend-grid { grid-template-columns: 1fr; } .mp-bar { grid-template-columns: 120px 1fr 44px; } }
 .mp-trends > .note { margin-top: 12px; }
+/* Live matches (modpanel.js renderOnline) */
+.mp-match { flex-wrap: wrap; }
+.mp-match.hot { border-left: 3px solid #ff3b3b; }
+.mp-match em { margin-left: 6px; font-style: normal; font-size: 11px; }
+.mp-who { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 4px 0 2px 4px; font-size: 12px; }
+.mp-who a { color: var(--text); }
+.mp-who a.sus, .mp-who a.bad { color: #ff8a8a; font-weight: 700; }

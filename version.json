@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.11",
+  "version": "2026.10.15.12",
   "notes": [
-    "Staff see report trends by reason"
+    "Staff see every live match with who's in it"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

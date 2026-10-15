@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.11', name: 'Staff HQ Update', banner: 'staffhq', notes: [
+  { v: '2026.10.15.12', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
     'Updates are now one big log each, with a heading for every new feature',
     '## 4 New Banners',
@@ -34,6 +34,8 @@ export const UPDATES = [
     'Reports show how many times that player was already reported, warned, muted, kicked and banned',
     '## Report Trends',
     "A board of this week's reports by reason (cheating, chat, griefing…) against last week, and the most reported players",
+    '## Live Matches for Staff',
+    "Staff see every live match with who's in it, its reports and suspects, sorted by players or by most trouble",
   ] },
   { v: '2026.10.14.26', name: 'The Mega Update', banner: 'mega', notes: [
     '## Smoother Replays',

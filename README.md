@@ -658,8 +658,10 @@ becomes free again.
     - **Unban**, **Unmute**, **Clear warnings**, or **Join their match**.
 
     It also lists recent actions.
-  - **Online:** every public server (spectate or join), and everyone with a gamertag who has the game open and where
-    they are, with **Join** and **Look up**.
+  - **Online:** **Live matches**: every public server plus any private match someone with a gamertag is in, with who's
+    in it (suspects 🎯 and banned / muted players in red, click a name to look them up), 🚩 open reports from that match,
+    **👁 Spectate** and **▶ Join**. Sort by **Most players** or **🚩 Most trouble**. Below it, everyone with a gamertag who
+    has the game open and where they are, with **Join** and **Look up**.
   - **Reports:** players report each other from the pause menu (**🚩 Report a player**), choosing a reason and adding
     optional details. A small **screenshot** of the reporter's screen goes with it as evidence (click it to enlarge),
     and a **replay of the last 30 seconds**: **🎬 Watch replay** opens it in the replay theater (follow anyone, see

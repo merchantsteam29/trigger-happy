@@ -290,12 +290,30 @@ export class ModPanel {
 
   renderOnline(body, online) {
     if (this.servers) this.servers.start();
-    const servers = this.servers ? this.servers.list() : [];
+    // Live matches: public servers plus any match an online player is in (private ones too), with who's
+    // there (from presence) and how much trouble: open reports from that match, suspects, banned / muted players.
+    const listed = this.servers ? this.servers.list() : [];
+    const matches = new Map(listed.map((s) => [s.code, { code: s.code, s, who: [] }]));
+    for (const o of online) if (o.mode === 'lobby' && o.lobby) { if (!matches.has(o.lobby)) matches.set(o.lobby, { code: o.lobby, s: null, who: [] }); matches.get(o.lobby).who.push(o.tag); }
+    const reps = [...moderation.reports.values()];
+    for (const m of matches.values()) {
+      m.reports = reps.filter((r) => r.lobby === m.code).length;
+      m.sus = m.who.filter((t) => moderation.isSuspect(t)).length;
+      m.bad = m.who.filter((t) => { const r = moderation.records.get(t.toLowerCase()); return moderation.activeBan(r) || moderation.activeMute(r) || moderation.offences(t).reports; }).length;
+      m.heat = m.reports * 3 + m.sus * 2 + m.bad;
+    }
+    const sort = this.liveSort || 'players';
+    const rows = [...matches.values()].sort((a, b) => (sort === 'reports' ? b.heat - a.heat : 0) || ((b.s ? b.s.players : b.who.length) - (a.s ? a.s.players : a.who.length)) || a.code.localeCompare(b.code));
+    const tagHtml = (t) => { const r = moderation.records.get(t.toLowerCase()); return `<a href="#" data-look="${esc(t)}" class="${moderation.isSuspect(t) ? 'sus' : moderation.activeBan(r) || moderation.activeMute(r) ? 'bad' : ''}">${moderation.isSuspect(t) ? '🎯' : ''}${esc(t)}</a>`; };
     body.innerHTML = `<div class="card">
-      <h3>Public servers <span class="muted">(${servers.length})</span></h3>
-      <div class="mp-online">${servers.length ? servers.map((s) => `<div class="fr-row"><span class="fr-name">${esc(s.name)}</span>
-        <small>${esc(s.mode)} · ${esc(s.map)} · ${s.players}/${s.max}${s.bots ? ` +${s.bots} bots` : ''}${s.region ? ' · ' + esc(s.region) : ''} · <b>${esc(s.code)}</b></small>
-        ${this.joinLobby ? `<button data-spec="${esc(s.code)}">👁 Spectate</button><button data-join="${esc(s.code)}">▶ Join</button>` : ''}</div>`).join('') : '<div class="sv-empty">No public servers right now.</div>'}</div>
+      <h3>Live matches <span class="muted">(${rows.length})</span></h3>
+      <div class="mp-actions"><span class="seg">${[['players', 'Most players'], ['reports', '🚩 Most trouble']].map(([id, n]) => `<button data-lsort="${id}" class="${sort === id ? 'sel' : ''}">${n}</button>`).join('')}</span></div>
+      <div class="mp-online mp-live">${rows.length ? rows.map((m) => `<div class="fr-row mp-match ${m.heat ? 'hot' : ''}">
+        <span class="fr-name">${m.s ? esc(m.s.name) : '🔒 Private match'} <b class="muted">${esc(m.code)}</b>
+          ${m.reports ? `<em class="bad">🚩 ${m.reports} report${m.reports > 1 ? 's' : ''}</em>` : ''}${m.sus ? `<em class="bad">🎯 ${m.sus} suspect${m.sus > 1 ? 's' : ''}</em>` : ''}</span>
+        <small>${m.s ? `${esc(m.s.mode)} · ${esc(m.s.map)} · ${m.s.players}/${m.s.max}${m.s.bots ? ` +${m.s.bots} bots` : ''}${m.s.region ? ' · ' + esc(m.s.region) : ''}` : `${m.who.length} with a gamertag`}</small>
+        ${this.joinLobby ? `<button data-spec="${esc(m.code)}">👁 Spectate</button><button data-join="${esc(m.code)}">▶ Join</button>` : ''}
+        <div class="mp-who">${m.who.length ? m.who.sort().map(tagHtml).join(' ') : '<small class="muted">Nobody with a gamertag that we can see</small>'}</div></div>`).join('') : '<div class="sv-empty">No matches right now.</div>'}</div>
     </div>`;
     body.innerHTML += `<div class="card mp-gap">
       <h3>Online now <span class="muted">(${online.length})</span></h3>
@@ -313,6 +331,8 @@ export class ModPanel {
     body.querySelectorAll('[data-look]').forEach((b) => { b.onclick = () => this.look(b.dataset.look); });
     body.querySelectorAll('[data-join]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.join); });
     body.querySelectorAll('[data-spec]').forEach((b) => { b.onclick = () => this.joinLobby(b.dataset.spec, true); });
+    body.querySelectorAll('[data-lsort]').forEach((b) => { b.onclick = () => { this.liveSort = b.dataset.lsort; this.render(); }; });
+    body.querySelectorAll('.mp-who [data-look]').forEach((a) => { a.onclick = (e) => { e.preventDefault(); this.tab = 'players'; this.look(a.dataset.look); }; });
   }
 
   // ---------- Reports ----------
