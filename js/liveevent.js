@@ -6,6 +6,9 @@ import { OWNER, roles, verifyWith } from './roles.js';
 // message at whffa/v1/event, signed with the owner's key; it ends by itself at `until`.
 
 const T = 'whffa/v1/event';
+const MOTD = 'whffa/v1/motd'; // the owner's message of the day: { id, title, text, btn, go } (owner-signed, retained)
+// Where a message of the day's button can take players: a page of the menu, or a web link (https only).
+export const MOTD_GO = [['', 'No button'], ['play', 'Quick Play'], ['shop', 'The Shop'], ['missions', 'Missions'], ['leaderboard', 'Leaderboard'], ['friends', 'Friends'], ['character', 'Character'], ['link', 'A web link…']];
 const low = (s) => String(s || '').toLowerCase();
 export const EVENT_HOURS = [[1, '1 hour'], [3, '3 hours'], [24, '1 day'], [48, '2 days'], [72, '3 days (a weekend)'], [168, '7 days']];
 
@@ -13,14 +16,16 @@ class LiveEvent {
   constructor() {
     this.ev = null; // { name, tokens, map, mode, until, ts }
     this.onChange = null;
+    this.motd = null; // { id, title, text, btn, go, url, ts }
+    this.onMotd = null;
   }
 
   init(social) {
     this.social = social;
-    social.relay.onMessage((t, payload) => { if (t === T) this.receive(payload.toString()); });
-    social.relay.subscribe(T);
+    social.relay.onMessage((t, payload) => { if (t === T) this.receive(payload.toString()); else if (t === MOTD) this.receiveMotd(payload.toString()); });
+    social.relay.subscribe(T); social.relay.subscribe(MOTD);
     const prev = social.relay.onConnect;
-    social.relay.onConnect = () => { if (prev) prev(); social.relay.subscribe(T); };
+    social.relay.onConnect = () => { if (prev) prev(); social.relay.subscribe(T); social.relay.subscribe(MOTD); };
   }
 
   async receive(text) {
@@ -60,6 +65,36 @@ class LiveEvent {
     this.social.relay.publish(T, signed, { retain: true });
     await this.receive(signed);
   }
+
+  // ---------- Message of the day ----------
+  async receiveMotd(text) {
+    let env, b;
+    try { env = JSON.parse(text); b = JSON.parse(env.b); } catch { return; }
+    if (!b || low(b.from) !== low(OWNER.tag) || !(await verifyWith(OWNER.pub, env))) return;
+    if (this.motd && this.motd.ts > Number(b.ts)) return;
+    const clean = (s, n) => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, n);
+    const go = MOTD_GO.some(([id]) => id === b.go) ? b.go : '';
+    const url = go === 'link' && /^https:\/\/[^\s"'<>]{3,300}$/.test(String(b.url || '')) ? String(b.url) : '';
+    this.motd = b.off || !clean(b.text, 300) ? { off: true, ts: Number(b.ts) || 0 }
+      : { id: clean(b.id, 20), title: clean(b.title, 50), text: clean(b.text, 300), btn: clean(b.btn, 24), go: go === 'link' && !url ? '' : go, url, ts: Number(b.ts) || 0 };
+    if (this.onMotd) this.onMotd(this.motd);
+  }
+  async setMotd({ title, text, btn, go, url }) {
+    if (!roles.isOwner()) throw new Error('Only the owner can set the message of the day.');
+    if (!String(text || '').trim()) throw new Error('Type the message first.');
+    if (go === 'link' && !/^https:\/\//.test(String(url || ''))) throw new Error('Links must start with https://');
+    const signed = await this.social.sign({ id: Date.now().toString(36), title, text, btn, go, url });
+    this.social.relay.publish(MOTD, signed, { retain: true });
+    await this.receiveMotd(signed);
+  }
+  async clearMotd() {
+    if (!roles.isOwner()) throw new Error('Only the owner can do that.');
+    const signed = await this.social.sign({ off: 1 });
+    this.social.relay.publish(MOTD, signed, { retain: true });
+    await this.receiveMotd(signed);
+  }
+  // The message to show (null if there's none, or you hid this one).
+  currentMotd(hidden) { const m = this.motd; return m && !m.off && m.id !== hidden ? m : null; }
 }
 
 export const liveEvent = new LiveEvent();

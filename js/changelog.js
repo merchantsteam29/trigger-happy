@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.23', name: 'Staff HQ Update', banner: 'staffhq', notes: [
+  { v: '2026.10.15.24', name: 'Staff HQ Update', banner: 'staffhq', notes: [
     '## One Big Update Log',
     'Updates are now one big log each, with a heading for every new feature',
     '## 4 New Banners',
@@ -58,6 +58,8 @@ export const UPDATES = [
     "The owner can start an event any time: double or triple tokens, a featured map or mode, shown on everyone's Play screen",
     '## Owner Stats',
     "The owner gets a Stats tab: players online, today's peak, busiest hours, players per day and the most played modes and maps",
+    '## Message of the Day',
+    "The owner can pin a message on top of everyone's Play screen, with a button to a page or a link",
   ] },
   { v: '2026.10.14.26', name: 'The Mega Update', banner: 'mega', notes: [
     '## Smoother Replays',

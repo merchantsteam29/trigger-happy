@@ -6,7 +6,7 @@ import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './game
 import { leaderboard } from './leaderboard.js';
 import { gifts, grantable, GRANT_MAX } from './gifts.js';
 import { COSMETICS, SLOT_LABELS } from './missions.js';
-import { liveEvent, EVENT_HOURS } from './liveevent.js';
+import { liveEvent, EVENT_HOURS, MOTD_GO } from './liveevent.js';
 import { MAPS, MAP_ORDER } from './maps.js';
 import { MODES, MODE_ORDER } from './host.js';
 
@@ -545,7 +545,32 @@ export class ModPanel {
     };
     const clear = body.querySelector('#mp-ann-clear');
     if (clear) clear.onclick = async () => { try { await moderation.clearAnnouncement(); this.say('Announcement cleared.'); this.render(); } catch (err) { this.say(err.message); } };
-    if (roles.myRole() === 'owner') { this.renderEvent(body); this.renderGameNight(body); }
+    if (roles.myRole() === 'owner') { this.renderMotd(body); this.renderEvent(body); this.renderGameNight(body); }
+  }
+
+  // Owner: the message of the day pinned on everyone's Play screen (liveevent.js).
+  renderMotd(body) {
+    const m = liveEvent.currentMotd();
+    const card = document.createElement('div');
+    card.className = 'card mp-gap mp-motd';
+    card.innerHTML = `<h3>📌 Message of the day</h3>
+      <div class="note">Pinned at the top of everyone's Play screen until you change or clear it (players can hide it with ✕). An optional button opens a page of the game or a web link.</div>
+      ${m ? `<div class="mp-ann info"><b>📌 ${esc(m.title || '')}</b><small>${esc(m.text)}${m.go ? ` · button: ${esc(m.btn || 'Go')} → ${esc(m.go === 'link' ? m.url : m.go)}` : ''}</small><button class="danger" id="mp-motd-clear">Clear it</button></div>` : ''}
+      <input id="mp-motd-title" maxlength="50" placeholder="Title (optional)" value="${esc(m ? m.title : '')}">
+      <textarea id="mp-motd-text" maxlength="300" rows="2" placeholder="The message, e.g. New map Foundry is out, go try the elevators!">${esc(m ? m.text : '')}</textarea>
+      <div class="mp-actions"><select id="mp-motd-go">${MOTD_GO.map(([id, n]) => `<option value="${id}" ${m && m.go === id ? 'selected' : ''}>${n}</option>`).join('')}</select>
+        <input id="mp-motd-btn" maxlength="24" placeholder="Button text" value="${esc(m ? m.btn : '')}"><input id="mp-motd-url" maxlength="300" placeholder="https://…" value="${esc(m ? m.url : '')}">
+        <button class="primary" id="mp-motd-go-btn">Pin it for everyone</button></div>`;
+    body.appendChild(card);
+    card.querySelectorAll('input, textarea').forEach((i) => i.addEventListener('keydown', (ev) => ev.stopPropagation()));
+    const v = (id) => card.querySelector(id).value.trim();
+    const sync = () => { card.querySelector('#mp-motd-url').classList.toggle('hidden', v('#mp-motd-go') !== 'link'); card.querySelector('#mp-motd-btn').classList.toggle('hidden', !v('#mp-motd-go')); };
+    card.querySelector('#mp-motd-go').onchange = sync; sync();
+    card.querySelector('#mp-motd-go-btn').onclick = async () => {
+      try { await liveEvent.setMotd({ title: v('#mp-motd-title'), text: v('#mp-motd-text'), btn: v('#mp-motd-btn'), go: v('#mp-motd-go'), url: v('#mp-motd-url') }); this.say('Message of the day pinned.'); this.render(); } catch (err) { this.say(err.message); }
+    };
+    const clr = card.querySelector('#mp-motd-clear');
+    if (clr) clr.onclick = async () => { try { await liveEvent.clearMotd(); this.say('Message of the day cleared.'); this.render(); } catch (err) { this.say(err.message); } };
   }
 
   // Owner: run an event (liveevent.js) — double tokens, a featured map / mode — for a while.

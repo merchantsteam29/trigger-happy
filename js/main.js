@@ -253,6 +253,7 @@ function renderHome() {
       : rkWeek.paid ? `Weekly reward earned ✓ · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
         : `This week ${rkWeek.n}/${RANKED_WEEKLY.matches} matches · 🪙 ${RANKED_WEEKLY.tokens} · Ranked Hour ${new Date(rkHour.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
   el.innerHTML = `
+    ${motdCard()}
     <div class="play-hero">
       <button class="hero-quick hs-tile" data-quick title="Joins the busiest public server, or starts one with bots if there are none">
         <span class="hq-kicker">Quick Play</span>
@@ -310,6 +311,16 @@ function renderHome() {
   el.querySelector('[data-ranked]').onclick = playRanked;
   el.querySelector('[data-feat]').onclick = playFeatured;
   el.querySelector('[data-motw]').onclick = playMotw;
+  const motdBtn = el.querySelector('[data-motd]');
+  if (motdBtn) motdBtn.onclick = () => {
+    const m = liveEvent.currentMotd();
+    if (!m) return;
+    if (m.go === 'link' && m.url) window.open(m.url, '_blank', 'noopener');
+    else if (m.go === 'play') quickPlay();
+    else if (m.go) showPane(m.go);
+  };
+  const motdX = el.querySelector('[data-motd-x]');
+  if (motdX) motdX.onclick = () => { store.set('motdHidden', liveEvent.currentMotd().id); showPane('play'); };
   const evBtn = el.querySelector('[data-event]');
   if (evBtn) evBtn.onclick = playEvent;
   const ins = el.querySelector('[data-install]');
@@ -366,6 +377,15 @@ async function playRanked() {
   status('');
   hostLobby({ name: `🏆 Ranked · ${me.div.name}`, mode: RANKED_MATCH.mode, map: randomMap(), max: RANKED_MATCH.max, bots: RANKED_MATCH.bots, rotate: true, vis: 'public', ranked: true });
 }
+// The owner's message of the day (liveevent.js): pinned on top of the Play screen until they change it
+// (or you hide that one).
+function motdCard() {
+  const m = liveEvent.currentMotd(store.get('motdHidden', ''));
+  if (!m) return '';
+  return `<div class="hs-tile motd-card"><span class="hs-ic">📌</span><span class="hs-txt">${m.title ? `<b>${esc(m.title)}</b>` : ''}<span>${esc(m.text)}</span></span>
+    ${m.go ? `<button class="primary sm" data-motd>${esc(m.btn || (m.go === 'link' ? 'Open' : 'Go'))}${m.go === 'link' ? ' ↗' : ''}</button>` : ''}<button class="ghost sm" data-motd-x title="Hide this message">✕</button></div>`;
+}
+
 // The owner's event (liveevent.js): a row on the home screen while it runs.
 function eventRow() {
   const e = liveEvent.live();
@@ -1828,6 +1848,7 @@ setInterval(() => {
 gameNight.init(social);
 liveEvent.init(social);
 setTokenBoost(() => liveEvent.tokenBoost()); // owner events: double / triple tokens
+liveEvent.onMotd = () => { if (!game.active && menuPane === 'play') showPane('play'); };
 liveEvent.onChange = (e, started) => {
   if (started && e) toast(`🎉 Event: ${e.name}${e.tokens > 1 ? ` · 🪙 ${e.tokens}x tokens` : ''}`);
   if (!game.active && menuPane === 'play') showPane('play');
