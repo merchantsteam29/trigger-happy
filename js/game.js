@@ -303,6 +303,9 @@ export class Game {
       const p = this.players.get(r.id);
       if (p) r.setLook(this.colorFor(p), this.teams && p.team === this.myTeam && !MODES[this.rules.mode].infect, !!MODES[this.rules.mode].teams);
       r.setBigHead(big);
+      // Costumes (costumes.js) step aside for zombies and the Juggernaut / bounty, and when switched off.
+      const mode = this.rules.mode, forced = p && ((MODES[mode].infect && p.team === 2) || (mode === 'zombies' && p.team === 2) || ((mode === 'juggernaut' || mode === 'bounty') && p.team === JUGG_TEAM));
+      r.setCostumeOff(opts.costumes === false || !!forced);
     }
     const me = this.players.get(this.myId);
     if (me) this.vm.setColor(this.colorFor(me));

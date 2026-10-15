@@ -25,7 +25,7 @@ export function giftable(slot, id) {
 export function grantable(slot, id) {
   if (slot === 'wrap') { const c = camoOf(id); return c.id === id ? c : null; }
   const c = (COSMETICS[slot] || []).find((x) => x.id === id);
-  return c && !(slot === 'nametag' && id === 'owner') ? c : null;
+  return c && !(slot === 'nametag' && id === 'owner') && !(slot === 'costume' && id === 'gigachad') ? c : null;
 }
 export const ownsItem = (slot, id) => (slot === 'wrap' ? ownsWrap(id) : isOwned(slot, id));
 

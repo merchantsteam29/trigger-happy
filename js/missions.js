@@ -7,6 +7,7 @@ import { KILL_FX_ITEMS } from './killfx.js';
 import { POSE_ITEMS } from './poses.js';
 import { NAMETAG_ITEMS } from './nametags.js';
 import { CHARM_ITEMS } from './charms.js';
+import { COSTUME_ITEMS } from './costumes.js';
 
 // Cosmetics shown on your character to other players. `free` items are owned from the start;
 // everything else is bought with tokens earned from missions (`price`).
@@ -112,6 +113,7 @@ export const COSMETICS = {
     { id: 'harvest', name: 'Harvest Moon', price: 300 },
     { id: 'mega', name: 'Mega Burst', price: 450 },
     { id: 'staffhq', name: 'Command Center', price: 400 },
+    { id: 'masquerade', name: 'Masquerade', price: 400 },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },
     { id: 's1elite', name: 'Ignition Elite (S1)', reward: true, how: 'Season 1, tier 25' },
@@ -131,12 +133,14 @@ export const COSMETICS = {
   nametag: NAMETAG_ITEMS,
   // A keychain hanging off your guns (charms.js).
   charm: CHARM_ITEMS,
+  // A whole new look instead of your soldier, same size and hitbox (costumes.js).
+  costume: COSTUME_ITEMS,
 };
-export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect', pose: 'Victory pose', nametag: 'Name tag', charm: 'Weapon charm' };
+export const SLOT_LABELS = { hat: 'Hat', hair: 'Hair', face: 'Face', back: 'Back', banner: 'Banner', killfx: 'Kill effect', pose: 'Victory pose', nametag: 'Name tag', charm: 'Weapon charm', costume: 'Costume' };
 // Slots shown as an icon card instead of your character wearing the item.
-export const ICON_SLOTS = ['killfx', 'pose', 'nametag', 'charm'];
+export const ICON_SLOTS = ['costume', 'killfx', 'pose', 'nametag', 'charm'];
 export const HAIR_COLORS = ['#3b2a1e', '#111111', '#e3c16f', '#b5462a', '#3d6fd8', '#e86fb6', '#e8e8e8'];
-export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none', pose: 'cheer', nametag: 'none', charm: 'none' };
+export const DEFAULT_COS = { hat: 'helmet', hair: 'none', hairColor: HAIR_COLORS[0], face: 'goggles', back: 'backpack', banner: 'standard', killfx: 'none', pose: 'cheer', nametag: 'none', charm: 'none', costume: 'none' };
 
 // Each mission tracks one lifetime stat and pays tokens once when finished.
 export const MISSIONS = [
@@ -350,6 +354,8 @@ export function randomCos() {
   if (Math.random() < 0.75) c.killfx = 'none'; // most bots don't have a kill effect
   if (c.nametag === 'owner' || Math.random() < 0.8) c.nametag = 'none'; // or a fancy name tag
   if (Math.random() < 0.7) c.charm = 'none';
+  const shopCostume = COSTUME_ITEMS.filter((x) => x.price);
+  c.costume = Math.random() < 0.12 ? pick(shopCostume).id : 'none'; // a few bots wear a shop costume
   c.lvl = 1 + Math.floor(Math.random() ** 2 * 40); // bots show a level too
   return c;
 }

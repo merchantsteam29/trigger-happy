@@ -28,6 +28,7 @@ const DEFAULTS = {
   partyFollow: true,  // party members join the leader's match automatically (main.js social.onLeaderLobby)
   weatherFx: true,    // rain and lightning flashes (weather.js); fog and light still change when off
   blood: true,
+  costumes: true, // show other players' costumes (costumes.js)
   killcam: true,
   colorblind: 'off',  // off | protan | deutan | tritan (see access.js)
   captions: false,    // on-screen captions for footsteps, gunfire and explosions

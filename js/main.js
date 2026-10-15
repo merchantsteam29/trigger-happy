@@ -221,6 +221,7 @@ gifts.onGift = (g) => {
 };
 // Ranked season rewards: when a season has ended, its banners.
 function claimRanked() {
+  grantRankArmor();
   for (const r of claimSeasonRewards(grantItem)) toast(`🏆 Ranked Season ${r.season}: you finished at ${r.div.icon} ${r.div.name}. Banner unlocked!`);
 }
 setTimeout(claimRanked, 2500);
@@ -403,6 +404,13 @@ async function playEvent() {
   if (s) return joinCode(s.code);
   status('');
   hostLobby({ name: `🎉 ${e.name}`, mode, map: map || randomMap(), max: 12, bots: 6, rotate: !map, vis: 'public' });
+}
+
+// Ranked division armor (costumes.js rk_*): yours once your best rating has reached that division.
+function grantRankArmor() {
+  const best = myRanked().best || 0;
+  const got = DIVISIONS.slice(1).filter((d) => best >= d.min && grantItem('costume', 'rk_' + d.id));
+  for (const d of got) toast(`${d.icon} ${d.name} Armor unlocked! Wear it in Character → Costumes.`);
 }
 
 // Today's featured mode: a public server already playing it, or a new one with bots.
@@ -1837,6 +1845,7 @@ invites.onReward = (e) => {
 if (invites.pending()) setTimeout(() => toast(`${invites.pending()} invited you: finish your first match and you both get 🪙 ${INVITE_TOKENS}!`), 1500);
 game.onRanked = (r) => {
   if (r.newDiv) game.hud.mission(r.delta >= 0 ? `Promoted to ${r.newDiv.name}` : `Dropped to ${r.newDiv.name}`, `${r.sr} SR`, 'RANKED');
+  grantRankArmor(); // a new best division may unlock its armor
   if (r.hourBonus) { addTokens(RANKED_HOUR_BONUS); chat.system(`🏆 Ranked Hour bonus: +${RANKED_HOUR_BONUS} tokens.`); }
   if (r.weeklyDone) { addTokens(RANKED_WEEKLY.tokens); game.hud.mission(`Weekly ranked reward: +${RANKED_WEEKLY.tokens} tokens`, `${RANKED_WEEKLY.matches} ranked matches this week`, 'RANKED'); }
   else if (r.week < RANKED_WEEKLY.matches) chat.system(`🏆 Ranked this week: ${r.week}/${RANKED_WEEKLY.matches} matches for 🪙 ${RANKED_WEEKLY.tokens}.`);

@@ -292,6 +292,21 @@ Switching holsters your current weapon before drawing the next (heavier weapons 
 immediately and then puts your previous weapon back in your hands. When you throw your last grenade you go back to
 the weapon you had out before.
 
+## Costumes
+
+A **costume** changes your whole look, not just a hat: same size and the same hitbox, so it's fair. It replaces your hat,
+hair, face and back items (your banner, kill effect, name tag and charm stay), and your color (your team color in team
+modes) always shows on it somewhere. Pick one in **Character → Costumes**, or try them on in the **Shop** (Costumes).
+
+- **In the shop:** Skeleton (glows a little in the dark), Cyber Samurai, Astronaut Cat, Party Llama, Junk Robot, Lava
+  Golem, Ice Golem, Banana, Ninja, Mummy and Deep Sea Diver (🪙 800 to 1,200). Friends can gift these.
+- **Giveaways only:** Impostor, Bug Knight, Cube Hero, Blood Machine and Hellwalker can't be bought: only the owner
+  hands them out.
+- **Ranked armor:** Contender, Veteran, Elite, Master and Legend Armor, each yours once your best rating reaches that
+  division. The higher the division, the fancier it is.
+- Zombies, the Juggernaut and the bounty target keep their own look, and Prop Hunt props are still props.
+  **Settings → Show other players' costumes** turns them off for you.
+
 ## Kill effects
 
 A **kill effect** plays where your victim stood when you get a kill, and everyone in the match sees it. Buy them in the
@@ -358,7 +373,7 @@ and players who are out for good (Battle Royale, Last Man Standing, a Tournament
 Your **banner** is the card shown behind your name on the death screen of everyone you kill
 ("**[BOT] Razor** — KILLED YOU", with the weapon and a headshot tag). Pick one in **Character → Banner**:
 Standard and Carbon are free; Tiger, Woodland / Arctic Camo, Ocean, Sunset, Hazard, Bloodbath, Neon Grid, Code Rain,
-Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst and Command Center cost tokens (several are animated). Some can only be
+Inferno, Galaxy, Dragon Scale, Rainbow, Solid Gold, Diamond, Candy Stripe, Trigger Happy, Thunderstorm, Vaporwave, Overdrive, Harvest Moon, Mega Burst, Command Center and Masquerade cost tokens (several are animated). Some can only be
 earned: season pass banners, a banner for each holiday event, ranked season banners and **Top Clan**. Bots wear random ones.
 
 ## Levels, daily rewards & challenges

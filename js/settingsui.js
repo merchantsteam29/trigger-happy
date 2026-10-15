@@ -60,6 +60,7 @@ const TABS = [
     { key: 'recordClips', label: 'Record highlight clips', hint: 'Off by default. Records the game screen (never your camera) to keep a clip of your best moment each match. Your browser may show a recording icon while it is on. Computers only', type: 'check' },
     { key: 'killcam', label: 'Kill cam', hint: 'When you die, replay the last few seconds from your killer\'s eyes (any key or tap skips it)', type: 'check' },
     { key: 'blood', label: 'Blood effects', hint: 'Off: hits and kills show grey sparks instead of red blood', type: 'check' },
+    { key: 'costumes', label: 'Show other players\' costumes', hint: 'Off: everyone looks like a normal soldier to you', type: 'check' },
     { key: 'showFps', label: 'Show FPS counter', type: 'check' },
     { key: 'partyFollow', label: 'Follow my party leader', hint: 'In a party, join the leader\'s match automatically when they start or join one', type: 'check' },
     { key: 'weatherFx', label: 'Weather effects', hint: 'Rain and lightning flashes. Off keeps only the fog and darker light', type: 'check' },
@@ -347,7 +348,7 @@ export class SettingsUI {
       const cos = getCos();
       const t = this.tryOn;
       const shown = t ? { ...cos, [t.slot]: t.id } : cos;
-      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['nametag', 'Name tags'], ['charm', 'Weapon charms'], ['spray', 'Spray'], ['card', 'Player card'], ['wraps', 'Weapon wraps']];
+      const TABS = [['costume', 'Costumes'], ['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['nametag', 'Name tags'], ['charm', 'Weapon charms'], ['spray', 'Spray'], ['card', 'Player card'], ['wraps', 'Weapon wraps']];
       if (!TABS.some(([k]) => k === this.czTab)) this.czTab = t ? t.slot : 'hat';
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
@@ -421,7 +422,7 @@ export class SettingsUI {
         panel.querySelectorAll('select').forEach((s) => { s.onchange = upd; });
         panel.querySelector('[data-save]').onclick = () => ctx.saveCard && ctx.saveCard(p, extra);
       } else if (ICON_SLOTS.includes(tab)) {
-        const hint = { killfx: 'Plays where your victim stood when you get a kill. Everyone in the match sees it.', pose: 'When you\'re the match MVP, everyone sees you do this on the end screen.', nametag: 'The name above your head. In team modes names show your team color instead.', charm: 'Hangs off every gun you hold, for you and everyone else to see. It swings when you move and shoot.' }[tab] || '';
+        const hint = { costume: 'Your whole look changes (same size, so it\'s fair). It replaces your hat, hair, face and back items; your color still shows on it. Some are giveaways from the owner, and the armor comes from ranked.', killfx: 'Plays where your victim stood when you get a kill. Everyone in the match sees it.', pose: 'When you\'re the match MVP, everyone sees you do this on the end screen.', nametag: 'The name above your head. In team modes names show your team color instead.', charm: 'Hangs off every gun you hold, for you and everyone else to see. It swings when you move and shoot.' }[tab] || '';
         panel.innerHTML = `<div class="cz-hint">${hint}</div>
           <div class="cz-grid cz-icon-grid">${COSMETICS[tab].map((c) => {
             const st = state(tab, c);

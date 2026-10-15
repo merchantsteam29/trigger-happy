@@ -11,7 +11,7 @@ import { liveEvent } from './liveevent.js';
 // with Buy / Wear / Gift to a friend. Also: send tokens to a friend, and gifts you've received.
 
 const CATS = [
-  ['all', 'Everything', '🛒'], ['hat', 'Hats', '🎩'], ['hair', 'Hair', '💇'], ['face', 'Face', '🕶'], ['back', 'Back', '🎒'],
+  ['all', 'Everything', '🛒'], ['costume', 'Costumes', '🦸'], ['hat', 'Hats', '🎩'], ['hair', 'Hair', '💇'], ['face', 'Face', '🕶'], ['back', 'Back', '🎒'],
   ['banner', 'Banners', '🏳'], ['killfx', 'Kill effects', '💥'], ['nametag', 'Name tags', '🏷'], ['charm', 'Weapon charms', '🔑'], ['pose', 'Victory poses', '🏆'], ['wrap', 'Weapon wraps', '🎨'], ['gifts', 'Gifts', '🎁'],
 ];
 const items = (cat) => {

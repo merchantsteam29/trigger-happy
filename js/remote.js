@@ -4,6 +4,7 @@ import { overlap } from './physics.js';
 import { RoundedBoxGeometry as RoundedBox } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { buildGun, modelQuality, mergeStatic } from './models.js';
 import { buildCosmetics } from './cosmetics.js';
+import { buildCostume } from './costumes.js';
 import { DEFAULT_COS } from './missions.js';
 
 // Plain boxes on phones (see modelQuality).
@@ -165,6 +166,14 @@ export class RemotePlayer {
     this.armsR = { sh: this.shoulderR, up: new Limb(this.limbs, bodyMat, 0.14), fo: new Limb(this.limbs, bodyMat, 0.12), hand: mesh(new THREE.BoxGeometry(0.09, 0.09, 0.1), gloveMat, 0, 0, 0, this.limbs) };
 
     mergeStatic(this.root); // body parts per bone -> one mesh per material
+    // The normal body, hidden while a costume (costumes.js) is on, and the limbs' own materials.
+    this.baseParts = [];
+    this.root.traverse((o) => { if (o.isMesh) this.baseParts.push(o); });
+    this.limbParts = [
+      ...this.legs.flatMap((l) => [[l.thigh.mesh, 'leg'], [l.shin.mesh, 'leg'], [l.foot, 'foot']]),
+      ...[this.armsL, this.armsR].flatMap((a) => [[a.up.mesh, 'arm'], [a.fo.mesh, 'arm'], [a.hand, 'hand']]),
+    ].map(([m, k]) => ({ m, k, base: m.material }));
+    this.costumeOff = false;
     this.cos = null;
     this.setCosmetics(cos);
 
@@ -198,9 +207,23 @@ export class RemotePlayer {
   // New name and/or staff role (proved to the host mid-lobby, or an impostor renamed).
   setIdentity(name, role) {
     if (name === this.name && role === this.role) return;
+    const wasRole = this.role;
     this.name = name;
     this.role = role;
     this.rebuildTag();
+    if (wasRole !== role && this.cos && this.cos.costume === 'gigachad') this.applyCosmetics(); // the owner's costume shows once verified
+  }
+
+  // Costume to show: none in modes with a forced look (setCostumeOff), and the owner's only on the verified owner.
+  costumeId() {
+    const c = this.cos && this.cos.costume;
+    if (!c || c === 'none' || this.costumeOff || (c === 'gigachad' && this.role !== 'owner')) return null;
+    return c;
+  }
+  setCostumeOff(v) {
+    if (!!v === this.costumeOff) return;
+    this.costumeOff = !!v;
+    if (this.cos) this.applyCosmetics();
   }
 
   rebuildTag() {
@@ -224,14 +247,33 @@ export class RemotePlayer {
     const tagWas = this.cos && this.cos.nametag;
     this.cos = cos;
     if (this.tag && tagWas !== cos.nametag) this.rebuildTag();
+    this.applyCosmetics();
+  }
+
+  // Builds what they wear: hat / hair / face / back items, or a costume instead of the whole body.
+  applyCosmetics() {
+    const cos = this.cos;
     if (this.guns) for (const g of Object.values(this.guns)) if ((g.userData.charm ? g.userData.charmId : 'none') !== (cos.charm || 'none')) { attachCharm(g, cos.charm); g.userData.charmId = cos.charm; }
-    for (const g of [this.cosHead, this.cosBack, this.hatFly && this.hat]) {
+    for (const g of [this.cosHead, this.cosBack, this.hatFly && this.hat, ...(this.costumeParts || [])]) {
       if (!g) continue;
       if (g.parent) g.parent.remove(g);
       g.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     }
     this.hatFly = null;
-    const { head, back, hat } = buildCosmetics(cos, this.bodyMat);
+    this.costumeParts = null;
+    const cid = this.costumeId(), costume = cid && buildCostume(cid, this.bodyMat);
+    for (const m of this.baseParts) m.visible = !costume;
+    for (const l of this.limbParts) l.m.material = costume && costume.mats[l.k] ? costume.mats[l.k] : l.base;
+    if (costume) {
+      for (const [g, bone] of [[costume.hips, this.hips], [costume.spine, this.spine], [costume.head, this.neck]]) {
+        mergeStatic(g);
+        if (!modelQuality.remoteShadows) g.traverse((o) => { o.castShadow = false; });
+        bone.add(g);
+      }
+      this.costumeParts = [costume.hips, costume.spine, costume.head];
+    }
+    // A costume replaces the hat, hair, face and back items (banner, kill effect, charm and the rest stay).
+    const { head, back, hat } = buildCosmetics(costume ? { ...cos, hat: 'none', hair: 'none', face: 'none', back: 'none' } : cos, this.bodyMat);
     this.hat = hat;
     mergeStatic(head);
     mergeStatic(back);
