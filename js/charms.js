@@ -15,6 +15,7 @@ export const CHARM_ITEMS = [
   { id: 'bullet', name: 'Golden Bullet', price: 200, icon: '🔸', desc: 'One shot, one charm' },
   { id: 'skull', name: 'Skull', price: 250, icon: '💀', desc: 'For the tryhards' },
   { id: 'gem', name: 'Diamond', price: 300, icon: '💎', desc: 'Sparkles in the light' },
+  { id: 'crown', name: 'Crown', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'A little golden crown with a red gem' },
 ];
 export const CHARM_IDS = CHARM_ITEMS.map((c) => c.id);
 
@@ -68,6 +69,10 @@ export function buildCharm(id) {
     add(g, new THREE.SphereGeometry(s * 0.8, 12, 10), 'white', 0, y + s * 0.15, 0);
     add(g, new THREE.BoxGeometry(s * 0.9, s * 0.45, s * 0.8), 'white', 0, y - s * 0.6, 0);
     for (const x of [-0.32, 0.32]) add(g, new THREE.SphereGeometry(s * 0.22, 8, 6), 'black', x * s, y + s * 0.1, -s * 0.66);
+  } else if (id === 'crown') {
+    add(g, new THREE.CylinderGeometry(s * 0.8, s * 0.7, s * 0.5, 12), 'gold', 0, y, 0);
+    for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; add(g, new THREE.ConeGeometry(s * 0.18, s * 0.6, 4), 'gold', Math.cos(a) * s * 0.65, y + s * 0.5, Math.sin(a) * s * 0.65); }
+    add(g, new THREE.SphereGeometry(s * 0.2, 8, 6), 'red', 0, y, -s * 0.78);
   } else if (id === 'gem') {
     add(g, new THREE.OctahedronGeometry(s * 0.95), 'gem', 0, y, 0).scale.set(0.8, 1.2, 0.8);
   }

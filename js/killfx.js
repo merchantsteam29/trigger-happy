@@ -16,6 +16,9 @@ export const KILL_FX_ITEMS = [
   { id: 'blackhole', name: 'Black Hole', price: 500, icon: '🌀', desc: 'Everything gets sucked into a void' },
   { id: 'sakura', name: 'Sakura Burst', price: 350, icon: '🌸', desc: 'Cherry blossom petals swirl around' },
   { id: 'angel', name: 'Angel Wings', price: 450, icon: '😇', desc: 'A halo and wings float up' },
+  { id: 'glitchdel', name: 'Glitch Delete', price: 400, icon: '📺', desc: 'They glitch into pixels and vanish' },
+  { id: 'snowstorm', name: 'Snowstorm', price: 300, icon: '❄️', desc: 'A puff of snowflakes swirls out' },
+  { id: 'disco', name: 'Disco Ball', price: 450, icon: '🪩', desc: 'Colored lights flash and sparkle' },
   { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one', icon: '♛', desc: 'A golden crown rises in a burst of gold and purple' },
 ];
 
@@ -88,6 +91,23 @@ export function playKillFx(fx, id, pos) {
         P(_v.set(pos.x + wx, pos.y + wy, pos.z + rnd(0.15)).clone(), new THREE.Vector3(s * 0.2, 1.1, 0), pick(['#ffffff', '#f2f4ff', '#e6ecff']), 0.1, 1.8, 0);
       }
       fx.flashAt(pos, '#fff6cc', 12, 0.3);
+      break;
+    }
+    case 'glitchdel': {
+      // squares stretched sideways in red / cyan / white, jittering, then a second "delete" burst
+      for (let i = 0; i < 40; i++) P(_v.set(pos.x + rnd(0.8), pos.y + rnd(1.7), pos.z + rnd(0.8)).clone(), new THREE.Vector3(rnd(6), rnd(0.6), rnd(6)), pick(['#ff2a5a', '#2ae8ff', '#ffffff', '#141414']), 0.12, 0.35, 0);
+      setTimeout(() => { for (let i = 0; i < 24; i++) P(_v.set(pos.x + rnd(0.5), pos.y + rnd(1.4), pos.z + rnd(0.5)).clone(), new THREE.Vector3(rnd(1), rnd(1), rnd(1)), pick(['#2ae8ff', '#ff2a5a']), 0.16, 0.25, 0); fx.flashAt(pos, '#2ae8ff', 10, 0.1); }, 220);
+      break;
+    }
+    case 'snowstorm':
+      for (let i = 0; i < 50; i++) { const a = Math.random() * Math.PI * 2; P(_v.set(pos.x, pos.y + rnd(1.2), pos.z).clone(), new THREE.Vector3(Math.cos(a) * (2 + Math.random() * 2), 0.5 + Math.random() * 1.5, Math.sin(a) * (2 + Math.random() * 2)), pick(['#ffffff', '#e8f6ff', '#cfeaff']), 0.08, 2.0, 1.4); }
+      fx.flashAt(pos, '#dff4ff', 10, 0.2);
+      break;
+    case 'disco': {
+      // sparkles in rings of color, and the light changing color a few times
+      const cols = ['#ff2fd8', '#2ae8ff', '#ffe14a', '#39ff6a', '#ff7a1a'];
+      for (let i = 0; i < 36; i++) { const a = (i / 36) * Math.PI * 2; P(_v.set(pos.x, pos.y + 0.6, pos.z).clone(), new THREE.Vector3(Math.cos(a) * 4, rnd(1.5), Math.sin(a) * 4), cols[i % cols.length], 0.08, 0.9, 0); }
+      cols.slice(0, 4).forEach((c, i) => setTimeout(() => fx.flashAt(pos, c, 16, 0.15), i * 160));
       break;
     }
     case 'gigachad': {

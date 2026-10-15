@@ -419,7 +419,7 @@ export class Game {
   onAction(act) {
     if (!act || !this.me.alive || this.matchOver) return;
     const n = { slot1: 0, slot2: 1, slot3: 2, slot4: 3 }[act];
-    if (n !== undefined && this.emoteOpen) this.doEmote(n); // emote bar open: 1–4 pick an emote
+    if (n !== undefined && this.emoteOpen) this.doEmote(n); // emote bar open: 1–5 pick an emote (5: see toggleEmotes)
     else if (n !== undefined) this.switchSlot(n);
     else if (act === 'emote') this.toggleEmotes();
     else if (act === 'swap') this.swapLast();
@@ -521,7 +521,8 @@ export class Game {
     const mine = mvp.id === this.myId, r = this.remotes.get(mvp.id);
     const cos = mine ? getCos() : r && r.cos;
     if (!cos) return;
-    const pose = POSE_IDS.includes(cos.pose) ? cos.pose : 'cheer';
+    const mvpRole = (this.players.get(mvp.id) || {}).role;
+    const pose = POSE_IDS.includes(cos.pose) && !(cos.pose === 'throne' && mvpRole !== 'owner') ? cos.pose : 'cheer'; // the throne is the owner's
     let spot = null;
     for (const s of [...spawns].sort(() => Math.random() - 0.5)) {
       const fx = -Math.sin(s.yaw), fz = -Math.cos(s.yaw);
@@ -2149,6 +2150,7 @@ export class Game {
       this.emoteEl.innerHTML = EMOTES.map((e, i) => `<button data-em="${i}"><kbd>${i + 1}</kbd><span>${e.icon}</span><small>${e.name}</small></button>`).join('');
       this.emoteEl.querySelectorAll('[data-em]').forEach((b) => { b.onclick = () => this.doEmote(Number(b.dataset.em)); });
       document.getElementById('hud').appendChild(this.emoteEl);
+      addEventListener('keydown', (e) => { if (e.code === 'Digit5' && this.emoteOpen && this.active) this.doEmote(4); }); // the 5th emote (no weapon slot 5)
     }
     this.emoteOpen = show ? performance.now() + 3500 : 0;
     this.emoteEl.classList.toggle('hidden', !show);

@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 
-// Emotes: B opens the bar, 1–4 picks one (game.js). Everyone else sees your character do it
+// Emotes: B opens the bar, 1–5 picks one (game.js). Everyone else sees your character do it
 // (remote.js) with an emoji bubble over your head. Sent as an 'fx' message; 3 s cooldown.
 export const EMOTES = [
   { id: 'wave', icon: '👋', name: 'Wave' },
   { id: 'dance', icon: '💃', name: 'Dance' },
   { id: 'salute', icon: '🫡', name: 'Salute' },
   { id: 'laugh', icon: '😂', name: 'Laugh' },
+  { id: 'flex', icon: '💪', name: 'Flex' },
 ];
 export const EMOTE_IDS = EMOTES.map((e) => e.id);
 export const EMOTE_TIME = 2.6;
@@ -18,6 +19,7 @@ export function emoteHand(id, side, t) {
   if (id === 'wave') return side > 0 ? [0.36, 1.78 + Math.sin(t * 9) * 0.04, -0.08 + Math.sin(t * 9) * 0.14] : null;
   if (id === 'salute') return side > 0 ? [0.1, 1.66, -0.2] : null;
   if (id === 'dance') return [side * 0.32, 1.45 + Math.sin(t * 8 + (side > 0 ? 0 : Math.PI)) * 0.3, -0.22];
+  if (id === 'flex') return [side * 0.44, 1.62 + Math.sin(t * 6) * 0.04, 0.02];
   if (id === 'laugh') return [side * 0.16, 1.0 + Math.abs(Math.sin(t * 14)) * 0.04, -0.24];
   return null;
 }

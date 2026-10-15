@@ -22,6 +22,9 @@ export const SKIN_ITEMS = [
   { id: 'squirtgun', gun: 'smg', name: 'Squirt Gun', price: 800, icon: '💦', desc: 'Bright plastic with a water tank on top.' },
   { id: 'candycane', gun: 'sniper', name: 'Candy Cane Sniper', price: 900, icon: '🍬', desc: 'A striped candy barrel and peppermint trim.' },
   { id: 'raygun', gun: 'pistol', name: 'Retro Ray Gun', price: 900, icon: '🛸', desc: 'A classic sci-fi ray gun with glowing rings.' },
+  { id: 'steampunk', gun: 'revolver', name: 'Steampunk Revolver', price: 1000, icon: '⚙', desc: 'Brass and copper, gears and pipes.' },
+  { id: 'chicken', gun: 'knife', name: 'Rubber Chicken', price: 700, icon: '🐔', desc: 'Slap them with a rubber chicken.' },
+  { id: 'portalgun', gun: 'pistol', name: 'Portal Gun', reward: true, handout: true, how: HANDOUT, icon: '🌀', desc: 'White with a glowing blue tip (goes with Cube Hero).' },
   { id: 'coinrevolver', gun: 'revolver', name: 'Marksman Revolver', reward: true, handout: true, how: HANDOUT, icon: '🪙', desc: 'A blue machine revolver with a coin on top (goes with Blood Machine).' },
   { id: 'shieldsaw', gun: 'shotgun', name: 'Shield Saw Shotgun', reward: true, handout: true, how: HANDOUT, icon: '🪚', desc: 'Green armor plating and a saw blade under the barrel (goes with Hellwalker).' },
   { id: 'gigachad', gun: 'ar', name: 'GIGACHAD Rifle', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'Solid gold with a crown and red gems.' },
@@ -147,6 +150,45 @@ const SKINS = {
       for (const s of [-1, 1]) box(g, red, 0.005, 0.07, 0.06, s * 0.035, 0.09, 0.0, 0, 0, s * 0.4); // fins
       box(g, red, 0.005, 0.07, 0.06, 0, 0.11, 0.0);
       rbox(g, red, 0.035, 0.1, 0.045, 0, -0.04, 0.03, -0.3); // grip
+    },
+  },
+  steampunk: {
+    build(g) {
+      const brass = mat('#c8963a', { metalness: 0.4, roughness: 0.35 }), copper = mat('#b8643a', { metalness: 0.4, roughness: 0.35 }), wood = mat('#5a3420', { roughness: 0.7 }), glass = glow('#ffb84a', 1.2);
+      rbox(g, brass, 0.045, 0.06, 0.13, 0, 0.042, -0.02); // frame
+      cyl(g, copper, 0.02, 0.24, 0, 0.06, -0.19, 12); cyl(g, brass, 0.026, 0.03, 0, 0.06, -0.3, 12); // barrel and muzzle ring
+      for (const z of [-0.12, -0.2]) cyl(g, brass, 0.024, 0.012, 0, 0.06, z, 12); // bands
+      cyl(g, copper, 0.008, 0.2, 0.03, 0.09, -0.15, 8); // a pipe along the top
+      const gear = add3(g, new THREE.TorusGeometry(0.03, 0.008, 4, 10), brass, 0.035, 0.03, 0.0); gear.rotation.y = Math.PI / 2; // gear on the side
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; box(g, brass, 0.008, 0.012, 0.012, 0.035, 0.03 + Math.cos(a) * 0.04, Math.sin(a) * 0.04); }
+      sphere(g, glass, 0.014, 0, 0.1, -0.05, 8, 6); // a little glowing gauge
+      const c = g.getObjectByName('cyl');
+      if (c) { cyl(c, copper, 0.034, 0.064, 0, 0, 0, 14); for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; box(c, brass, 0.006, 0.006, 0.066, Math.cos(a) * 0.034, Math.sin(a) * 0.034, 0); } }
+      rbox(g, wood, 0.044, 0.12, 0.056, 0, -0.05, 0.045, -0.35); // wooden grip
+      box(g, brass, 0.012, 0.04, 0.018, 0, 0.075, 0.045, 0.6); // hammer
+    },
+  },
+  chicken: {
+    build(g) {
+      const yellow = mat('#ffd23a', { roughness: 0.5 }), red = mat('#e0283c', { roughness: 0.5 }), orange = mat('#ff8a1a'), black = mat('#111');
+      const body = sphere(g, yellow, 0.045, 0, 0, -0.02, 12, 10); body.scale.set(0.8, 0.9, 1.4); // body (the handle)
+      cyl(g, yellow, 0.016, 0.2, 0, 0, -0.17, 10); // long neck
+      const head = sphere(g, yellow, 0.03, 0, 0.01, -0.29, 10, 8); head.scale.set(0.9, 1, 1.1);
+      for (let i = 0; i < 3; i++) sphere(g, red, 0.012, 0, 0.04, -0.27 - i * 0.015, 6, 4); // comb
+      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.04, 6), orange); beak.rotation.x = -Math.PI / 2; beak.position.set(0, 0.005, -0.33); g.add(beak);
+      for (const s of [-1, 1]) sphere(g, black, 0.005, s * 0.022, 0.018, -0.3, 6, 4); // eyes
+      for (const s of [-1, 1]) cyl(g, orange, 0.006, 0.08, s * 0.02, -0.04, 0.06, 6); // legs out the back
+    },
+  },
+  portalgun: {
+    build(g) {
+      const white = mat('#f4f4f4', { roughness: 0.3 }), black = mat('#1a1a1a'), blue = glow('#3fa9ff', 2.2);
+      rbox(g, white, 0.07, 0.08, 0.2, 0, 0.05, -0.04); // body
+      box(g, black, 0.072, 0.03, 0.06, 0, 0.06, -0.02); // black band
+      cyl(g, black, 0.03, 0.08, 0, 0.05, -0.17, 12); cyl(g, blue, 0.022, 0.04, 0, 0.05, -0.22, 12); // glowing tip
+      for (const s of [-1, 1]) { box(g, black, 0.008, 0.008, 0.08, s * 0.03, 0.08, -0.2); box(g, black, 0.008, 0.008, 0.08, s * 0.03, 0.02, -0.2); } // the claws
+      cyl(g, blue, 0.012, 0.1, 0, 0.1, -0.02, 8); // the glowing top tube
+      rbox(g, white, 0.035, 0.1, 0.045, 0, -0.04, 0.03, -0.3); // grip
     },
   },
   coinrevolver: {

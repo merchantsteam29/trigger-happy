@@ -16,6 +16,9 @@ const STYLES = {
   pixel: { stops: ['#ffffff', '#ffffff'], glow: '#000000', blur: 0, font: '900 32px "Courier New", monospace', pixel: true },
   lava: { stops: ['#ffe28a', '#ff7a1a', '#c81a0a'], glow: '#ff4a12', blur: 16, drips: '#ff5a12', anim: 'flicker' },
   code: { stops: ['#d8ffe0', '#3aff7a', '#1a9a3a'], glow: '#3aff7a', blur: 14, font: '700 28px "Courier New", monospace', anim: 'flicker' },
+  candy: { stops: [...Array(7)].flatMap(() => ['#ffffff', '#ffffff', '#ff4f8b', '#ff4f8b']), glow: '#ff9ac8', blur: 10, sharp: true },
+  shadow: { stops: ['#2a2a2e', '#08080a'], glow: '#ff1a2a', blur: 18, stroke: '#ff2a3a' },
+  hearts: { stops: ['#ffe0ee', '#ff6aa8', '#ff2f6a'], glow: '#ff6aa8', blur: 12, sparks: '#ff6aa8', spark: '♥' },
   owner: { stops: ['#fffbe0', '#ffd23a', '#ff9d00'], glow: '#ffcc33', blur: 20, sparks: '#fff3a0', crown: true, anim: 'shimmer' },
 };
 
@@ -33,6 +36,9 @@ export const NAMETAG_ITEMS = [
   item('pixel', 'Pixel', 300, 'Blocky 8-bit letters'),
   item('lava', 'Lava', 400, 'Hot letters dripping lava'),
   item('code', 'Code', 400, 'Glowing green computer letters'),
+  item('candy', 'Candy Stripe', 300, 'Pink and white stripes'),
+  item('shadow', 'Shadow', 450, 'Black letters with a red glow'),
+  item('hearts', 'Hearts', 350, 'Pink, with hearts all around'),
   { id: 'owner', name: 'Owner', reward: true, how: 'Only GIGACHAD can wear this', desc: 'Shimmering gold with a crown', get icon() { return tagIcon('owner'); } },
 ];
 export const NAMETAG_IDS = NAMETAG_ITEMS.map((x) => x.id);
@@ -56,7 +62,7 @@ export function drawName(g, name, x, y, id, color) {
   }
   if (st.sparks) {
     g.fillStyle = st.sparks;
-    for (let i = 0; i < 9; i++) { const a = i * 2.39, r = 70 + (i % 3) * 24; g.globalAlpha = 0.5 + (i % 2) * 0.4; g.fillText('✦', x + Math.cos(a) * r, y + Math.sin(a) * 16 + (i % 2 ? -14 : 12)); }
+    for (let i = 0; i < 9; i++) { const a = i * 2.39, r = 70 + (i % 3) * 24; g.globalAlpha = 0.5 + (i % 2) * 0.4; g.fillText(st.spark || '✦', x + Math.cos(a) * r, y + Math.sin(a) * 16 + (i % 2 ? -14 : 12)); }
     g.globalAlpha = 1;
     g.font = '700 30px Rubik, sans-serif';
   }
@@ -73,8 +79,9 @@ export function drawName(g, name, x, y, id, color) {
     for (let i = 0; i < 6; i++) { const dx = x - w0 / 2 + ((i + 0.5) / 6) * w0, len = 6 + ((i * 7) % 5) * 3; g.fillRect(dx - 2, y + 10, 4, len); g.beginPath(); g.arc(dx, y + 10 + len, 3, 0, Math.PI * 2); g.fill(); }
   }
   const w = Math.max(40, g.measureText(name).width);
-  const grad = g.createLinearGradient(0, y - 15, 0, y + 15);
-  st.stops.forEach((c, i) => grad.addColorStop(i / Math.max(1, st.stops.length - 1), c));
+  const grad = st.sharp ? g.createLinearGradient(x - 90, y - 30, x + 90, y + 30) : g.createLinearGradient(0, y - 15, 0, y + 15); // stripes run diagonally
+  if (st.sharp) st.stops.forEach((c, i) => grad.addColorStop(Math.floor(i / 2) * 2 / st.stops.length + (i % 2) * (2 / st.stops.length - 0.001), c)); // hard-edged stripes
+  else st.stops.forEach((c, i) => grad.addColorStop(i / Math.max(1, st.stops.length - 1), c));
   g.shadowColor = st.glow;
   g.shadowBlur = st.blur;
   g.fillStyle = grad;

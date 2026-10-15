@@ -1,4 +1,4 @@
-import { poseHand, poseBody } from './poses.js';
+import { poseHand, poseBody, poseProp } from './poses.js';
 import * as THREE from 'three';
 import { overlap } from './physics.js';
 import { RoundedBoxGeometry as RoundedBox } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -217,6 +217,9 @@ export class RemotePlayer {
     if (wasRole !== role && this.guns && Object.keys(this.guns).length) this.setMods(this.mods); // and the owner's gun skin / wrap
   }
 
+  // Their weapon charm (the owner's crown only on the verified owner).
+  charmId() { const c = (this.cos && this.cos.charm) || 'none'; return c === 'crown' && this.role !== 'owner' ? 'none' : c; }
+
   // Costume to show: none in modes with a forced look (setCostumeOff), and the owner's only on the verified owner.
   costumeId() {
     const c = this.cos && this.cos.costume;
@@ -257,7 +260,7 @@ export class RemotePlayer {
   // Builds what they wear: hat / hair / face / back items, or a costume instead of the whole body.
   applyCosmetics() {
     const cos = this.cos;
-    if (this.guns) for (const g of Object.values(this.guns)) if ((g.userData.charm ? g.userData.charmId : 'none') !== (cos.charm || 'none')) { attachCharm(g, cos.charm); g.userData.charmId = cos.charm; }
+    if (this.guns) for (const g of Object.values(this.guns)) if ((g.userData.charm ? g.userData.charmId : 'none') !== this.charmId()) { attachCharm(g, this.charmId()); g.userData.charmId = this.charmId(); }
     for (const g of [this.cosHead, this.cosBack, this.hatFly && this.hat, ...(this.costumeParts || [])]) {
       if (!g) continue;
       if (g.parent) g.parent.remove(g);
@@ -297,7 +300,7 @@ export class RemotePlayer {
       const sk = skinFor(this.cos && this.cos.skins, id), owner = this.role === 'owner';
       const m = this.mods[id] && camoOf(this.mods[id].camo).owner && !owner ? { ...this.mods[id], camo: 'default' } : this.mods[id];
       const g = buildGun(id, m, sk && (!sk.owner || owner) ? sk.id : null);
-      attachCharm(g, this.cos && this.cos.charm);
+      attachCharm(g, this.charmId());
       g.userData.charmId = this.cos && this.cos.charm;
       g.scale.setScalar(1.25);
       if (!modelQuality.remoteShadows) g.traverse((o) => { o.castShadow = false; });
@@ -501,6 +504,7 @@ export class RemotePlayer {
         this.poseT = (this.poseT || 0) + dt;
         const b = this.poseB = poseBody(this.poseId, this.poseT);
         this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw));
+        if (b.pitch) this.root.quaternion.multiply(_q.setFromAxisAngle(XAXIS, b.pitch)); // lying down (push-ups)
         this.root.position.y += b.y;
       }
     }
@@ -593,6 +597,7 @@ export class RemotePlayer {
       let ty = Math.max(0, Math.cos(ph)) * lift + 0.06;
       let tx = fx + lx * sw, tz = fz + lz * sw;
       if (this.air > 0.01) { ty += this.air * (leg.side > 0 ? 0.35 : 0.2); tz += this.air * (leg.side > 0 ? -0.15 : 0.12); }
+      if (this.poseId && this.poseB && this.poseB.foot) { tx += this.poseB.foot[0]; ty += this.poseB.foot[1]; tz += this.poseB.foot[2]; } // e.g. sitting (poses.js)
       if (this.deathT > 0) { ty += dying * 0.2; tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
       this.root.localToWorld(_b.set(tx, ty, tz));
       leg.hip.getWorldPosition(_a);
@@ -680,6 +685,9 @@ export class RemotePlayer {
     this.poseId = id || null;
     this.poseT = 0;
     this.gunHolder.visible = !id;
+    if (this.poseProp) { this.poseProp.parent.remove(this.poseProp); this.poseProp = null; }
+    const p = id && poseProp(id); // a guitar, a throne… (poses.js)
+    if (p) { (p.bone === 'spine' ? this.spine : this.root).add(p.g); this.poseProp = p.g; }
   }
 
   // Big Heads mode: a giant head (and matching hitbox), name tag lifted above it.

@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.33', name: 'Costume Party 2', banner: 'sakura', notes: [
+  { v: '2026.10.15.34', name: 'Costume Party 2', banner: 'sakura', notes: [
     '## Costumes',
     'New giveaways: Vault Kid, Hooded Assassin and Grin Skeleton, handed out by the owner',
     '## Gun Skins',
@@ -20,6 +20,18 @@ export const UPDATES = [
     'New: Pixel (8-bit letters), Lava (dripping) and Code (green computer letters)',
     '## Kill Effects',
     'New: Sakura Burst (petals swirl around) and Angel Wings (a halo and wings rise)',
+    '## More Costumes',
+    'Giveaways: Block Steve, Pink Puffball and Jelly Bean Racer',
+    'New costume styles in the shop: Gold Skeleton, Neon Ninja, Shadow Samurai and Dark Astronaut',
+    '## More Gun Skins',
+    'Steampunk Revolver and Rubber Chicken (knife) in the shop, Portal Gun as a giveaway',
+    '## More Banners, Name Tags and Kill Effects',
+    'Banners: Pixel Arcade, Glitch and Checkered Flag',
+    'Name tags: Candy Stripe, Shadow and Hearts',
+    'Kill effects: Glitch Delete, Snowstorm and Disco Ball',
+    '## Poses and Emotes',
+    'New victory poses: Push-ups and Guitar Solo',
+    'New emote: Flex (press 5 in the emote bar)',
   ] },
   { v: '2026.10.15.32', name: 'Armory', banner: 'armory', notes: [
     '## Gun Skins',

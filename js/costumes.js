@@ -33,6 +33,11 @@ export const COSTUME_ITEMS = [
   { id: 'chicken', name: 'Chicken', price: 900, icon: '🐔', desc: 'Flaps its wings when you emote.' },
   { id: 'toaster', name: 'Toaster Bot', price: 1000, icon: '🍞', desc: 'A walking toaster. Toast pops up when you emote.' },
   { id: 'icecream', name: 'Ice Cream Cone', price: 900, icon: '🍦', desc: 'A waffle cone body, and your head is the scoop.' },
+  // Styles: another look for a costume
+  { id: 'goldskeleton', name: 'Gold Skeleton', price: 1400, icon: '💀', desc: 'A Skeleton style: solid gold bones.' },
+  { id: 'neonninja', name: 'Neon Ninja', price: 1300, icon: '🥷', desc: 'A Ninja style: glowing pink edges.' },
+  { id: 'shadowsamurai', name: 'Shadow Samurai', price: 1500, icon: '⛩', desc: 'A Cyber Samurai style: red neon.' },
+  { id: 'darkastronaut', name: 'Dark Astronaut', price: 1400, icon: '🌑', desc: 'An Astronaut style: a black suit and a purple visor.' },
   // Giveaways (game-inspired)
   { id: 'impostor', name: 'Impostor', reward: true, handout: true, how: HANDOUT, icon: '🫘', desc: 'A bean-shaped astronaut in your color.' },
   { id: 'bugknight', name: 'Bug Knight', reward: true, handout: true, how: HANDOUT, icon: '🐞', desc: 'A white horned mask, a ragged cloak and a nail on the back.' },
@@ -45,6 +50,9 @@ export const COSTUME_ITEMS = [
   { id: 'vaultkid', name: 'Vault Kid', reward: true, handout: true, how: HANDOUT, icon: '☢', desc: 'A blue jumpsuit with yellow stripes and a big number on the back.' },
   { id: 'assassin', name: 'Hooded Assassin', reward: true, handout: true, how: HANDOUT, icon: '🗡', desc: 'White hood and robes with a red sash.' },
   { id: 'grinskeleton', name: 'Grin Skeleton', reward: true, handout: true, how: HANDOUT, icon: '😁', desc: 'A blue hoodie, a big skull grin and one glowing blue eye.' },
+  { id: 'blocksteve', name: 'Block Steve', reward: true, handout: true, how: HANDOUT, icon: '⛏', desc: 'A blocky hero in a teal shirt and blue jeans.' },
+  { id: 'puffball', name: 'Pink Puffball', reward: true, handout: true, how: HANDOUT, icon: '🩷', desc: 'A round pink puffball with red feet.' },
+  { id: 'jellybean', name: 'Jelly Bean Racer', reward: true, handout: true, how: HANDOUT, icon: '🫘', desc: 'A squishy bean in your color with a goofy face.' },
   { id: 'creeper', name: 'Creeper Suit', reward: true, handout: true, how: HANDOUT, icon: '🟩', desc: 'Green pixel blocks and that famous frown.' },
   // Ranked division armor (ranked.js DIVISIONS)
   { id: 'rk_contender', name: 'Contender Armor', reward: true, rank: 'contender', how: rankHow('Contender'), icon: '◆', desc: 'Earned by reaching Contender.' },
@@ -87,8 +95,8 @@ const headBlock = (g, m, s = 0.28) => box(g, m, s, s, s, 0, 0.15, 0);
 // ---------- the costumes ----------
 // Each gets (parts, team) with parts = { hips, spine, head } groups, and returns limb materials.
 const BUILD = {
-  skeleton({ hips, spine, head }, team) {
-    const bone = mat('#ece6d6', { emissive: '#3a3a30', emissiveIntensity: 0.6 }), dark = mat('#141416');
+  skeleton({ hips, spine, head }, team, pal = {}) { // pal: a style's colors (Gold Skeleton)
+    const bone = mat(pal.bone || '#ece6d6', { emissive: pal.glow || '#3a3a30', emissiveIntensity: 0.6, ...(pal.shiny ? { metalness: 0.35, roughness: 0.3 } : {}) }), dark = mat(pal.dark || '#141416');
     torso(spine, dark, 0.46, 0.54, 0.26);
     for (let i = 0; i < 4; i++) box(spine, bone, 0.38 - i * 0.03, 0.035, 0.03, 0, 0.46 - i * 0.08, -0.14);
     box(spine, bone, 0.05, 0.5, 0.03, 0, 0.3, -0.145); // breastbone
@@ -102,8 +110,8 @@ const BUILD = {
     for (let i = -2; i <= 2; i++) box(head, bone, 0.012, 0.03, 0.022, i * 0.03, 0.06, -0.14);
     return { arm: bone, leg: bone, hand: bone, foot: bone };
   },
-  samurai({ hips, spine, head }, team) {
-    const armor = mat('#16141a', { roughness: 0.35, metalness: 0.4 }), neon = glow('#29f0ff', 1.8), red = glow('#ff2d75', 1.2);
+  samurai({ hips, spine, head }, team, pal = {}) { // pal: Shadow Samurai's red neon
+    const armor = mat(pal.armor || '#16141a', { roughness: 0.35, metalness: 0.4 }), neon = glow(pal.neon || '#29f0ff', 1.8), red = glow(pal.red || '#ff2d75', 1.2);
     torso(spine, armor, 0.5, 0.56, 0.3);
     for (let i = 0; i < 3; i++) box(spine, armor, 0.46, 0.06, 0.34, 0, 0.12 + i * 0.1, 0); // plates
     box(spine, neon, 0.03, 0.4, 0.01, -0.12, 0.33, -0.172); box(spine, neon, 0.03, 0.4, 0.01, 0.12, 0.33, -0.172);
@@ -200,9 +208,15 @@ const BUILD = {
     box(head, mat('#a33'), 0.07, 0.02, 0.02, 0, 0.1, -0.11);
     return { arm: peel, leg: peel, hand: mat('#f2c12e'), foot: tip };
   },
-  ninja({ hips, spine, head }, team) {
+  ninja({ hips, spine, head }, team, pal = {}) { // pal.neon: Neon Ninja's glowing edges
     const cloth = mat('#141518', { roughness: 0.95 }), wrap = mat('#26282d');
     torso(spine, cloth);
+    if (pal.neon) { // glowing edges down the sides, across the shoulders and around the head
+      const n = glow(pal.neon, 2);
+      for (const s of [-1, 1]) { box(spine, n, 0.015, 0.56, 0.3, s * 0.255, 0.3, 0); box(spine, n, 0.2, 0.015, 0.3, s * 0.15, 0.585, 0); }
+      for (const s of [-1, 1]) box(head, n, 0.012, 0.29, 0.29, s * 0.145, 0.15, 0);
+      box(head, n, 0.29, 0.012, 0.29, 0, 0.297, 0);
+    }
     box(spine, wrap, 0.52, 0.06, 0.3, 0, 0.3, 0, 0, 0, 0.6); // sash across the chest
     box(spine, wrap, 0.04, 0.5, 0.04, 0.12, 0.33, 0.17, 0, 0, 0.5); // sword on the back
     box(spine, mat('#9aa1a8', { metalness: 0.7 }), 0.12, 0.03, 0.06, 0.25, 0.6, 0.17, 0, 0, 0.5);
@@ -430,9 +444,9 @@ const BUILD = {
     for (const s of [-1, 1]) box(head, black, 0.03, 0.03, 0.02, s * 0.13, 0.33, -0.16); // shark eyes
     return { arm: grey, leg: grey, hand: white, foot: grey };
   },
-  astronaut({ hips, spine, head }, team) {
-    // A classic space suit: white, a gold visor, a life-support pack and a flag patch in your color.
-    const suit = mat('#f2f4f7'), grey = mat('#9aa1ab'), visor = mat('#ffbf3a', { metalness: 0.25, roughness: 0.15, emissive: '#8a5200', emissiveIntensity: 0.9 });
+  astronaut({ hips, spine, head }, team, pal = {}) {
+    // A classic space suit: white, a gold visor, a life-support pack and a flag patch in your color. (pal: Dark Astronaut)
+    const suit = mat(pal.suit || '#f2f4f7'), grey = mat(pal.grey || '#9aa1ab'), visor = mat(pal.visor || '#ffbf3a', { metalness: 0.25, roughness: 0.15, emissive: pal.visorGlow || '#8a5200', emissiveIntensity: 0.9 });
     torso(spine, suit, 0.52, 0.56, 0.3);
     box(spine, grey, 0.4, 0.46, 0.16, 0, 0.32, 0.22); // life-support pack
     box(spine, team, 0.1, 0.07, 0.01, -0.13, 0.44, -0.155); // flag patch
@@ -551,6 +565,43 @@ const BUILD = {
     box(head, black, 0.03, 0.025, 0.02, 0, 0.14, -0.163); // nose
     return { arm: hoodie, leg: mat('#e8e2d0'), hand: skull, foot: mat('#ff8fb8', { roughness: 0.9 }) };
   },
+  blocksteve({ hips, spine, head }, team) {
+    // Minecraft vibe: all blocks. A square head with short brown hair, a teal shirt, blue jeans, grey shoes.
+    const skin = mat('#c99a6e', { roughness: 0.9 }), hair = mat('#3a2614', { roughness: 0.9 }), shirt = mat('#2ab0b0', { roughness: 0.9 }), jeans = mat('#3a3aa8', { roughness: 0.9 }), eye = mat('#ffffff'), iris = mat('#4a3aa8');
+    torso(spine, shirt, 0.5, 0.56, 0.26);
+    box(spine, team, 0.5, 0.04, 0.27, 0, 0.05, 0); // a hem in your color
+    pelvis(hips, jeans);
+    headBlock(head, skin, 0.3);
+    box(head, hair, 0.31, 0.08, 0.31, 0, 0.27, 0); box(head, hair, 0.31, 0.2, 0.06, 0, 0.19, 0.13); // hair
+    for (const s of [-1, 1]) { box(head, eye, 0.06, 0.035, 0.01, s * 0.07, 0.16, -0.152); box(head, iris, 0.03, 0.035, 0.012, s * 0.055, 0.16, -0.153); }
+    box(head, mat('#8a5a3a'), 0.06, 0.03, 0.01, 0, 0.12, -0.152); box(head, mat('#5a3a22'), 0.12, 0.03, 0.01, 0, 0.08, -0.152); // nose, mouth
+    return { arm: skin, leg: jeans, hand: skin, foot: mat('#6a6a6a') };
+  },
+  puffball({ hips, spine, head }, team) {
+    // Kirby vibe: one big round pink body from the hips to the top of the head, big oval eyes, blush, red feet.
+    const pink = mat('#ffaecb', { roughness: 0.6 }), red = mat('#d8263a', { roughness: 0.5 }), black = mat('#141018'), white = mat('#ffffff'), blush = mat('#ff6a9a', { roughness: 0.6 });
+    ball(spine, pink, 0.42, 0, 0.42, 0).scale.set(1, 1, 0.85);
+    pelvis(hips, pink);
+    for (const s of [-1, 1]) {
+      const e = ball(head, black, 0.03, s * 0.06, -0.02, -0.355); e.scale.set(0.7, 1.6, 0.5); // tall oval eyes
+      ball(head, white, 0.012, s * 0.06, 0.01, -0.37);
+      const b = ball(head, blush, 0.03, s * 0.15, -0.09, -0.33); b.scale.set(1.4, 0.6, 0.4); // blush
+    }
+    box(head, red, 0.05, 0.02, 0.01, 0, -0.08, -0.365); // little mouth
+    box(spine, team, 0.08, 0.08, 0.02, 0, 0.2, 0.36); // a star patch in your color
+    return { arm: pink, leg: pink, hand: pink, foot: red };
+  },
+  jellybean({ hips, spine, head }, team) {
+    // Fall Guys vibe: a tall squishy bean in your color with a white face, big googly eyes and a smile.
+    const face = mat('#f6f2ea', { roughness: 0.6 }), black = mat('#111'), white = mat('#ffffff');
+    const bean = add(spine, new THREE.CapsuleGeometry(0.27, 0.48, 6, 18), team, 0, 0.44, 0);
+    bean.scale.set(1, 1, 0.9);
+    pelvis(hips, team);
+    const f = ball(head, face, 0.16, 0, 0.16, -0.1); f.scale.set(1.15, 0.85, 0.6); // face
+    for (const s of [-1, 1]) { ball(head, white, 0.045, s * 0.06, 0.2, -0.19); ball(head, black, 0.02, s * 0.06, 0.2, -0.235); } // googly eyes
+    const m = add(head, new THREE.TorusGeometry(0.04, 0.008, 6, 12, Math.PI), black, 0, 0.13, -0.19); m.rotation.z = Math.PI; // smile
+    return { arm: team, leg: team, hand: team, foot: team };
+  },
   gigachad({ hips, spine, head }, team) {
     const gold = mat('#f5c533', { metalness: 0.35, roughness: 0.3, emissive: '#3a2a00', emissiveIntensity: 0.6 }), deep = mat('#c08a16', { metalness: 0.35, roughness: 0.35 }), gem = mat('#d0213a', { emissive: '#600010', emissiveIntensity: 0.8 });
     torso(spine, gold, 0.52, 0.56, 0.3);
@@ -568,6 +619,15 @@ const BUILD = {
     return { arm: gold, leg: deep, hand: gold, foot: deep };
   },
 };
+// Costume styles: another look for a costume, from the same builder with other colors.
+const STYLES = {
+  goldskeleton: ['skeleton', { bone: '#f5c533', glow: '#5a3a00', dark: '#2a1a05', shiny: true }],
+  neonninja: ['ninja', { neon: '#ff2fd8' }],
+  shadowsamurai: ['samurai', { neon: '#ff2a2a', red: '#ff8a1a', armor: '#0c0a0e' }],
+  darkastronaut: ['astronaut', { suit: '#1e2028', grey: '#3a3d48', visor: '#b36bff', visorGlow: '#4a1a8a' }],
+};
+for (const [id, [base, pal]] of Object.entries(STYLES)) BUILD[id] = (parts, team) => BUILD[base](parts, team, pal);
+
 // Ranked armor: one design tinted with the division's color, with more on it the higher the division.
 for (const [div, color] of Object.entries(RANK_COLOR)) {
   const tier = Object.keys(RANK_COLOR).indexOf(div); // 0..4

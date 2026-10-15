@@ -119,6 +119,9 @@ export const COSMETICS = {
     { id: 'sakura', name: 'Cherry Blossom', price: 400 },
     { id: 'deepsea', name: 'Deep Sea', price: 400 },
     { id: 'aurora', name: 'Aurora', price: 500 },
+    { id: 'pixelarcade', name: 'Pixel Arcade', price: 400 },
+    { id: 'glitch', name: 'Glitch', price: 450 },
+    { id: 'checkered', name: 'Checkered Flag', price: 400 },
     { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one' },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },

@@ -106,6 +106,18 @@ export const BANNER_STYLE = {
     bg: 'linear-gradient(100deg, transparent 0 10%, #3affb055 25%, transparent 40%, #8a3aff55 55%, transparent 70%, #3affb044 85%, transparent 100%) 0 0, radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 20%, #fff, transparent), linear-gradient(180deg, #020818, #0a1a3a)',
     accent: '#8affd0', emblem: '🌌', anim: 'wave', size: '200% 100%, cover, cover, cover',
   },
+  pixelarcade: {
+    bg: 'linear-gradient(90deg, #ff2fd855 2px, transparent 2px), linear-gradient(0deg, #2fe6ff55 2px, transparent 2px), radial-gradient(circle at 82% 50%, #39ff6a55 0 14%, transparent 40%), linear-gradient(100deg, #0a0420, #2a0a5a 60%, #1a0a3a)',
+    accent: '#39ff6a', emblem: '👾', anim: 'scroll', size: '12px 12px, 12px 12px, cover, cover',
+  },
+  glitch: {
+    bg: 'repeating-linear-gradient(0deg, #ffffff10 0 2px, transparent 2px 5px), linear-gradient(100deg, transparent 0 30%, #ff2a5a66 30% 34%, transparent 34% 52%, #2ae8ff66 52% 55%, transparent 55% 78%, #ff2a5a55 78% 80%, transparent 80%), linear-gradient(100deg, #0a0a12, #1a1a2a 60%, #2a1a3a)',
+    accent: '#2ae8ff', emblem: '📺', anim: 'flicker',
+  },
+  checkered: {
+    bg: 'linear-gradient(90deg, #101010 0 30%, #10101099 55%, transparent 80%), repeating-linear-gradient(100deg, transparent 0 40px, #ff3a3a33 40px 46px), repeating-conic-gradient(#d8d8d8 0 25%, #1a1a1a 0 50%), linear-gradient(100deg, #141414, #2a2a2a)',
+    accent: '#ff3a3a', emblem: '🏁', size: 'cover, cover, 24px 24px, cover',
+  },
   gigachad: {
     bg: 'repeating-linear-gradient(135deg, #ffffff10 0 2px, transparent 2px 14px), radial-gradient(circle at 84% 50%, #fff3a0aa 0 10%, #ffd23a55 20%, transparent 45%), linear-gradient(100deg, #2a0a3a, #6a1a8a 40%, #c88a12 75%, #ffd23a)',
     accent: '#ffe27a', emblem: '♛', anim: 'shine',
