@@ -39,6 +39,12 @@ const parse = (text) => { try { const env = JSON.parse(text); return { env, body
 
 export const REPORT_REASONS = ['Cheating / hacking', 'Abusive chat', 'Offensive name', 'Griefing / team killing', 'Spamming', 'Other'];
 export const AUTO_FLAG = 'Auto-flag: suspicious stats';
+// Restrictions on one part of the game (record.limits[kind]: { by, reason, until, ts }), set with
+// act(tag, LIMITS[kind].act) and lifted with 'un' + that.
+export const LIMITS = {
+  ranked: { act: 'rankban', icon: '🏆', name: 'Ranked ban', lift: 'Lift ranked ban', why: 'Ranked misconduct', you: 'You\'re banned from ranked' },
+};
+const LIMIT_OF = Object.fromEntries(Object.entries(LIMITS).map(([k, v]) => [v.act, k]));
 // Punishment ladder: step N is suggested for someone's Nth offence (the owner can change it in Mod Panel → Staff).
 export const DEFAULT_LADDER = [{ act: 'warn', h: 0 }, { act: 'mute', h: 24 }, { act: 'ban', h: 24 }, { act: 'ban', h: 168 }, { act: 'ban', h: 0 }]; // filed by the host's game, not offered to players
 
@@ -251,6 +257,8 @@ class Moderation {
   active(x) { return x && (!x.until || x.until > Date.now()) ? x : null; }
   activeBan(rec) { return this.active(rec && rec.ban); }
   activeMute(rec) { return this.active(rec && rec.mute); }
+  limited(rec, kind) { return this.active(rec && rec.limits && rec.limits[kind]); } // an active restriction (LIMITS)
+  myLimit(kind) { return this.limited(this.mine(), kind); }
   mine() { const s = this.social; return s && s.tag ? this.records.get(low(s.tag)) : null; }
   myBan() { return this.activeBan(this.mine()); }
   myMute() { const m = this.activeMute(this.mine()); return m && !m.shadow ? m : null; } // a shadow mute is never shown to them
@@ -302,7 +310,7 @@ class Moderation {
     const old = this.records.get(k) || {};
     const rec = {
       target, warns: [...(old.warns || [])], ban: old.ban || null, mute: old.mute || null, rename: old.rename || null,
-      notes: [...(old.notes || [])], log: [...(old.log || [])],
+      notes: [...(old.notes || [])], log: [...(old.log || [])], limits: { ...(old.limits || {}) },
     };
     let note = '';
     const span = hours > 0 ? fmtHours(hours) : 'permanent';
@@ -337,6 +345,11 @@ class Moderation {
       if (!rec.ban) throw new Error('They aren\'t banned.');
       rec.ban = { ...rec.ban, appealDenied: true };
       note = reason;
+    } else if (LIMIT_OF[act] || LIMIT_OF[act.slice(2)]) { // a restriction (LIMITS) on, or 'un…' off
+      const on = !!LIMIT_OF[act], kind = LIMIT_OF[on ? act : act.slice(2)];
+      if (on) rec.limits[kind] = { by: s.tag, reason: reason || LIMITS[kind].why, until, ts: now };
+      else delete rec.limits[kind];
+      note = on ? `${span}${reason ? ' · ' + reason : ''}` : reason;
     } else if (act === 'note') {
       if (!reason) throw new Error('Type the note first.');
       rec.notes = [...rec.notes, { by: s.tag, text: reason, ts: now, ...(/^[a-z0-9]{4,12}$/.test(clipId) ? { clip: clipId } : {}) }].slice(-20);

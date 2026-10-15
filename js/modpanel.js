@@ -1,5 +1,5 @@
 import { roles, badge, rank, PERMS } from './roles.js';
-import { moderation, fmtHours, AUTO_FLAG, DEFAULT_LADDER } from './moderation.js';
+import { moderation, fmtHours, AUTO_FLAG, DEFAULT_LADDER, LIMITS } from './moderation.js';
 import { esc } from './util.js';
 import { validTag, TAG_RULES } from './social.js';
 import { gameNight, describe as describeGn, nextWindow, DAY_NAMES } from './gamenight.js';
@@ -18,6 +18,7 @@ import { leaderboard } from './leaderboard.js';
 const TIMES = [[1, '1 hour'], [24, '1 day'], [24 * 7, '7 days'], [24 * 30, '30 days'], [0, 'Permanent']];
 const ACT_LABEL = {
   warn: 'warned', ban: 'banned', unban: 'unbanned', mute: 'muted', smute: 'shadow-muted', unmute: 'unmuted',
+  rankban: 'banned from ranked', unrankban: 'lifted the ranked ban of', giftban: 'froze the gifts of', ungiftban: 'unfroze the gifts of', mapban: 'banned from publishing maps', unmapban: 'lifted the map ban of',
   rename: 'forced a new gamertag for', clearwarns: 'cleared warnings of', note: 'added a note on', denyappeal: 'denied the appeal of', kick: 'kicked',
 };
 // Quick reasons for actions (fill the reason box; it can still be edited).
@@ -200,6 +201,7 @@ export class ModPanel {
         ${alts.length ? `<div class="mp-flag ${evadeOf ? 'bad' : 'alt'}">🔗 Same device as: ${alts.map((a) => `<a href="#" data-look="${esc(a)}">${esc(a)}</a>${moderation.activeBan(moderation.records.get(a.toLowerCase())) || moderation.isGone(a) ? ' <em class="bad">BANNED</em>' : ''}`).join(', ')}${evadeOf && can && may('ban') ? ` <button class="danger" data-evade="${esc(evadeOf)}">🚫 Ban as ban evasion</button>` : ''}</div>` : ''}
         <small class="muted">Gamertag since ${t.since ? when(t.since) : 'unknown'}${rec.rename ? ` · new gamertag requested ${ago(rec.rename.ts)}` : ''}</small>
         ${ban ? `<div class="mp-flag bad">🚫 Banned ${until(ban)} by ${esc(ban.by)}: ${esc(ban.reason)}</div>` : ''}
+        ${Object.entries(LIMITS).map(([k, L]) => { const x = moderation.limited(rec, k); return x ? `<div class="mp-flag mute">${L.icon} ${L.name} ${until(x)} by ${esc(x.by)}: ${esc(x.reason)}</div>` : ''; }).join('')}
         ${mute ? `<div class="mp-flag mute">${mute.shadow ? '👻 Shadow-muted (they don\'t know)' : '🔇 Chat muted'} ${until(mute)} by ${esc(mute.by)}: ${esc(mute.reason)}</div>` : ''}
         <div class="mp-sub">Warnings (${warns.length})</div>
         <div class="mp-list">${warns.length ? warns.slice().reverse().map((w) => `<div>⚠ ${esc(w.reason)} <small>— ${esc(w.by)}, ${ago(w.ts)}</small></div>`).join('') : '<small class="muted">None</small>'}</div>
@@ -218,6 +220,7 @@ export class ModPanel {
           ${ban && may('ban') ? `<button data-act="unban">${trial ? 'Ask to unban' : 'Unban'}</button>` : ''}
           ${mute && may('mute') ? '<button data-act="unmute">Unmute</button>' : ''}
           ${warns.length && may('warn') ? '<button data-act="clearwarns" class="ghost">Clear warnings</button>' : ''}
+          ${may('tools') ? Object.entries(LIMITS).map(([k, L]) => (moderation.limited(rec, k) ? `<button data-act="un${L.act}">${L.icon} ${L.lift}</button>` : `<button data-act="${L.act}" title="Uses the length and reason above">${L.icon} ${L.name}</button>`)).join('') : ''}
           ${may('tools') ? `<button data-lb title="Take them off (or put them back on) the weekly leaderboard, e.g. for faked stats">${leaderboard.isHidden(t.tag) ? '🏆 Show on leaderboard' : '🏆 Hide from leaderboard'}</button>` : ''}
           ${on && on.lobby && this.joinLobby ? `<button data-join="${esc(on.lobby)}">▶ Join their match</button><button data-spec="${esc(on.lobby)}">👁 Spectate</button>` : ''}
           ${on && on.mode === 'lobby' && may('kick') ? '<button data-act="kick" class="danger">⏏ Kick from match</button>' : ''}
@@ -282,15 +285,17 @@ export class ModPanel {
         const what = {
           warn: 'warn', note: 'add this note to', rename: 'force a new gamertag for', ban: `ban (${span})`, mute: `mute the chat of (${span})`, smute: `shadow mute (${span}: they won't know)`,
           unban: 'unban', unmute: 'unmute', clearwarns: 'clear the warnings of', kick: 'kick from their match',
+          ...Object.fromEntries(Object.values(LIMITS).flatMap((L) => [[L.act, `${L.name.toLowerCase()} (${span})`], ['un' + L.act, L.lift.toLowerCase()]])),
         }[act];
         if ((act === 'warn' || act === 'note') && !reason) { this.say(act === 'warn' ? 'Type a reason for the warning first.' : 'Type the note first.'); return; }
-        if (act !== 'note' && !confirm(`${what[0].toUpperCase() + what.slice(1)} ${t.tag}?`)) return;
+        if (act !== 'note' && !confirm(`${what[0].toUpperCase() + what.slice(1)}${LIMITS[act.replace(/^un/, '')] || Object.values(LIMITS).some((L) => L.act === act || 'un' + L.act === act) ? ': ' : ' '}${t.tag}?`)) return;
         b.disabled = true;
         try {
           const res = await moderation.act(t.tag, act, { reason, hours });
           if (res && res.pending) { this.say('Sent to the owner for approval.'); this.render(); return; }
           this.say({
             warn: `Warned ${t.tag}.`, note: 'Note added.', rename: `${t.tag} will have to pick a new gamertag.`, ban: `Banned ${t.tag}.`,
+            ...Object.fromEntries(Object.values(LIMITS).flatMap((L) => [[L.act, `${L.name}: ${t.tag}.`], ['un' + L.act, `${L.lift}: ${t.tag}.`]])),
             mute: `Muted ${t.tag}'s chat.`, smute: `Shadow-muted ${t.tag}. Their messages now only reach themselves.`, unban: `Unbanned ${t.tag}.`, unmute: `Unmuted ${t.tag}.`, clearwarns: 'Warnings cleared.', kick: `${t.tag} will be removed from their match.`,
           }[act]);
           this.render();

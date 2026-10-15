@@ -41,7 +41,8 @@ export const PERMS = [
 ];
 const PERM_IDS = PERMS.map(([id]) => id);
 // Record actions (moderation.js act) -> the permission they need. Notes need none.
-export const ACT_PERM = { warn: 'warn', clearwarns: 'warn', mute: 'mute', smute: 'mute', unmute: 'mute', kick: 'kick', ban: 'ban', unban: 'ban', denyappeal: 'ban', rename: 'rename' };
+export const ACT_PERM = { warn: 'warn', clearwarns: 'warn', mute: 'mute', smute: 'mute', unmute: 'mute', kick: 'kick', ban: 'ban', unban: 'ban', denyappeal: 'ban', rename: 'rename',
+  rankban: 'tools', unrankban: 'tools', giftban: 'tools', ungiftban: 'tools', mapban: 'tools', unmapban: 'tools' };
 
 // owner > mod > everyone else. Staff can only act on players ranked below them.
 export const rank = (role) => (role === 'owner' ? 2 : role === 'mod' ? 1 : 0);

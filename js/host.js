@@ -493,11 +493,11 @@ export class HostLogic {
     if (!p.bot) this.balanceBots(); // a real player left: a bot takes the slot
   }
 
-  kick(id) {
+  kick(id, reason = '') {
     const p = this.players.get(id);
     if (!p || id === 'host') return;
     if (p.bot) { this.removePlayer(id); return; }
-    this.rawSend(id, { t: 'kicked' });
+    this.rawSend(id, reason ? { t: 'kicked', reason } : { t: 'kicked' });
     if (this.onKick) this.onKick(id);
   }
 
@@ -896,6 +896,9 @@ export class HostLogic {
       this.broadcast({ t: 'notice', text: `${p.name} is banned and was removed` });
       if (p.id === 'host') return; // can't remove the host from their own match (their game shows the ban screen)
       this.kick(p.id);
+    } else if (this.s.ranked && moderation.limited(rec, 'ranked') && !p.role && p.id !== 'host') {
+      this.broadcast({ t: 'notice', text: `${p.name} is banned from ranked and was removed` });
+      this.kick(p.id, 'You\'re banned from ranked right now.');
     } else if (mute && mute.shadow) {
       p.shadow = true; // nobody is told, them included
     } else if (mute && !p.muted) {

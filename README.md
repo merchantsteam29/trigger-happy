@@ -658,6 +658,8 @@ becomes free again.
     - **👻 Shadow mute** (same lengths): they can still chat and see their own messages, but nobody else sees them, in
       matches, party chat or clan chat. They aren't told. **Unmute** lifts it.
     - **Force a new gamertag:** their tag is released and they must pick another.
+    - **Restrictions** (same lengths and reason box as bans; they need the Match tools permission): **🏆 Ranked ban** keeps
+      them out of ranked only (Ranked won't start for them, and ranked servers remove them), with **Lift** to undo it.
     - **Unban**, **Unmute**, **Clear warnings**, or **Join their match**.
 
     It also lists recent actions.

@@ -348,6 +348,8 @@ async function quickPlay() {
 // Ranked: a ranked server near your rating (busiest first), or a new one.
 async function playRanked() {
   if (busy) return;
+  const rb = moderation.myLimit('ranked');
+  if (rb) { toast(`🏆 You're banned from ranked ${rb.until ? 'until ' + new Date(rb.until).toLocaleString() : 'for good'}: ${rb.reason}`); return; }
   const me = myRanked();
   status('Finding a ranked match…');
   // Everyone goes to the busiest ranked server (any rating: the SR maths handles the gap), so

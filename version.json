@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.15",
+  "version": "2026.10.15.16",
   "notes": [
-    "Staff get a suggested next punishment for each player"
+    "Staff can ban players from ranked only"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
