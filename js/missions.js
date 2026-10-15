@@ -108,6 +108,10 @@ export const COSMETICS = {
     { id: 'happy', name: 'Trigger Happy', price: 250 },
     { id: 'storm', name: 'Thunderstorm', price: 300 },
     { id: 'vapor', name: 'Vaporwave', price: 350 },
+    { id: 'overdrive', name: 'Overdrive', price: 350 },
+    { id: 'harvest', name: 'Harvest Moon', price: 300 },
+    { id: 'mega', name: 'Mega Burst', price: 450 },
+    { id: 'staffhq', name: 'Command Center', price: 400 },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },
     { id: 's1elite', name: 'Ignition Elite (S1)', reward: true, how: 'Season 1, tier 25' },

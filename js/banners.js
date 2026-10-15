@@ -81,6 +81,23 @@ export const BANNER_STYLE = {
     bg: 'linear-gradient(0deg, #ff2fd844 1px, transparent 1px) 0 0 / 100% 12px, radial-gradient(circle at 50% 125%, #ffd23a 0 26%, #ff5f9e 27% 36%, transparent 37%), linear-gradient(180deg, #1a0b3a, #6a1b8a 60%, #ff5f9e)',
     accent: '#2de2ff', emblem: '🌴', anim: 'scroll',
   },
+  // Big update banners (changelog.js), also sold in the shop
+  overdrive: {
+    bg: 'repeating-linear-gradient(100deg, transparent 0 26px, #ffffff1c 26px 30px, transparent 30px 52px), radial-gradient(ellipse at 100% 50%, #ffe14a 0 12%, #ff7a1a 24%, transparent 55%), linear-gradient(100deg, #1a0420, #8a0f4a 55%, #ff3f6a)',
+    accent: '#ffe14a', emblem: '🚀', anim: 'flicker',
+  },
+  harvest: {
+    bg: 'radial-gradient(circle at 84% 40%, #ffe2a0 0 22px, #ffb347 23px 26px, #ff9a2a44 27px 34px, transparent 35px), radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1.5px 1.5px at 45% 20%, #fff, transparent), radial-gradient(1px 1px at 62% 60%, #fff, transparent), linear-gradient(0deg, #12060a 0 18%, transparent 18%), linear-gradient(180deg, #1a0b33, #5a1f5a 60%, #c8501f)',
+    accent: '#ffb347', emblem: '🌕', anim: 'twinkle',
+  },
+  mega: {
+    bg: 'repeating-conic-gradient(from 0deg at 18% 50%, #ffffff10 0 6deg, transparent 6deg 18deg), radial-gradient(circle at 18% 50%, #fff7 0 6%, #2fe6ff88 12%, transparent 40%), linear-gradient(100deg, #10052a, #4a0f9a 45%, #ff2fd8)',
+    accent: '#2fe6ff', emblem: '💥', anim: 'hue',
+  },
+  staffhq: {
+    bg: 'linear-gradient(90deg, #4fc3ff22 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(0deg, #4fc3ff22 1px, transparent 1px) 0 0 / 22px 22px, radial-gradient(circle at 88% 50%, #ffd23f33 0 30px, transparent 70px), linear-gradient(100deg, #04101f, #0b2a4a 60%, #134a7a)',
+    accent: '#ffd23f', emblem: '🛡', anim: 'scroll',
+  },
 };
 
 // Holiday banners (holidays.js)

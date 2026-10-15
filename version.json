@@ -1,7 +1,8 @@
 {
-  "version": "2026.10.15.2",
+  "version": "2026.10.15.3",
   "notes": [
-    "New moderators can start on trial: the owner approves their bans"
+    "Updates are now one big log each, with a heading for every new feature",
+    "4 new banners in the shop"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

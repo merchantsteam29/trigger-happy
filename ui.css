@@ -695,6 +695,8 @@ body.mobile:not(.tablet) .topbar .share-btn span { display: none; }
 .chl-item .bnr-name { white-space: normal; }
 .chl-item ul { margin: 10px 0 0; padding-left: 20px; line-height: 1.5; font-size: 14px; color: var(--text); }
 .chl-item li + li { margin-top: 3px; }
+.chl-item li.chl-h { list-style: none; margin: 14px 0 4px -20px; font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--pop, #ff2d75); }
+.chl-item li.chl-h:first-child { margin-top: 2px; }
 
 /* Prop Hunt: hunters are blind while the props hide; props have no crosshair */
 .ph-blind { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;

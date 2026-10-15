@@ -17,8 +17,10 @@ MQTT relays, signed by the players' own keys.
   every earlier commit). Don't write git config.
 - **Every release bumps the version** (`node tools/release.mjs`, below). Players' games update
   themselves from `version.json`, and the notes in it are shown to players.
-- **Players see the update history** (Settings → 📜 Updates, `UPDATES` in `js/changelog.js`). For a release players would
-  notice, add an entry at the top: a short name, a banner id from `banners.js` that fits the update, and the new features.
+- **Players see the update history** (Settings → 📜 Updates, `UPDATES` in `js/changelog.js`). **One big log per
+  batch, never one entry per feature** (the owner insists): each feature is a `'## Feature name'` heading note followed by its
+  notes. While building a batch of features, add each one to the top entry and bump its `v` to the new version. A new batch
+  gets a new entry with a **new banner** made for it in `banners.js` (also sold in the shop, `COSMETICS.banner` in missions.js).
 - **Test before committing**, in a browser, against a local server.
 - **Keep tests private.** Host test matches as *Private*. Never publish test data (reports, gifts,
   leaderboard posts, clan records, server listings) to the public relays. See "Testing" for how to stub them.
