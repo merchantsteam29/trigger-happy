@@ -148,7 +148,10 @@ function renderCharacter() {
   const side = document.querySelector('[data-pane="character"] .field.two') || document.querySelector('.cz-side .field.two');
   el.replaceChildren(settingsUI.special('customize', { side, rerender: () => { renderCharacter(); renderChip(); },
     card: () => ({ ...myProfile(), tag: social.tag || settings.name || 'Player' }), cardExtra: () => ({ rankName: rankOfLevel(myLevel().level).name }),
-    onCard: () => { if (profiles.social) profiles.publish(myProfile()); }, saveCard }));
+    onCard: () => { if (profiles.social) profiles.publish(myProfile()); }, saveCard,
+    spray: () => ({ mine: store.get('mySpray', null), clan: (clans.myClan() || {}).spray || null, pick: store.get('sprayPick', 'mine') }),
+    openSpray: () => openSprayEditor(store.get('mySpray', null), 'mine'),
+    setSprayPick: (v) => { store.set('sprayPick', v); syncMySpray(); }, drawSpray }));
 }
 // Missions screen: three tabs (daily rewards + challenges, season pass + level, missions).
 let msTab = null;
@@ -960,15 +963,21 @@ function renderClan() {
   el.querySelectorAll('[data-ckick]').forEach((b) => { b.onclick = async () => { if (confirm(`Remove ${b.dataset.ckick} from the clan?`)) await clans.kick(b.dataset.ckick); }; });
 }
 
-// ---------- Clan spray editor (leader) ----------
+// ---------- Spray editor: your own spray (Character → Spray) or your clan's (leader) ----------
 function drawSpray(canvas, spray) {
   const g = canvas.getContext('2d'), s = canvas.width / 16;
   g.clearRect(0, 0, canvas.width, canvas.height);
   for (let i = 0; i < 256; i++) { const col = SPRAY_PALETTE[parseInt(spray[i], 16)]; if (col) { g.fillStyle = col; g.fillRect((i % 16) * s, ((i / 16) | 0) * s, s, s); } }
 }
-let sprayPix = null, sprayColor = 4, sprayTool = 'paint';
-function openSprayEditor(current) {
+let sprayPix = null, sprayColor = 4, sprayTool = 'paint', sprayMode = 'clan';
+// mode: 'clan' (saved to the clan record) or 'mine' (your own, kept with your progress as `mySpray`)
+function openSprayEditor(current, mode = 'clan') {
+  sprayMode = mode;
   sprayPix = (current && SPRAY_RE.test(current) ? current : '0'.repeat(256)).split('');
+  $('spray-pop').querySelector('h2').textContent = mode === 'mine' ? 'YOUR SPRAY' : 'CLAN SPRAY';
+  $('spray-pop').querySelector('.note').textContent = mode === 'mine'
+    ? 'Draw your own spray. Spray it on walls in matches (X key). Everyone in the match sees it, so keep it friendly: staff can see sprays in reports.'
+    : 'Draw your clan\'s spray. Members spray it on walls in matches (X key). Everyone in the match sees it, so keep it friendly.';
   $('spray-msg').textContent = '';
   $('spray-pal').innerHTML = SPRAY_PALETTE.slice(1).map((c, i) => `<button data-col="${i + 1}" style="background:${c}" class="${i + 1 === sprayColor ? 'sel' : ''}"></button>`).join('');
   $('spray-pal').querySelectorAll('[data-col]').forEach((b) => { b.onclick = () => { sprayColor = Number(b.dataset.col); sprayTool = sprayTool === 'erase' ? 'paint' : sprayTool; syncSprayUi(); }; });
@@ -1014,15 +1023,23 @@ function sprayAt(e) {
   cv.addEventListener('pointerup', () => { down = false; });
   $('spray-clear').onclick = () => { sprayPix = '0'.repeat(256).split(''); syncSprayUi(); };
   $('spray-cancel').onclick = () => $('spray-pop').classList.add('hidden');
-  $('spray-remove').onclick = async () => { try { await clans.setSpray(null); $('spray-pop').classList.add('hidden'); toast('Clan spray removed.'); } catch (e) { $('spray-msg').textContent = e.message; } };
+  $('spray-remove').onclick = async () => {
+    if (sprayMode === 'mine') { store.set('mySpray', null); $('spray-pop').classList.add('hidden'); syncMySpray(); renderCharacter(); toast('Your spray was removed.'); return; }
+    try { await clans.setSpray(null); $('spray-pop').classList.add('hidden'); toast('Clan spray removed.'); } catch (e) { $('spray-msg').textContent = e.message; }
+  };
   $('spray-save').onclick = async () => {
     const str = sprayPix.join('');
     if (!/[1-9a-f]/.test(str)) { $('spray-msg').textContent = 'Draw something first.'; return; }
+    if (sprayMode === 'mine') { store.set('mySpray', str); $('spray-pop').classList.add('hidden'); syncMySpray(); renderCharacter(); toast('🎨 Spray saved! Press X in a match to spray it.'); return; }
     try { await clans.setSpray(str); $('spray-pop').classList.add('hidden'); toast('🎨 Clan spray saved! Members can spray it in matches.'); } catch (e) { $('spray-msg').textContent = e.message; }
   };
 }
-// Your clan's spray, for the X key in matches.
-function syncMySpray() { const c = clans.myClan(); game.mySpray = c && c.spray ? c.spray : null; game.myClanTag = c ? c.tag : null; }
+// The spray for the X key in matches: yours or your clan's (Character → Spray picks; whichever you have otherwise).
+function syncMySpray() {
+  const c = clans.myClan(), clanS = c && c.spray ? c.spray : null, mine = SPRAY_RE.test(store.get('mySpray', '') || '') ? store.get('mySpray') : null;
+  game.mySpray = store.get('sprayPick', 'mine') === 'clan' ? clanS || mine : mine || clanS;
+  game.myClanTag = c ? c.tag : null;
+}
 setInterval(syncMySpray, 3000);
 setTimeout(syncMySpray, 1500);
 

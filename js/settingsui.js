@@ -346,7 +346,7 @@ export class SettingsUI {
       const cos = getCos();
       const t = this.tryOn;
       const shown = t ? { ...cos, [t.slot]: t.id } : cos;
-      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['nametag', 'Name tags'], ['charm', 'Weapon charms'], ['card', 'Player card'], ['wraps', 'Weapon wraps']];
+      const TABS = [['hat', 'Hats'], ['hair', 'Hair'], ['face', 'Face'], ['back', 'Back'], ['banner', 'Banners'], ['killfx', 'Kill effects'], ['pose', 'Victory poses'], ['nametag', 'Name tags'], ['charm', 'Weapon charms'], ['spray', 'Spray'], ['card', 'Player card'], ['wraps', 'Weapon wraps']];
       if (!TABS.some(([k]) => k === this.czTab)) this.czTab = t ? t.slot : 'hat';
       const tab = this.czTab;
       el.innerHTML = `<aside class="cz-side">
@@ -383,6 +383,19 @@ export class SettingsUI {
       };
       if (tab === 'wraps') {
         panel.appendChild(this.wrapsView(rerender));
+      } else if (tab === 'spray') {
+        // Your own 16×16 spray (main.js spray editor), and which one X sprays if you're in a clan with one.
+        const sp = ctx.spray();
+        panel.innerHTML = `<div class="cz-hint">Press X in a match to spray it on the wall you're looking at. Everyone in the match sees it.</div>
+          <div class="sp-row"><div class="sp-card"><canvas class="sp-img" width="160" height="160" data-mine></canvas><b>Your spray</b>
+            <button class="primary" data-draw>🎨 ${sp.mine ? 'Edit' : 'Draw'} your spray</button></div>
+          ${sp.clan ? `<div class="sp-card"><canvas class="sp-img" width="160" height="160" data-clan></canvas><b>Your clan's spray</b><small>Your clan leader draws this one</small></div>` : ''}</div>
+          ${sp.clan && sp.mine ? `<div class="cz-hint">X sprays: <span class="seg sp-pick"><button data-pick="mine" class="${sp.pick !== 'clan' ? 'sel' : ''}">Mine</button><button data-pick="clan" class="${sp.pick === 'clan' ? 'sel' : ''}">My clan's</button></span></div>` : ''}`;
+        const mineCv = panel.querySelector('[data-mine]'), clanCv = panel.querySelector('[data-clan]');
+        if (sp.mine) ctx.drawSpray(mineCv, sp.mine); else { const g = mineCv.getContext('2d'); g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(0, 0, 160, 160); g.fillStyle = '#888'; g.font = '14px sans-serif'; g.textAlign = 'center'; g.fillText('Nothing yet', 80, 84); }
+        if (clanCv) ctx.drawSpray(clanCv, sp.clan);
+        panel.querySelector('[data-draw]').onclick = () => ctx.openSpray();
+        panel.querySelectorAll('[data-pick]').forEach((b) => { b.onclick = () => { ctx.setSprayPick(b.dataset.pick); rerender(); }; });
       } else if (tab === 'card') {
         // Player card: the title (one of your achievements) and the 4 stats on it.
         const mc = myCard(), p = { ...ctx.card(), title: mc.title, stats: mc.stats }, extra = ctx.cardExtra();

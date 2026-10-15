@@ -258,7 +258,7 @@ The Grenade Launcher one-shots on a direct hit but slows you down while it's out
 
 WASD move · Mouse aim · LMB fire · RMB aim/scope · Space jump · Shift sprint · Ctrl/C crouch ·
 R reload · 1–4 / wheel switch · Q last weapon · G quick grenade · F quick melee · T inspect · Z ping (team modes) ·
-X clan spray · V push to talk · Tab scoreboard · Esc pause/loadout
+X spray · V push to talk · Tab scoreboard · Esc pause/loadout
 
 **Movement:** crouch while sprinting to **slide** (a burst of speed you can jump out of). You stay on the ground
 walking down stairs, can still jump for a moment after running off a ledge, a jump pressed just before landing
@@ -288,6 +288,12 @@ the weapon you had out before.
 A **kill effect** plays where your victim stood when you get a kill, and everyone in the match sees it. Buy them in the
 **Shop** (Kill effects) and pick one in **Character → Kill effects**: Confetti, Love Bomb, Pixel Burst, Lightning, Ember
 Burst, Spirit, Jackpot and Black Hole (🪙 200 to 500).
+
+## Sprays
+
+Draw your own 16×16 pixel spray in **Character → Spray** (draw, fill, erase, 15 colors). Press **X** in a match to spray it
+on the wall you're looking at (within 5 m, once every 8 seconds); everyone in the match sees it. If your clan has a
+spray too, pick which one X sprays. Your spray follows you to your linked devices.
 
 ## Weapon charms
 

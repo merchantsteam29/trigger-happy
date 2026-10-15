@@ -552,12 +552,12 @@ export class Game {
     this.stage = null;
   }
 
-  // ---------- Clan sprays ----------
-  // Sprays your clan's spray on the wall you're looking at (within 5 m). this.mySpray comes from
-  // main.js (your clan's record). One every 8 s; each player has one spray up at a time.
+  // ---------- Sprays ----------
+  // Sprays your spray (or your clan's) on the wall you're looking at (within 5 m). this.mySpray comes
+  // from main.js (syncMySpray). One every 8 s; each player has one spray up at a time.
   spray() {
     if (!this.me.alive || this.spectating || this.matchOver) return;
-    if (!this.mySpray) { this.hud.say(this.myClanTag ? 'YOUR CLAN HAS NO SPRAY YET' : 'SPRAYS ARE FOR CLAN MEMBERS'); return; }
+    if (!this.mySpray) { this.hud.say('DRAW YOUR SPRAY IN CHARACTER → SPRAY'); return; }
     const now = performance.now();
     if (now - (this.lastSprayT || 0) < 8000) { this.hud.say('SPRAY RECHARGING'); return; }
     const cam = this.camera, dir = _c.set(0, 0, -1).applyQuaternion(cam.quaternion);

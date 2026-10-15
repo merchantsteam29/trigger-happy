@@ -23,7 +23,7 @@ const COUNTERS = ['xp', 'tokens', 'stats', 'season', 'aimBest', 'trainBest'];
 const SETS = ['owned', 'claimed', 'modesPlayed', 'mapsPlayed', 'seasonBadges', 'holDone', 'giftsClaimed', 'invitesPaid'];
 const MAPS = ['ach'];
 const LWW = ['name', 'color', 'cos', 'loadout', 'mods', 'presets', 'rulePresets', 'myClan', 'friends', 'friendReqOut', 'login',
-  'daily', 'motw', 'featDone', 'streakWrap', 'champClaimed', 'clanTopClaimed', 'achShow', 'ranked', 'tutorialDone', 'card'];
+  'daily', 'motw', 'featDone', 'streakWrap', 'champClaimed', 'clanTopClaimed', 'achShow', 'ranked', 'tutorialDone', 'card', 'mySpray', 'sprayPick'];
 const SYNCED = new Set([...COUNTERS, ...SETS, ...MAPS, ...LWW]);
 
 const low = (s) => String(s || '').toLowerCase();

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.18",
+  "version": "2026.10.14.19",
   "notes": [
-    "Weapon charms: little keychains for your guns (Shop → Weapon charms)"
+    "Draw your own spray in Character → Spray and press X in a match"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
