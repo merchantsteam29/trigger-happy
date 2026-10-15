@@ -286,6 +286,7 @@ export class Game {
   // The match's weather (settings `wx`) with this device's graphics level and Weather effects setting.
   setWeather() {
     const kind = this.active ? this.rules.wx || 'clear' : 'clear';
+    this.weather.setDay(this.active && !this.theater ? this.rules.dn || 0 : 0, netClock.off || 0); // day / night (weather.js)
     const before = this.weather.kind;
     this.weather.set(kind, false, { drops: this.gfx === 'potato' ? 0 : this.lowGfx ? 0.4 : 1, fx: opts.weatherFx !== false });
     if (!this.scene.fog) return;

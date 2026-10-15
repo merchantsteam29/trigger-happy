@@ -13,6 +13,19 @@ export const WEATHER = {
   fog: { name: 'Fog', icon: '🌫️', far: 0, fogFar: 38, near: 3, tint: ['#b8c0c8', '#2a2f3a', 0.6], light: 0.85 },
   storm: { name: 'Thunderstorm', icon: '⛈️', far: 0.55, tint: ['#3a4250', '#10131a', 0.6], light: 0.5, drops: 2000, speed: 32, lightning: true },
 };
+// Day / night cycle on outdoor maps: day, sunset, night, sunrise over DAY_MS, counted from the match's
+// start (settings `dn`, the host's clock) so everyone sees the same time of day. It works on top of the
+// weather (its tints and dimming), and nights stay light enough to see people. Host rule `daynight`.
+export const DAY_MAPS = ['yard', 'town', 'outpost', 'docks', 'arena', 'compound', 'canyon', 'construction', 'castle', 'temple', 'oilrig', 'skyislands', 'arctic', 'farm', 'skyline'];
+export const DAY_MS = 8 * 60e3;
+const SUNSET = new THREE.Color('#ff8a4a'), NIGHT = new THREE.Color('#0b1024'), MOON = new THREE.Color('#9fb4ff'), _c1 = new THREE.Color();
+// How dark (0 day .. 1 night) and how orange (sunset glow) it is at phase p (0..1 of a cycle).
+export function dayLight(p) {
+  const s = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
+  const dark = p < 0.32 ? 0 : p < 0.5 ? s(0.32, 0.5, p) : p < 0.82 ? 1 : 1 - s(0.82, 0.97, p);
+  const glow = Math.max(0, 1 - Math.abs(p - 0.42) / 0.1) + Math.max(0, 1 - Math.abs(p - 0.9) / 0.08) * 0.7;
+  return { dark, glow: Math.min(1, glow) };
+}
 export const WEATHER_PICKS = [['random', 'Random each match'], ['clear', 'Clear'], ['rain', 'Rain'], ['fog', 'Fog'], ['storm', 'Thunderstorm']];
 export function rollWeather() {
   const r = Math.random();
@@ -39,7 +52,7 @@ export class Weather {
       bg: this.scene.background && this.scene.background.isColor ? this.scene.background.clone() : null,
       lights: [], night: false, group,
     };
-    group.traverse((o) => { if (o.isLight) this.base.lights.push([o, o.intensity]); });
+    group.traverse((o) => { if (o.isLight) this.base.lights.push([o, o.intensity, o.color.clone()]); });
     const lum = this.base.bg ? this.base.bg.r * 0.3 + this.base.bg.g * 0.59 + this.base.bg.b * 0.11 : 1;
     this.base.night = lum < 0.2;
     group.add(this.flashLight);
@@ -65,7 +78,12 @@ export class Weather {
       if (w.tint) this.scene.background.lerp(new THREE.Color(b.night ? w.tint[1] : w.tint[0]), w.tint[2]);
       this.bg0 = this.scene.background.clone();
     }
-    for (const [l, i] of b.lights) l.intensity = i * (w.light || 1);
+    for (const [l, i, c] of b.lights) { l.intensity = i * (w.light || 1); l.color.copy(c); }
+    // What the weather made of the map's look: the day / night cycle starts from here.
+    this.lit = b.lights.map(([l]) => [l, l.intensity, l.color.clone()]);
+    this.fogW = f ? f.color.clone() : null;
+    this.bgW = this.scene.background && this.scene.background.isColor ? this.scene.background.clone() : null;
+    this.dayK = -1;
     this.flash = 0; this.flashLight.intensity = 0;
     this.nextBolt = performance.now() + 3000 + Math.random() * 5000;
     if (this.rain) { this.scene.remove(this.rain); this.rain.geometry.dispose(); this.rain.material.dispose(); this.rain = null; }
@@ -96,7 +114,26 @@ export class Weather {
     p[k + 3] = x - this.wind[0] * len / this.vel; p[k + 4] = y + len; p[k + 5] = z - this.wind[1] * len / this.vel;
   }
 
+  // start: the host's time the cycle started (0: off). off: the host's clock is this much behind ours.
+  setDay(start, off = 0) { this.dayStart = start; this.dayOff = off; if (!start) this.applyDay(0, 0); }
+  // Darkens / tints the sky, fog and lights for the time of day (only when it changed noticeably).
+  applyDay(dark, glow) {
+    const b = this.base;
+    if (!b || b.night || !this.lit) return;
+    const key = Math.round(dark * 200) * 1000 + Math.round(glow * 200);
+    if (key === this.dayK) return;
+    this.dayK = key;
+    const look = (c) => c.lerp(SUNSET, glow * 0.45).lerp(NIGHT, dark * 0.88);
+    if (this.bgW) { this.scene.background = look(this.bgW.clone()); this.bg0 = this.scene.background.clone(); }
+    if (this.fogW && this.scene.fog) this.scene.fog.color.copy(look(this.fogW.clone()));
+    for (const [l, i, col] of this.lit) {
+      l.intensity = i * (1 - dark * (l.isDirectionalLight ? 0.8 : 0.62));
+      l.color.copy(col).lerp(_c1.copy(SUNSET), glow * (l.isDirectionalLight ? 0.6 : 0.3)).lerp(MOON, dark * 0.5);
+    }
+  }
+
   update(dt, cam, now = performance.now()) {
+    if (this.dayStart) { const { dark, glow } = dayLight((((Date.now() - (this.dayOff || 0) - this.dayStart) % DAY_MS) + DAY_MS) % DAY_MS / DAY_MS); this.applyDay(dark, glow); }
     if (this.rain) {
       const n = this.rain.geometry.attributes.position.count / 2;
       if (!this.rain.userData.seeded) { for (let i = 0; i < n; i++) this.seed(i, cam, cam.y - BELOW + Math.random() * (ABOVE + BELOW)); this.rain.userData.seeded = true; }

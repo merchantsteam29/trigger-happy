@@ -20,6 +20,7 @@ const RULES = [
   { key: 'oneShot', label: 'One shot kills', type: 'check' },
   { key: 'weapons', label: 'Weapons', type: 'select', options: Object.entries(WEAPON_RULES).map(([k, v]) => [k, v.name]) },
   { key: 'weather', label: 'Weather', type: 'select', options: WEATHER_PICKS },
+  { key: 'daynight', label: 'Day / night cycle (outdoor maps)', type: 'check' },
   { key: 'watch', label: 'Allow spectators (👁 Watch)', type: 'check' },
   { key: 'walls', label: 'Breakable walls (wooden boards)', type: 'check' },
 ];

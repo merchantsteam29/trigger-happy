@@ -7,7 +7,7 @@ import { breakables } from './maps.js';
 import { BOARD_HP, boardById, boardCenter, withoutBoards } from './walls.js';
 import { isFighter, bracketKill, bracketTick, bracketLeave, bracketSnap } from './bracket.js';
 import { Bot, BOT_NAMES, BOT_DIFFS } from './bot.js';
-import { WEATHER, rollWeather } from './weather.js';
+import { WEATHER, rollWeather, DAY_MAPS } from './weather.js';
 import { COLORS } from './util.js';
 import { sanitizeCos, randomCos } from './missions.js';
 import { cleanModMap, randomMods } from './mods.js';
@@ -160,6 +160,7 @@ export function defaultSettings(mode = 'ffa', map = 'warehouse') {
     scoreLimit: MODES[mode].score, timeLimit: MODES[mode].time,
     health: 100, respawn: 3, infiniteAmmo: false, headshotsOnly: false, friendlyFire: false, pickups: true, oneShot: false, weapons: 'any', rulesName: '',
     weather: 'random', wx: 'clear', // weather pick, and this match's weather (weather.js)
+    daynight: true, dn: 0, // day / night cycle on outdoor maps, and when this match's started (host clock; 0 = off)
     watch: true, // anyone may 👁 Watch (spectate without a player slot)
     walls: true, // wooden boards in windows and doorways can be shot / blown open (walls.js)
     ...PHYS_DEFAULTS, ...MODES[mode].preset,
@@ -1888,6 +1889,7 @@ export class HostLogic {
   // This match's weather from the host's pick (practice is always clear).
   rollWx() {
     this.s.wx = this.s.mode === 'practice' ? 'clear' : WEATHER[this.s.weather] ? this.s.weather : rollWeather();
+    this.s.dn = this.s.daynight !== false && DAY_MAPS.includes(this.s.map) && this.s.mode !== 'practice' ? Date.now() : 0;
   }
 
   applySettings(partial) {
@@ -1895,7 +1897,7 @@ export class HostLogic {
     if (this.s.ranked) partial = 'rotate' in partial ? { rotate: partial.rotate } : {};
     const weaponsBefore = this.s.weapons;
     Object.assign(this.s, partial);
-    if ('weather' in partial) this.rollWx();
+    if ('weather' in partial || 'daynight' in partial) this.rollWx();
     if ('walls' in partial) this.resetWalls();
     if ('weapons' in partial && partial.weapons !== weaponsBefore) {
       this.broadcast({ t: 'notice', text: `Weapons: ${(WEAPON_RULES[this.s.weapons] || WEAPON_RULES.any).name} (from your next life)` });

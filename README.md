@@ -130,7 +130,9 @@ The lobby creator gets a **Host panel** button in the pause menu (Esc):
   breakable walls, spectators, one shot kills, and **weapons** (any, snipers / shotguns / rifles / pistols / melee / explosives only, or a random
   loadout every life), and **weather**: random each match (the default), clear, rain, fog or a thunderstorm. Rain
   stops under a roof; storms darken the map and flash lightning with thunder. Settings → **Weather effects** turns off
-  the rain and lightning flashes on your device (the fog and darker light stay, so it's still fair)
+  the rain and lightning flashes on your device (the fog and darker light stay, so it's still fair), and the **day /
+  night cycle**: on outdoor maps the sun sets and rises during a match (day, an orange sunset, a dark blue night and
+  sunrise, about 8 minutes in all, the same for everyone). Indoor and night maps stay as they are
 - **Rule presets:** Snipers only, One shot one kill, Moon knife fight, Shotgun madness, Pistol duel, Boom boom, Moon
   gravity, Speed demons, Tanks, Headhunters and Chaos. **Save current…** keeps your own, **Copy share code** gives a
   code (R-…) anyone can paste with **Use a code…**. Presets can also be picked when creating a server, and the

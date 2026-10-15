@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.14.23",
+  "version": "2026.10.14.24",
   "notes": [
-    "Clan bases: your clan's own map with your tag, spray and record (clan card)"
+    "Day and night: outdoor maps now have a sunset, night and sunrise during a match"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

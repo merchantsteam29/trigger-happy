@@ -7,6 +7,10 @@ import { APP_VERSION } from './version.js';
 // finished the update; small releases are grouped into one update. Add an entry with each release
 // that players would notice (keep the hidden feature out, see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.14.24', name: 'Day and Night', banner: 'sunset', notes: [
+    'Outdoor maps now have a day / night cycle: the sun sets, night falls and the sun comes back up during a match',
+    'Hosts can turn it off in the Host panel',
+  ] },
   { v: '2026.10.14.23', name: 'Clan Bases', banner: 'gold', notes: [
     'Every clan has a base: open it from your clan card for a private match on your own map',
     'Your clan tag in lights, your clan spray on the walls and your war record on a plaque',
