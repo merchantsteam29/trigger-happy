@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.5",
+  "version": "2026.10.16.6",
   "notes": [
-    "Players flinch when hit, and deaths depend on the hit: headshots crumple, explosions send them tumbling"
+    "Fixed bots looking like they go through walls, and players crossing their legs when strafing"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

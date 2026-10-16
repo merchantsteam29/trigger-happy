@@ -384,6 +384,7 @@ export class RemotePlayer {
     // Ran past the newest snapshot (packets late): keep moving a little, then hold.
     const over = Math.min(rt - c.t, EXTRAP_MS) / Math.max(1, c.t - a.t);
     this.pos.lerpVectors(a.p, c.p, 1 + over);
+    if (overlap(this.pos.x, this.pos.y + 0.3, this.pos.z, 0.3, 1.3)) this.pos.copy(c.p); // guessing ahead ran into a wall: wait at the last known spot
     this.yaw = c.yaw;
     this.pitch = c.pitch;
   }
@@ -401,13 +402,25 @@ export class RemotePlayer {
     else this.fallDir.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
     if (this.fallDir.lengthSq() < 1e-4) this.fallDir.set(0, 0, 1);
     this.fallDir.normalize();
+    // Lying down it reaches ~1.8 m that way: if a wall is in the way, fall the way with the most room instead.
+    const room = (x, z) => { const h = raycast(this.pos.x, this.pos.y + 0.5, this.pos.z, x, 0, z, 2); return h ? h.t : 2; };
+    if (room(this.fallDir.x, this.fallDir.z) < 1.9) {
+      const fx = this.fallDir.x, fz = this.fallDir.z;
+      let best = [fx, fz, room(fx, fz)];
+      for (const [x, z] of [[fz, -fx], [-fz, fx], [-fx, -fz], [fx * 0.7 + fz * 0.7, fz * 0.7 - fx * 0.7], [fx * 0.7 - fz * 0.7, fz * 0.7 + fx * 0.7]]) {
+        const l = Math.hypot(x, z), d = room(x / l, z / l);
+        if (d > best[2] + 0.2) best = [x / l, z / l, d];
+      }
+      this.fallDir.set(best[0], 0, best[1]);
+      this.cramped = best[2] < 1.4; // no room anywhere: crumple where they stand
+    } else this.cramped = false;
     // Knocked back (and up, for explosions), with a random twist so no two deaths look the same.
     this.deathVel.set(this.fallDir.x * force, force >= 6 ? force * 0.75 : force * 0.25, this.fallDir.z * force);
     this.deathTwist = (Math.random() - 0.5) * (force >= 6 ? 3 : 1.2);
     this.deathFloor = Math.min(this.pos.y, this.groundBelow());
     this.deathSplay = 0.6 + Math.random() * 0.4;
     // How they go down: headshots crumple at the knees, explosions throw them tumbling, the rest fall like a tree.
-    this.deathKind = force >= 6 ? 'blast' : head ? 'crumple' : 'fall';
+    this.deathKind = force >= 6 ? 'blast' : head || this.cramped ? 'crumple' : 'fall';
     this.deathHead = head;
     this.deathDrop = 0;
     if (head) this.popHat();
@@ -506,7 +519,9 @@ export class RemotePlayer {
     this.turnRate = (this.turnRate || 0) + (dYaw / Math.max(dt, 1e-4) - (this.turnRate || 0)) * Math.min(1, dt * 10);
     const shuffle = this.alive && !this.poseId ? Math.min(1, Math.max(0, Math.abs(this.turnRate) - 1) / 2.5) * (1 - moving) * (1 - this.air) : 0;
     // One step = half a cycle; a step is longer the faster they go (walk ~0.65 m, sprint ~1.1 m), shorter crouched.
-    this.stepLen = (0.6 + speed * 0.055) * (1 - this.crouch * 0.35);
+    const vcy = Math.cos(this.yaw), vsy = Math.sin(this.yaw), vl = Math.hypot(this.vel.x, this.vel.z) || 1;
+    const sideK = Math.abs(this.vel.x * vcy - this.vel.z * vsy) / vl, backK = Math.max(0, (this.vel.x * vsy + this.vel.z * vcy) / vl);
+    this.stepLen = (0.6 + speed * 0.055) * (1 - this.crouch * 0.35) * (1 - sideK * 0.55) * (1 - backK * 0.25); // short side steps and back steps
     const lastPhase = this.phase;
     this.phase += dt * ((Math.PI * speed) / this.stepLen + shuffle * 9 + 0.001);
     if (Math.floor(lastPhase / Math.PI) !== Math.floor(this.phase / Math.PI) && moving > 0.5 && this.alive) this.stepped = true;
@@ -685,6 +700,7 @@ export class RemotePlayer {
       leg.swing = swing ? su : -1;
       let ty = (swing ? Math.sin(su * Math.PI) : 0) * lift + 0.06;
       let tx = fx + lx * sw, tz = fz + lz * sw;
+      tx += leg.side * Math.abs(lx) * stride; // side steps: a wider stance, so each foot steps on its own side and they never cross
       if (this.air > 0.01) { ty += this.air * (leg.side > 0 ? 0.35 : 0.2); tz += this.air * (leg.side > 0 ? -0.15 : 0.12); }
       if (this.poseId && this.poseB && this.poseB.foot) { const k = this.poseK ?? 1; tx += this.poseB.foot[0] * k; ty += this.poseB.foot[1] * k; tz += this.poseB.foot[2] * k; } // e.g. sitting (poses.js)
       if (this.deathT > 0) { ty += dying * 0.2 + (this.deathDrop || 0); tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
