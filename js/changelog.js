@@ -9,13 +9,13 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.16.7', name: 'In Motion', banner: 'motion', notes: [
+  { v: '2026.10.16.8', name: 'In Motion', banner: 'motion', notes: [
     '## Moderator looks',
     "Moderators get their own versions of the owner's items, in steel blue and silver with a shield badge",
     'A costume, a rifle skin, a weapon wrap, a weapon charm, a name tag, a kill effect, a banner and a victory pose (On Guard, with a riot shield)',
     'They only show on moderators the game has checked, so nobody can fake them',
     '## Fixes',
-    'Animations are back to how they were before this update',
+    'We had to remove the new animations because they were too broken, so animations are back to how they were',
     'Bots no longer look like they slip into walls when the connection hiccups',
     'Someone killed next to a wall falls away from it instead of through it',
     'The Bow and Dab victory poses leaned the wrong way',

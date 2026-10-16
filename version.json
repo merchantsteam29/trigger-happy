@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.7",
+  "version": "2026.10.16.8",
   "notes": [
-    "Animations are back to how they were",
+    "We had to remove the new animations because they were too broken, so animations are back to how they were",
     "Fixed bots looking like they slip into walls"
   ],
   "files": [
