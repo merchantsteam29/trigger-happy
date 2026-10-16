@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.1",
+  "version": "2026.10.16.2",
   "notes": [
-    "Moderators get their own looks: costume, rifle skin, wrap, charm, name tag, kill effect, banner and victory pose"
+    "New first-person animations: reloads, weapon draws, sprinting, inspecting, melee and throws"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

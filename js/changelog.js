@@ -9,13 +9,20 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.16.1', name: 'In Motion', banner: 'motion', notes: [
+  { v: '2026.10.16.2', name: 'In Motion', banner: 'motion', notes: [
     '## Moderator looks',
     "Moderators get their own versions of the owner's items, in steel blue and silver with a shield badge",
     'A costume, a rifle skin, a weapon wrap, a weapon charm, a name tag, a kill effect, a banner and a victory pose (On Guard, with a riot shield)',
     'They only show on moderators the game has checked, so nobody can fake them',
     '## New Banner',
     'In Motion, the banner of this update, is in the shop',
+    '## First-person animations',
+    'Reloads: your hand reaches down to your belt for the new mag, the empty one drops out, and it slaps in with a jolt when the bolt or slide snaps forward',
+    'Every weapon type draws its own way: rifles roll up from the side, pistols flip up, melee weapons sweep in, and they settle with a little bounce',
+    'Sprinting: pistols are held up at your chest, rifles rock with each stride, melee weapons swing with your arm',
+    'New inspects: rifles get a mag check, pistols spin around your finger, knives and grenades get tossed and caught',
+    'Melee swings wind up, strike fast and follow through; grenades are drawn back over your shoulder before the throw',
+    'Standing still, you shift your weight a little, and every footstep lands',
   ] },
   { v: '2026.10.15.38', name: 'New Look', banner: 'newlook', notes: [
     '## Menus',
