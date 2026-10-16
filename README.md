@@ -7,7 +7,8 @@
 ## How to play
 
 On PC the tabs run along the top: **Play · Loadout · Locker Room · Shop · Missions · Leaderboard · Friends** (and the Mod
-Panel for staff), with Practice 🎯, the Map editor 🛠 and Settings ⚙ as icons on the right.
+Panel for staff), with Practice 🎯, the Map editor 🛠 and Settings ⚙ as icons on the right. On phones the same tabs sit
+in one slim bar along the bottom (short names: Locker, Leaders), with Practice, the Map editor and Settings as icons at its end.
 
 **Play** opens with two big buttons, **Quick Play** and **Ranked**, the servers list under them, your level, daily
 reward and challenges on the right, and Play Hour, Game Night, the featured mode, the mode of the week and your match

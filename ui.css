@@ -1088,3 +1088,51 @@ body.mobile:not(.tablet) .shop2 .shop-3d .cz-3d { width: 160px; height: 210px; }
 .menu-pane[data-pane="friends"] > #clan-card { order: 4; }
 .menu-pane[data-pane="friends"] > #invite-card { order: 5; }
 .menu-pane[data-pane="friends"] > #devices-card { order: 6; }
+
+/* ================= Phone menu remake (2026-10-15, landscape) ================= */
+/* A slim top bar, and one line of tabs along the bottom: icon + a short name (data-short).
+   Practice / Map editor / Settings are icon-only at the end of the bar. */
+body.mobile:not(.tablet) .topbar { padding: calc(4px + env(safe-area-inset-top)) 12px 4px; min-height: 0; }
+body.mobile:not(.tablet) .topbar .brand { margin: 0; }
+body.mobile:not(.tablet) .topbar h1 { font-size: 16px; }
+body.mobile:not(.tablet) .topbar .logo-mark { width: 26px; height: 26px; }
+body.mobile:not(.tablet) .menu-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+body.mobile:not(.tablet) .menu-nav button { flex: 1 1 0; min-width: 0; flex-direction: row; justify-content: center; gap: 5px; height: 44px; padding: 0 4px;
+  font-size: 11px; letter-spacing: 0.3px; white-space: nowrap; }
+body.mobile:not(.tablet) .menu-nav .ic { font-size: 16px; }
+body.mobile:not(.tablet) .menu-nav .lbl { overflow: hidden; text-overflow: ellipsis; }
+body.mobile:not(.tablet) .menu-nav [data-short] .lbl { display: none; }
+body.mobile:not(.tablet) .menu-nav [data-short]::after { content: attr(data-short); }
+body.mobile:not(.tablet) .menu-nav #btn-practice, body.mobile:not(.tablet) .menu-nav #btn-editor, body.mobile:not(.tablet) .menu-nav #btn-settings-menu { flex: 0 0 42px; padding: 0; }
+body.mobile:not(.tablet) .menu-nav #btn-practice .lbl, body.mobile:not(.tablet) .menu-nav #btn-editor .lbl, body.mobile:not(.tablet) .menu-nav #btn-settings-menu .lbl { display: none; }
+body.mobile:not(.tablet) .menu-nav button b { top: 2px; transform: translateX(22px); }
+/* Play: Quick Play and Ranked as two wide buttons, then a row of today's things, then servers and tiles */
+body.mobile:not(.tablet) .home-strip { display: block; overflow: visible; }
+body.mobile:not(.tablet) .home-strip > *, body.mobile:not(.tablet) .home-strip .hs-tile { width: 100%; max-width: none; }
+body.mobile:not(.tablet) .play-big { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+body.mobile:not(.tablet) .big-play { min-height: 118px; padding: 12px 16px; gap: 4px; justify-content: center; }
+body.mobile:not(.tablet) .bp-kicker { font-size: 11px; padding: 3px 8px; }
+body.mobile:not(.tablet) .bp-title { font-size: 22px; }
+body.mobile:not(.tablet) .bp-sub { display: block; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.mobile:not(.tablet) .bp-go { display: inline-block; margin-top: 4px; padding: 6px 14px; font-size: 12px; }
+body.mobile:not(.tablet) .bp-quick::after { display: block; width: 150px; height: 150px; right: -20px; top: -24px; }
+body.mobile:not(.tablet) .home-side { margin-bottom: 10px; }
+body.mobile:not(.tablet) .home-side .today-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 8px; overflow-x: auto; scrollbar-width: none; }
+body.mobile:not(.tablet) .home-side .today-row .hs-tile { width: auto; min-height: 0; padding: 8px 10px; }
+body.mobile:not(.tablet) .home-bottom .hs-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+body.mobile:not(.tablet) .home-bottom .hs-tiles > * { min-height: 0; }
+/* Shop: a narrow 3D column on the left, the shop on the right */
+body.mobile:not(.tablet) .shop.shop2 { grid-template-columns: 170px minmax(0, 1fr); gap: 10px; }
+body.mobile:not(.tablet) .shop2 .shop-3d { padding: 6px 0 2px; }
+body.mobile:not(.tablet) .shop2 .shop-3d .cz-3d { width: 150px; height: 197px; }
+body.mobile:not(.tablet) .shop2 .shop-wallet small { display: none; }
+body.mobile:not(.tablet) .shop2 .shop-cats { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+body.mobile:not(.tablet) .shop2 .shop-cats button { flex: 0 0 auto; padding: 7px 9px; font-size: 11px; }
+body.mobile:not(.tablet) .shop2 .shop-detail { display: flex; flex-flow: row wrap; align-items: center; padding: 8px 10px; gap: 4px 10px; }
+body.mobile:not(.tablet) .shop2 .shop-detail > *:empty { display: none; }
+body.mobile:not(.tablet) .shop2 .shop-detail h3 { font-size: 14px; margin: 0; }
+body.mobile:not(.tablet) .shop2 .shop-detail button { padding: 6px 12px; font-size: 12px; }
+body.mobile:not(.tablet) .shop2 .shop-detail .shop-msg { font-size: 11px; }
+body.mobile:not(.tablet) .topbar .player-chip { padding: 2px 8px 2px 4px; }
+body.mobile:not(.tablet) .topbar .share-btn { padding: 4px 10px; }
+body.mobile:not(.tablet) .shop2 .shop-detail .shop-bnr, body.mobile:not(.tablet) .shop2 .shop-detail .shop-wrap.big, body.mobile:not(.tablet) .shop2 .shop-detail .shop-icon.big { max-width: 140px; }

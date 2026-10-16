@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.36', name: 'New Look (PC)', banner: 'newlook', notes: [
+  { v: '2026.10.15.37', name: 'New Look', banner: 'newlook', notes: [
     '## Menus',
     'Tabs across the top: Play, Loadout, Locker Room, Shop, Missions, Leaderboard and Friends',
     '## Play',
@@ -24,6 +24,12 @@ export const UPDATES = [
     'Friends and challenges first, then your clan, inviting friends and linking devices',
     '## New Banner',
     'New Look, the banner of this update, is in the shop',
+    '## Phones: a cleaner menu',
+    'The tabs along the bottom are one slim line now: an icon and a short name each, so nothing wraps or gets squeezed',
+    'Practice, the Map editor and Settings are small icons at the end of the bar',
+    "A slimmer top bar, so there's more room for everything else",
+    'Play: Quick Play and Ranked are two big wide buttons again, with your daily reward, challenges and level in a row under them',
+    'Shop: your character in 3D on the left, the items on the right, and the categories scroll sideways',
   ] },
   { v: '2026.10.15.35', name: 'Play Together', banner: 'together', notes: [
     '## Play Hour',

@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.15.36",
+  "version": "2026.10.15.37",
   "notes": [
-    "New PC menus: big Quick Play and Ranked, Locker Room, 3D shop"
+    "Phones: a cleaner menu with a slim tab bar, big Quick Play and Ranked buttons, and the Shop with your 3D character beside the items"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
