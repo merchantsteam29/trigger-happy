@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.2",
+  "version": "2026.10.16.3",
   "notes": [
-    "New first-person animations: reloads, weapon draws, sprinting, inspecting, melee and throws"
+    "New player movement: feet stay planted, steps match speed, and players lean into turns"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -42,6 +42,7 @@ const INTERP_MS = 110, EXTRAP_MS = 120;
 export const netClock = { off: 0 };
 const YAXIS = new THREE.Vector3(0, 1, 0);
 const XAXIS = new THREE.Vector3(1, 0, 0);
+const ZAXIS = new THREE.Vector3(0, 0, 1);
 
 function mesh(geo, mat, x, y, z, parent) {
   const m = new THREE.Mesh(geo, mat);
@@ -471,11 +472,20 @@ export class RemotePlayer {
     this.swapT = Math.max(0, this.swapT - dt * 3);
 
     this.vel.subVectors(this.pos, this.prev).divideScalar(Math.max(dt, 1e-4));
-    const speed = this.deathT > 0 ? 0 : Math.min(9, Math.hypot(this.vel.x, this.vel.z)); // a falling body doesn't run
+    const rawSpeed = this.deathT > 0 ? 0 : Math.min(9, Math.hypot(this.vel.x, this.vel.z)); // a falling body doesn't run
+    this.spd = (this.spd || 0) + (rawSpeed - (this.spd || 0)) * Math.min(1, dt * 12); // smoothed: snapshots aren't perfectly even
+    const speed = this.deathT > 0 ? 0 : this.spd;
     if (this.deathT > 0) this.air = 0;
     const moving = Math.min(1, speed / 1.5) * (1 - this.air);
+    // Turning on the spot: how fast they're turning (for little shuffling steps and leaning into turns).
+    const dYaw = Math.atan2(Math.sin(this.yaw - (this.lastYaw ?? this.yaw)), Math.cos(this.yaw - (this.lastYaw ?? this.yaw)));
+    this.lastYaw = this.yaw;
+    this.turnRate = (this.turnRate || 0) + (dYaw / Math.max(dt, 1e-4) - (this.turnRate || 0)) * Math.min(1, dt * 10);
+    const shuffle = this.alive && !this.poseId ? Math.min(1, Math.max(0, Math.abs(this.turnRate) - 1) / 2.5) * (1 - moving) * (1 - this.air) : 0;
+    // One step = half a cycle; a step is longer the faster they go (walk ~0.65 m, sprint ~1.1 m), shorter crouched.
+    this.stepLen = (0.6 + speed * 0.055) * (1 - this.crouch * 0.35);
     const lastPhase = this.phase;
-    this.phase += dt * (speed * 2.1 + 0.001);
+    this.phase += dt * ((Math.PI * speed) / this.stepLen + shuffle * 9 + 0.001);
     if (Math.floor(lastPhase / Math.PI) !== Math.floor(this.phase / Math.PI) && moving > 0.5 && this.alive) this.stepped = true;
 
     // Root (dead bodies fly back, bounce and slide to a stop)
@@ -504,6 +514,9 @@ export class RemotePlayer {
       if (this.deathT > 3) this.root.position.y -= (this.deathT - 3) * 0.6;
     } else {
       this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw);
+      const bank = Math.max(-0.16, Math.min(0.16, this.turnRate * speed * 0.012)) * moving; // leans into the turn
+      this.bank = (this.bank || 0) + (bank - (this.bank || 0)) * Math.min(1, dt * 8);
+      if (Math.abs(this.bank) > 1e-3) this.root.quaternion.multiply(_q.setFromAxisAngle(ZAXIS, this.bank));
       if (this.emoteT > 0 && this.emoteId === 'dance') { // dance: twist and bounce
         const t = EMOTE_TIME - this.emoteT;
         this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, Math.sin(t * 6) * 0.5));
@@ -597,13 +610,17 @@ export class RemotePlayer {
     let lx = dirX * cy - dirZ * sy, lz = dirX * sy + dirZ * cy;
     const ll = Math.hypot(lx, lz) || 1;
     lx /= ll; lz /= ll;
-    const stride = Math.min(0.46, speed * 0.075) * moving * (1 - this.crouch * 0.35);
-    const lift = Math.min(0.26, speed * 0.045) * moving * (1 + this.sprint * 0.3);
+    const stride = Math.min(0.55, this.stepLen * 0.5) * moving + shuffle * 0.05; // half a step either side: planted feet
+    const lift = (Math.min(0.24, 0.08 + speed * 0.03) * moving + shuffle * 0.07) * (1 + this.sprint * 0.3) * (1 - this.crouch * 0.4);
     for (const leg of this.legs) {
       const ph = this.phase + (leg.side > 0 ? Math.PI : 0);
       const fx = leg.side * (0.13 + this.crouch * 0.08), fz = -this.crouch * 0.12;
-      const sw = Math.sin(ph) * stride;
-      let ty = Math.max(0, Math.cos(ph)) * lift + 0.06;
+      // A step cycle: the first half the foot swings forward through the air, the second half it's planted
+      // and moves back at exactly the body's speed (so it doesn't skate).
+      const u = (((ph / (Math.PI * 2)) % 1) + 1) % 1, swing = u < 0.5, su = u * 2;
+      const sw = (swing ? -1 + 2 * su * su * (3 - 2 * su) : 1 - 2 * (su - 1)) * stride;
+      leg.swing = swing ? su : -1;
+      let ty = (swing ? Math.sin(su * Math.PI) : 0) * lift + 0.06;
       let tx = fx + lx * sw, tz = fz + lz * sw;
       if (this.air > 0.01) { ty += this.air * (leg.side > 0 ? 0.35 : 0.2); tz += this.air * (leg.side > 0 ? -0.15 : 0.12); }
       if (this.poseId && this.poseB && this.poseB.foot) { tx += this.poseB.foot[0]; ty += this.poseB.foot[1]; tz += this.poseB.foot[2]; } // e.g. sitting (poses.js)
@@ -618,7 +635,7 @@ export class RemotePlayer {
       leg.foot.position.copy(_e);
       leg.foot.position.y -= 0.02;
       leg.foot.quaternion.copy(this.root.quaternion);
-      if (moving > 0.05 && this.alive) leg.foot.quaternion.multiply(_q.setFromAxisAngle(XAXIS, -Math.sin(ph) * 0.35 * moving)); // toe up as the foot swings forward
+      if (moving > 0.05 && this.alive && leg.swing >= 0) leg.foot.quaternion.multiply(_q.setFromAxisAngle(XAXIS, (0.4 - leg.swing * 0.75) * Math.sin(leg.swing * Math.PI) * moving * 1.4)); // pushes off with the toes, toe up before the heel lands
     }
 
     // Arms: right hand on the grip, left hand on the fore anchor (or relaxed at the side).
@@ -632,7 +649,7 @@ export class RemotePlayer {
     if (flop) this.root.localToWorld(_b.set(-0.6 * (this.deathSplay || 1), 1.15 - flop * 0.2, -0.05));
     else if (parts.fore && !this.reload) parts.fore.getWorldPosition(_b);
     else if (gun && this.reload > 0.01) gun.localToWorld(_b.set(0, -0.15 - Math.abs(Math.sin(this.phase * 2 + performance.now() / 300)) * 0.05, -0.1));
-    else this.root.localToWorld(_b.set(-0.33, 0.78 - this.crouch * 0.3, -0.05 + Math.sin(this.phase) * 0.12 * moving));
+    else this.root.localToWorld(_b.set(-0.33, 0.78 - this.crouch * 0.3 + Math.abs(Math.sin(this.phase)) * 0.04 * moving, -0.05 + Math.sin(this.phase) * (0.12 + this.sprint * 0.12) * moving));
     this.emoteArm(-1);
     this.placeArm(this.armsL, _b, -1);
     this.updateEmote(dt);
