@@ -1,9 +1,7 @@
 {
-  "version": "2026.10.15.38",
+  "version": "2026.10.16.1",
   "notes": [
-    "Aiming down sights stays steady on the crosshair, and aiming sensitivity feels less sluggish",
-    "Some gun skins no longer block your view when aiming",
-    "Killed bots no longer glitch or jump around"
+    "Moderators get their own looks: costume, rifle skin, wrap, charm, name tag, kill effect, banner and victory pose"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

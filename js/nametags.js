@@ -20,6 +20,7 @@ const STYLES = {
   shadow: { stops: ['#2a2a2e', '#08080a'], glow: '#ff1a2a', blur: 18, stroke: '#ff2a3a' },
   hearts: { stops: ['#ffe0ee', '#ff6aa8', '#ff2f6a'], glow: '#ff6aa8', blur: 12, sparks: '#ff6aa8', spark: '♥' },
   owner: { stops: ['#fffbe0', '#ffd23a', '#ff9d00'], glow: '#ffcc33', blur: 20, sparks: '#fff3a0', crown: true, anim: 'shimmer' },
+  mod: { stops: ['#ffffff', '#cfe8ff', '#4fa8ff', '#2a6ad8'], glow: '#4fc3ff', blur: 18, sparks: '#cfe8ff', badge: '🛡', anim: 'shimmer' },
 };
 
 const item = (id, name, price, desc) => ({ id, name, price, desc, get icon() { return tagIcon(id); } });
@@ -39,7 +40,8 @@ export const NAMETAG_ITEMS = [
   item('candy', 'Candy Stripe', 300, 'Pink and white stripes'),
   item('shadow', 'Shadow', 450, 'Black letters with a red glow'),
   item('hearts', 'Hearts', 350, 'Pink, with hearts all around'),
-  { id: 'owner', name: 'Owner', reward: true, how: 'Only GIGACHAD can wear this', desc: 'Shimmering gold with a crown', get icon() { return tagIcon('owner'); } },
+  { id: 'mod', name: 'Moderator', reward: true, staff: true, how: 'Only moderators have this one', desc: 'Silver and blue with a shield', get icon() { return tagIcon('mod'); } },
+  { id: 'owner', name: 'Owner', reward: true, owner: true, how: 'Only GIGACHAD can wear this', desc: 'Shimmering gold with a crown', get icon() { return tagIcon('owner'); } },
 ];
 export const NAMETAG_IDS = NAMETAG_ITEMS.map((x) => x.id);
 export const tagAnim = (id) => (STYLES[id] && STYLES[id].anim) || null;
@@ -66,7 +68,7 @@ export function drawName(g, name, x, y, id, color) {
     g.globalAlpha = 1;
     g.font = '700 30px Rubik, sans-serif';
   }
-  if (st.crown) { g.font = '28px sans-serif'; g.fillText('👑', x, y - 30); g.font = '800 30px Rubik, sans-serif'; }
+  if (st.crown || st.badge) { g.font = '28px sans-serif'; g.fillText(st.badge || '👑', x, y - 30); g.font = '800 30px Rubik, sans-serif'; }
   if (st.font) g.font = st.font;
   g.strokeText(name, x, y);
   if (st.pixel) { // arcade look: cyan and pink copies just off to the sides
@@ -108,7 +110,7 @@ export function tagIcon(id) {
   if (!icons.has(id)) {
     const c = document.createElement('canvas');
     c.width = 256; c.height = 96;
-    drawName(c.getContext('2d'), id === 'owner' ? 'GIGACHAD' : 'Your Name', 128, 58, id, '#ffffff');
+    drawName(c.getContext('2d'), id === 'owner' ? 'GIGACHAD' : id === 'mod' ? 'Moderator' : 'Your Name', 128, 58, id, '#ffffff');
     icons.set(id, `<img class="tag-prev" src="${c.toDataURL()}" alt="">`);
   }
   return icons.get(id);

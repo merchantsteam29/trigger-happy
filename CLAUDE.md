@@ -177,6 +177,8 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
   built by `buildGun(id, mods, skin)`. Animated wraps: `anim` / `speed` in camos.js, moved by `animLoop` in models.js.
 - **Owner-only items:** `owner: true` on the item (never grantable, kept off bots); shown only for the verified owner
   (costume / skin: `remote.js`; banner: `game.js` death screen and `hud.js` MVP; kill effect: `game.js` `onKill`).
+  **Moderator items:** `staff: true` (owned by any mod, trial ones too, and the owner: `isOwned` / `ownsWrap`). Every
+  place that shows another player's look asks `lookOk(slot, id, role)` (missions.js) with the host-verified role.
 - **Banner with repeating tiles:** give it `size` (background sizes per layer, banners.js) since `.bnr` uses `cover`.
 - **Cosmetic or banner:** `COSMETICS` in `missions.js` (`price`, or `reward` with `how`), with its look in `cosmetics.js` /
   `banners.js`. Earn-only items use `grantItem` / `grantWrap`.

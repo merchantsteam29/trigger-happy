@@ -258,7 +258,7 @@ export class SettingsUI {
         <div class="wr-preview"><div class="wr-canvas"></div><p class="note">${esc(pick.desc || '')}</p></div>
         <div class="wr-side">${guns.map((g) => `<div class="sk-gun"><b>${esc(WEAPONS[g].name)}</b><div class="cz-grid cz-icon-grid">${skins.filter((s) => s.gun === g).map((s) => {
           const own = isOwned('skin', s.id), worn = cos.skins.includes(s.id);
-          const tag = worn ? '<em class="cz-tag on">Using</em>' : own ? '<em class="cz-tag">Owned</em>' : s.owner ? '<em class="cz-tag lock">👑 Owner only</em>' : s.reward ? '<em class="cz-tag lock">🔒 Giveaway</em>' : `<em class="cz-tag price">🪙 ${s.price}</em>`;
+          const tag = worn ? '<em class="cz-tag on">Using</em>' : own ? '<em class="cz-tag">Owned</em>' : s.owner ? '<em class="cz-tag lock">👑 Owner only</em>' : s.staff ? '<em class="cz-tag lock">🛡 Mods only</em>' : s.reward ? '<em class="cz-tag lock">🔒 Giveaway</em>' : `<em class="cz-tag price">🪙 ${s.price}</em>`;
           return `<button class="cz-card cz-icon-card ${s.id === this.skinTry ? 'trying' : ''} ${worn ? 'sel' : ''} ${own ? '' : 'locked'}" data-skin="${s.id}"><span class="cz-icon">${s.icon}</span><b>${esc(s.name)}</b>${tag}</button>`;
         }).join('')}</div></div>`).join('')}
         <div class="wr-actions">${actions}</div></div>

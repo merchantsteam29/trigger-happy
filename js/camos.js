@@ -55,6 +55,7 @@ export const CAMOS = [
   { id: 'coderain', name: 'Code Rain', pattern: 'code', colors: ['#020a04', '#3aff7a', '#b8ffcf'], glow: '#0a5a1e', anim: 'fall', speed: 0.5, price: 500 },
   { id: 'rainbowflow', name: 'Rainbow Flow', pattern: 'rainbow', colors: ['#ff3b3b'], glow: '#202020', anim: 'scroll', speed: 0.25, price: 700 },
   { id: 'lavaflow', name: 'Lava Flow', pattern: 'cracks', colors: ['#1a0a06', '#ff5a12', '#ffb020'], glow: '#ff3a00', anim: 'pulse', speed: 0.12, price: 600 },
+  { id: 'modshield', name: 'Moderator', pattern: 'shields', colors: ['#2a5a9a', '#c8d4e2', '#4fc3ff'], metal: 0.4, rough: 0.3, glow: '#0a2a5a', anim: 'scroll', speed: 0.3, reward: true, staff: true, how: 'Only moderators have this one' },
   { id: 'gigachad', name: 'GIGACHAD', pattern: 'crowns', colors: ['#e8a81e', '#ffe28a', '#b8860b'], metal: 0.3, rough: 0.25, glow: '#4a3000', anim: 'scroll', speed: 0.3, reward: true, owner: true, how: 'Only the game owner has this one' },
   { id: 'champion', name: 'Weekly Champion', pattern: 'cracks', colors: ['#1a1206', '#ffd23a', '#fff2b0'], metal: 0.8, rough: 0.2, glow: '#3a2600', reward: true, how: 'Finish #1 on a weekly leaderboard' },
 ];
@@ -64,7 +65,7 @@ export const camoOf = (id) => CAMOS.find((c) => c.id === id) || CAMOS[0];
 
 // CSS background for the little swatch in the loadout menu.
 export function camoSwatch(c) {
-  if (c.pattern === 'shine' || c.pattern === 'crowns') return `linear-gradient(110deg, ${c.colors[0]} 0 35%, ${c.colors[2]} 45%, ${c.colors[0]} 55%, ${c.colors[1]})`;
+  if (c.pattern === 'shine' || c.pattern === 'crowns' || c.pattern === 'shields') return `linear-gradient(110deg, ${c.colors[0]} 0 35%, ${c.colors[2]} 45%, ${c.colors[0]} 55%, ${c.colors[1]})`;
   if (c.pattern === 'rainbow') return 'linear-gradient(90deg, #ff3b3b, #ffb020, #ffe94a, #3bd16f, #3b9cff, #8a4bff)';
   if (c.pattern === 'code') return `repeating-linear-gradient(90deg, ${c.colors[0]} 0 4px, ${c.colors[1]} 4px 5px, ${c.colors[0]} 5px 9px)`;
   if (c.pattern === 'carbon') return `repeating-linear-gradient(45deg, ${c.colors[0]} 0 3px, ${c.colors[1]} 3px 6px)`;

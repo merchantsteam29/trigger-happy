@@ -118,6 +118,7 @@ export const COSMETICS = {
     { id: 'armory', name: 'Armory', price: 400 },
     { id: 'together', name: 'Together', price: 400 },
     { id: 'newlook', name: 'New Look', price: 400 },
+    { id: 'motion', name: 'In Motion', price: 400 },
     { id: 'sakura', name: 'Cherry Blossom', price: 400 },
     { id: 'deepsea', name: 'Deep Sea', price: 400 },
     { id: 'aurora', name: 'Aurora', price: 500 },
@@ -125,6 +126,7 @@ export const COSMETICS = {
     { id: 'glitch', name: 'Glitch', price: 450 },
     { id: 'checkered', name: 'Checkered Flag', price: 400 },
     { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one' },
+    { id: 'modshield', name: 'Moderator', reward: true, staff: true, how: 'Only moderators have this one' },
     // Season pass (can't be bought)
     { id: 's1', name: 'Ignition (S1)', reward: true, how: 'Season 1, tier 10' },
     { id: 's1elite', name: 'Ignition Elite (S1)', reward: true, how: 'Season 1, tier 25' },
@@ -274,10 +276,15 @@ function findItem(slot, id) { return COSMETICS[slot] && COSMETICS[slot].find((c)
 // The owner (GIGACHAD, checked against this device's key in roles.js) has every cosmetic and wrap,
 // including ones added later. It's a check, not a grant: nothing is added to the owned list.
 const ownsEverything = () => roles.isOwner();
+// Moderators (trial ones too) have the moderator items (`staff: true`), also a check, not a grant.
+const isStaff = () => { const r = roles.myRole(); return r === 'owner' || r === 'mod'; };
 export function isOwned(slot, id) {
   const item = findItem(slot, id);
-  return !!item && (item.free || owned.has(slot + ':' + id) || ownsEverything());
+  return !!item && (item.free || owned.has(slot + ':' + id) || ownsEverything() || (!!item.staff && isStaff()));
 }
+// Owner items (`owner`) and moderator items (`staff`) only show on a player whose role the host verified.
+export const roleOk = (it, role) => !it || (!it.owner && !it.staff) || role === 'owner' || (!!it.staff && role === 'mod');
+export const lookOk = (slot, id, role) => roleOk(slot === 'wrap' ? camoOf(id) : findItem(slot, id), role);
 // Earned or bought for real (achievements count these, not the owner's everything-unlocked).
 export function isEarned(slot, id) {
   const item = findItem(slot, id);
@@ -298,7 +305,7 @@ export function buy(slot, id) {
 }
 
 // Weapon wraps (camos.js): free ones are always yours; premium ones are bought with tokens.
-export const ownsWrap = (id) => { const c = camoOf(id); return c.id === id && ((!c.price && !c.reward) || owned.has('wrap:' + id) || ownsEverything()); };
+export const ownsWrap = (id) => { const c = camoOf(id); return c.id === id && ((!c.price && !c.reward) || owned.has('wrap:' + id) || ownsEverything() || (!!c.staff && isStaff())); };
 export function buyWrap(id) {
   if (ownsWrap(id)) return true;
   const c = camoOf(id);
@@ -377,7 +384,7 @@ export function wearSkin(cos, id, gun = null) {
 export function randomCos() {
   const pick = (a) => a[(Math.random() * a.length) | 0];
   const c = { hairColor: pick(HAIR_COLORS) };
-  for (const slot of Object.keys(COSMETICS)) c[slot] = pick(COSMETICS[slot].filter((x) => !x.owner)).id; // never the owner's own items
+  for (const slot of Object.keys(COSMETICS)) c[slot] = pick(COSMETICS[slot].filter((x) => !x.owner && !x.staff)).id; // never the owner's / moderators' own items
   if (Math.random() < 0.75) c.killfx = 'none'; // most bots don't have a kill effect
   if (c.nametag === 'owner' || Math.random() < 0.8) c.nametag = 'none'; // or a fancy name tag
   if (Math.random() < 0.7) c.charm = 'none';

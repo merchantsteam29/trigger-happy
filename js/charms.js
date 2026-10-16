@@ -15,6 +15,7 @@ export const CHARM_ITEMS = [
   { id: 'bullet', name: 'Golden Bullet', price: 200, icon: '🔸', desc: 'One shot, one charm' },
   { id: 'skull', name: 'Skull', price: 250, icon: '💀', desc: 'For the tryhards' },
   { id: 'gem', name: 'Diamond', price: 300, icon: '💎', desc: 'Sparkles in the light' },
+  { id: 'shield', name: 'Mod Shield', reward: true, staff: true, how: 'Only moderators have this one', icon: '🛡', desc: 'A little silver shield with a blue badge' },
   { id: 'crown', name: 'Crown', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'A little golden crown with a red gem' },
 ];
 export const CHARM_IDS = CHARM_ITEMS.map((c) => c.id);
@@ -26,6 +27,7 @@ const mat = (k) => {
     mats = {
       chain: m('#b8bcc4', { metalness: 0.9, roughness: 0.3 }), white: m('#f2f2f2'), black: m('#151515'), red: m('#e0283c'),
       yellow: m('#ffd21f'), orange: m('#ff7a12'), green: m('#3a8f2a'), gold: m('#ffc634', { metalness: 0.8, roughness: 0.25 }),
+      silver: m('#d8e0ea', { metalness: 0.8, roughness: 0.25 }), blue: m('#2f6ad8', { metalness: 0.3, roughness: 0.35, emissive: '#0a2a6a', emissiveIntensity: 0.4 }),
       brass: m('#d4a23a', { metalness: 0.85, roughness: 0.3 }), gem: m('#7fe9ff', { metalness: 0.2, roughness: 0.05, emissive: '#1a6f88', emissiveIntensity: 0.4 }),
     };
   }
@@ -69,6 +71,15 @@ export function buildCharm(id) {
     add(g, new THREE.SphereGeometry(s * 0.8, 12, 10), 'white', 0, y + s * 0.15, 0);
     add(g, new THREE.BoxGeometry(s * 0.9, s * 0.45, s * 0.8), 'white', 0, y - s * 0.6, 0);
     for (const x of [-0.32, 0.32]) add(g, new THREE.SphereGeometry(s * 0.22, 8, 6), 'black', x * s, y + s * 0.1, -s * 0.66);
+  } else if (id === 'shield') {
+    const sh = new THREE.Shape(); // a flat top, curving down to a point
+    sh.moveTo(-s * 0.8, s * 0.7);
+    sh.lineTo(s * 0.8, s * 0.7);
+    sh.quadraticCurveTo(s * 0.8, -s * 0.5, 0, -s * 1.1);
+    sh.quadraticCurveTo(-s * 0.8, -s * 0.5, -s * 0.8, s * 0.7);
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: s * 0.25, bevelEnabled: false }); geo.center();
+    add(g, geo, 'silver', 0, y, 0);
+    add(g, new THREE.CylinderGeometry(s * 0.32, s * 0.32, s * 0.3, 6), 'blue', 0, y + s * 0.05, 0).rotation.x = Math.PI / 2;
   } else if (id === 'crown') {
     add(g, new THREE.CylinderGeometry(s * 0.8, s * 0.7, s * 0.5, 12), 'gold', 0, y, 0);
     for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; add(g, new THREE.ConeGeometry(s * 0.18, s * 0.6, 4), 'gold', Math.cos(a) * s * 0.65, y + s * 0.5, Math.sin(a) * s * 0.65); }

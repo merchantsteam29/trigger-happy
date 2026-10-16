@@ -3,7 +3,7 @@ import { MAPS, setMapData, buildMapScene, boxes, quality, spawns } from './maps.
 import { moveBody, overlap, raycast, rayAABB, PLAYER_R, phys, GRAVITY } from './physics.js';
 import { MODES, TEAM_COLORS, ZOMBIE_COLOR, JUGG_COLOR, JUGG_TEAM, defaultSettings } from './host.js';
 import { WEAPONS, DEFAULT_LOADOUT, GUNGAME_LADDER, SLOTS } from './weapons.js';
-import { track, onMissionComplete, getCos } from './missions.js';
+import { track, onMissionComplete, getCos, lookOk } from './missions.js';
 import { onProgress, myLevel } from './progress.js';
 import { rateMatch } from './ranked.js';
 import { statsFor, cleanModMap } from './mods.js';
@@ -522,7 +522,7 @@ export class Game {
     const cos = mine ? getCos() : r && r.cos;
     if (!cos) return;
     const mvpRole = (this.players.get(mvp.id) || {}).role;
-    const pose = POSE_IDS.includes(cos.pose) && !(cos.pose === 'throne' && mvpRole !== 'owner') ? cos.pose : 'cheer'; // the throne is the owner's
+    const pose = POSE_IDS.includes(cos.pose) && lookOk('pose', cos.pose, mvpRole) ? cos.pose : 'cheer'; // the throne is the owner's, On Guard the mods'
     let spot = null;
     for (const s of [...spawns].sort(() => Math.random() - 0.5)) {
       const fx = -Math.sin(s.yaw), fz = -Math.cos(s.yaw);
@@ -1168,7 +1168,7 @@ export class Game {
     if (m.k !== m.v) {
       const kc = m.k === this.myId ? getCos() : this.remotes.get(m.k) && this.remotes.get(m.k).cos;
       const vp = m.v === this.myId ? this.me.pos : this.remotes.get(m.v) && this.remotes.get(m.v).pos;
-      const ownerOnly = kc && kc.killfx === 'gigachad' && !(pk && pk.role === 'owner'); // the owner's own, only on the verified owner
+      const ownerOnly = kc && kc.killfx && !lookOk('killfx', kc.killfx, pk && pk.role); // the owner's / mods' own, only on a verified owner / mod
       if (kc && kc.killfx && kc.killfx !== 'none' && vp && !ownerOnly) playKillFx(this.fx, kc.killfx, vp.clone().add(new THREE.Vector3(0, 1.1, 0)));
     }
     if (v) this.hud.feed(k, v, m.w, m.head, m.k === this.myId || m.v === this.myId);
@@ -3355,7 +3355,7 @@ export class Game {
       const tourOut = this.tourData && !this.tourData[2].includes(this.myId);
       const kr = killer && this.remotes.get(killer.id);
       hud.death(true, killer ? killer.name : null, this.deathInfo.w, secs, out ? 'Out of lives · spectating until the next round' : tourOut ? 'Out of the tournament · spectating' : brOut ? 'Eliminated · spectating until the round ends' : downed ? 'Downed · back when your team clears the wave' : null, this.deathInfo.head,
-        killer ? this.colorFor(killer) : '#fff', ((b) => (b === 'gigachad' && !(killer && killer.role === 'owner') ? 'standard' : b))((kr && kr.cos && kr.cos.banner) || 'standard'), killer ? killer.role : null);
+        killer ? this.colorFor(killer) : '#fff', ((b) => (lookOk('banner', b, killer && killer.role) ? b : 'standard'))((kr && kr.cos && kr.cos.banner) || 'standard'), killer ? killer.role : null);
     }
     if (this.matchOver && this.endInfo) {
       const next = MAPS[this.endInfo.nextMap];

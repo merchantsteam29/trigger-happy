@@ -693,6 +693,11 @@ becomes free again.
 - in matches: the name tag above their head, scoreboard, kill feed, chat, death screen and end screen;
 - in the menus: friends list and the **Staff** list in the Friends tab.
 
+**Moderator looks:** moderators have their own steel-blue and silver items with a shield badge: the **Moderator**
+costume, **Moderator Rifle** skin, **Moderator** wrap, **Mod Shield** charm, **Moderator** name tag, kill effect and banner,
+and the **On Guard** victory pose (a riot shield). Like the owner's GIGACHAD items, they only show on a moderator the game
+has verified.
+
 - **Can't be faked:** the owner badge is tied to the GIGACHAD gamertag's key, not the name. In a match, staff prove
   who they are to the host with a signed message. Anyone else who joins using a staff name is renamed to
   "Imposter###" after a few seconds.

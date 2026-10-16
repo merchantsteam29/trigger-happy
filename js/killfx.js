@@ -19,6 +19,7 @@ export const KILL_FX_ITEMS = [
   { id: 'glitchdel', name: 'Glitch Delete', price: 400, icon: '📺', desc: 'They glitch into pixels and vanish' },
   { id: 'snowstorm', name: 'Snowstorm', price: 300, icon: '❄️', desc: 'A puff of snowflakes swirls out' },
   { id: 'disco', name: 'Disco Ball', price: 450, icon: '🪩', desc: 'Colored lights flash and sparkle' },
+  { id: 'modshield', name: 'Moderator', reward: true, staff: true, how: 'Only moderators have this one', icon: '🛡', desc: 'A shield of blue light rises in a burst of silver' },
   { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one', icon: '♛', desc: 'A golden crown rises in a burst of gold and purple' },
 ];
 
@@ -108,6 +109,20 @@ export function playKillFx(fx, id, pos) {
       const cols = ['#ff2fd8', '#2ae8ff', '#ffe14a', '#39ff6a', '#ff7a1a'];
       for (let i = 0; i < 36; i++) { const a = (i / 36) * Math.PI * 2; P(_v.set(pos.x, pos.y + 0.6, pos.z).clone(), new THREE.Vector3(Math.cos(a) * 4, rnd(1.5), Math.sin(a) * 4), cols[i % cols.length], 0.08, 0.9, 0); }
       cols.slice(0, 4).forEach((c, i) => setTimeout(() => fx.flashAt(pos, c, 16, 0.15), i * 160));
+      break;
+    }
+    case 'modshield': {
+      // the moderators': a shield outline of blue light rises, silver and blue burst out, a blue flash
+      const c = new THREE.Vector3(pos.x, pos.y + 0.6, pos.z);
+      for (let i = 0; i < 30; i++) { // a shield shape: a flat top, then the sides curving down to a point
+        const u = i / 30;
+        let x, y;
+        if (u < 0.2) { x = -0.35 + (u / 0.2) * 0.7; y = 0.3; }
+        else { const k = (u - 0.2) / 0.8, side = k < 0.5 ? 1 : -1, f = k < 0.5 ? k * 2 : (1 - k) * 2; x = side * 0.35 * Math.cos(f * Math.PI / 2); y = 0.3 - Math.sin(f * Math.PI / 2) * 0.65; }
+        P(_v.set(c.x + x, c.y + y, c.z).clone(), new THREE.Vector3(0, 1.2, 0), i % 2 ? '#4fc3ff' : '#e8f4ff', 0.08, 1.5, 0);
+      }
+      for (let i = 0; i < 36; i++) P(pos, _v.set(rnd(8), 3 + Math.random() * 5, rnd(8)), pick(['#4fc3ff', '#e8f4ff', '#2a6ad8', '#c8d4e2']), 0.09, 1.3, 10);
+      fx.flashAt(pos, '#4fc3ff', 26, 0.3);
       break;
     }
     case 'gigachad': {

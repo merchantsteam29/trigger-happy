@@ -61,6 +61,7 @@ export const COSTUME_ITEMS = [
   { id: 'rk_master', name: 'Master Armor', reward: true, rank: 'master', how: rankHow('Master'), icon: '✷', desc: 'Earned by reaching Master.' },
   { id: 'rk_legend', name: 'Legend Armor', reward: true, rank: 'legend', how: rankHow('Legend'), icon: '♛', desc: 'Earned by reaching Legend.' },
   // The owner's
+  { id: 'moderator', name: 'Moderator', reward: true, staff: true, how: 'Only moderators have this one', icon: '🛡', desc: 'Steel-blue armor with silver plates, a visor and a shield badge.' },
   { id: 'gigachad', name: 'GIGACHAD', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'Solid gold, with a crown and a cape.' },
 ];
 const RANK_COLOR = { contender: '#5fc46a', veteran: '#4aa8ff', elite: '#b36bff', master: '#ff8a3a', legend: '#ff3a6a' };
@@ -601,6 +602,21 @@ const BUILD = {
     for (const s of [-1, 1]) { ball(head, white, 0.045, s * 0.06, 0.2, -0.19); ball(head, black, 0.02, s * 0.06, 0.2, -0.235); } // googly eyes
     const m = add(head, new THREE.TorusGeometry(0.04, 0.008, 6, 12, Math.PI), black, 0, 0.13, -0.19); m.rotation.z = Math.PI; // smile
     return { arm: team, leg: team, hand: team, foot: team };
+  },
+  moderator({ hips, spine, head }, team) {
+    const steel = mat('#2a4a7a', { metalness: 0.45, roughness: 0.35 }), silver = mat('#d0dae6', { metalness: 0.6, roughness: 0.25 }), dark = mat('#141c2a', { metalness: 0.3, roughness: 0.5 }), light = glow('#4fc3ff', 1.8);
+    torso(spine, steel, 0.52, 0.56, 0.3);
+    box(spine, silver, 0.4, 0.28, 0.02, 0, 0.4, -0.155); // chest plate
+    cyl(spine, steel, 0.075, 0.075, 0.02, 0, 0.4, -0.17, Math.PI / 2, 0, 0, 6); cone(spine, light, 0.045, 0.07, 0, 0.4, -0.18, Math.PI / 2, 0, Math.PI, 3); // shield badge
+    for (const s of [-1, 1]) { box(spine, silver, 0.22, 0.14, 0.3, s * 0.3, 0.56, 0, 0, 0, s * -0.25); box(spine, light, 0.02, 0.2, 0.02, s * 0.17, 0.2, -0.155); }
+    const cape = box(spine, mat('#1a3a7a'), 0.48, 0.78, 0.02, 0, 0.2, 0.17, 0.1, 0, 0); cape.castShadow = false;
+    box(spine, team, 0.48, 0.04, 0.025, 0, 0.58, 0.165); // cape clasp in your color
+    pelvis(hips, dark); belt(hips, silver);
+    headBlock(head, steel, 0.29);
+    box(head, silver, 0.31, 0.1, 0.31, 0, 0.27, 0); // helmet
+    box(head, light, 0.24, 0.045, 0.02, 0, 0.16, -0.148); // visor
+    box(head, silver, 0.04, 0.1, 0.26, 0, 0.35, 0); // crest
+    return { arm: steel, leg: dark, hand: silver, foot: dark };
   },
   gigachad({ hips, spine, head }, team) {
     const gold = mat('#f5c533', { metalness: 0.35, roughness: 0.3, emissive: '#3a2a00', emissiveIntensity: 0.6 }), deep = mat('#c08a16', { metalness: 0.35, roughness: 0.35 }), gem = mat('#d0213a', { emissive: '#600010', emissiveIntensity: 0.8 });

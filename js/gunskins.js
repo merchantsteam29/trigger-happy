@@ -27,6 +27,7 @@ export const SKIN_ITEMS = [
   { id: 'portalgun', gun: 'pistol', name: 'Portal Gun', reward: true, handout: true, how: HANDOUT, icon: '🌀', desc: 'White with a glowing blue tip (goes with Cube Hero).' },
   { id: 'coinrevolver', gun: 'revolver', name: 'Marksman Revolver', reward: true, handout: true, how: HANDOUT, icon: '🪙', desc: 'A blue machine revolver with a coin on top (goes with Blood Machine).' },
   { id: 'shieldsaw', gun: 'shotgun', name: 'Shield Saw Shotgun', reward: true, handout: true, how: HANDOUT, icon: '🪚', desc: 'Green armor plating and a saw blade under the barrel (goes with Hellwalker).' },
+  { id: 'modrifle', gun: 'ar', name: 'Moderator Rifle', reward: true, staff: true, how: 'Only moderators have this one', icon: '🛡', desc: 'Steel blue and silver with a shield badge and blue lights.' },
   { id: 'gigachad', gun: 'ar', name: 'GIGACHAD Rifle', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'Solid gold with a crown and red gems.' },
 ];
 export const skinItem = (id) => SKIN_ITEMS.find((s) => s.id === id && s.gun) || null;
@@ -48,7 +49,26 @@ const toGold = (grips = mat('#141414')) => (m) => {
   return m === M.poly || m === M.rubber ? grips : lum < 0.02 ? DGOLD : GOLD;
 };
 
+// Moderator: steel blue, the darkest parts silver, grips navy.
+const STEEL = mat('#2f5a9a', { metalness: 0.45, roughness: 0.3 }), SILVER = mat('#d0dae6', { metalness: 0.6, roughness: 0.25 }), NAVY = mat('#141c2a', { roughness: 0.5 });
+const toSteel = () => (m) => {
+  if (KEEP().has(m) || !m.color) return m;
+  const c = m.color, lum = 0.3 * c.r + 0.59 * c.g + 0.11 * c.b;
+  return m === M.poly || m === M.rubber ? NAVY : lum < 0.02 ? SILVER : STEEL;
+};
+
 const SKINS = {
+  modrifle: {
+    recolor: toSteel,
+    extra(g) { // a shield badge on each side and blue lights down the top
+      const light = glow('#4fc3ff', 2);
+      for (const s of [-1, 1]) {
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.006, 6), SILVER); b.rotation.z = Math.PI / 2; b.position.set(s * 0.041, 0.06, -0.08); g.add(b);
+        const d = new THREE.Mesh(new THREE.ConeGeometry(0.011, 0.018, 3), light); d.rotation.set(0, 0, s * Math.PI / 2); d.position.set(s * 0.045, 0.06, -0.08); g.add(d);
+      }
+      for (const z of [-0.2, -0.3, -0.4]) for (const s of [-1, 1]) sphere(g, light, 0.005, s * 0.04, 0.075, z, 8, 6);
+    },
+  },
   laserrifle: { base: 'laser' },
   golddeagle: { recolor: () => toGold() },
   gigachad: {

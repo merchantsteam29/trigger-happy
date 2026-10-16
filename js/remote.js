@@ -7,7 +7,7 @@ import { buildCosmetics } from './cosmetics.js';
 import { buildCostume } from './costumes.js';
 import { skinFor } from './gunskins.js';
 import { camoOf } from './camos.js';
-import { DEFAULT_COS } from './missions.js';
+import { DEFAULT_COS, lookOk } from './missions.js';
 
 // Plain boxes on phones (see modelQuality).
 const RoundedBoxGeometry = function (sx, sy, sz, seg, r) {
@@ -62,7 +62,7 @@ function nameTag(name, color, role = null, style = null) {
   g.textBaseline = 'middle';
   g.lineWidth = 6;
   g.strokeStyle = 'rgba(0,0,0,0.8)';
-  const r = style === 'owner' ? null : TAG_ROLES[role]; // the owner's style has its own crown
+  const r = style === 'owner' || (style === 'mod' && role === 'mod') ? null : TAG_ROLES[role]; // the owner's / mods' styles have their own crown / shield
   if (r) {
     g.font = '800 22px Rubik, sans-serif';
     g.strokeText(r[0], 128, 30);
@@ -192,7 +192,7 @@ export class RemotePlayer {
   // Their name tag style (nametags.js): plain in team modes, and the owner's only on the verified owner.
   tagStyle() {
     const s = this.cos && this.cos.nametag;
-    if (!s || s === 'none' || this.teamLook || (s === 'owner' && this.role !== 'owner')) return null;
+    if (!s || s === 'none' || this.teamLook || !lookOk('nametag', s, this.role)) return null;
     return s;
   }
 
@@ -213,17 +213,17 @@ export class RemotePlayer {
     this.name = name;
     this.role = role;
     this.rebuildTag();
-    if (wasRole !== role && this.cos && this.cos.costume === 'gigachad') this.applyCosmetics(); // the owner's costume shows once verified
-    if (wasRole !== role && this.guns && Object.keys(this.guns).length) this.setMods(this.mods); // and the owner's gun skin / wrap
+    if (wasRole !== role && this.cos && this.cos.costume && !lookOk('costume', this.cos.costume, null)) this.applyCosmetics(); // the owner's / mods' costume shows once verified
+    if (wasRole !== role && this.guns && Object.keys(this.guns).length) this.setMods(this.mods); // and their gun skin / wrap / charm
   }
 
-  // Their weapon charm (the owner's crown only on the verified owner).
-  charmId() { const c = (this.cos && this.cos.charm) || 'none'; return c === 'crown' && this.role !== 'owner' ? 'none' : c; }
+  // Their weapon charm (the owner's crown / the mods' shield only on a verified owner / mod).
+  charmId() { const c = (this.cos && this.cos.charm) || 'none'; return lookOk('charm', c, this.role) ? c : 'none'; }
 
   // Costume to show: none in modes with a forced look (setCostumeOff), and the owner's only on the verified owner.
   costumeId() {
     const c = this.cos && this.cos.costume;
-    if (!c || c === 'none' || this.costumeOff || (c === 'gigachad' && this.role !== 'owner')) return null;
+    if (!c || c === 'none' || this.costumeOff || !lookOk('costume', c, this.role)) return null;
     return c;
   }
   setCostumeOff(v) {
@@ -297,9 +297,9 @@ export class RemotePlayer {
     if (this.weapon && this.guns[this.weapon]) this.guns[this.weapon].visible = false;
     if (!this.guns[id]) {
       // Their skin for this weapon, and their wrap (the owner's own only on the verified owner).
-      const sk = skinFor(this.cos && this.cos.skins, id), owner = this.role === 'owner';
-      const m = this.mods[id] && camoOf(this.mods[id].camo).owner && !owner ? { ...this.mods[id], camo: 'default' } : this.mods[id];
-      const g = buildGun(id, m, sk && (!sk.owner || owner) ? sk.id : null);
+      const sk = skinFor(this.cos && this.cos.skins, id);
+      const m = this.mods[id] && !lookOk('wrap', this.mods[id].camo, this.role) ? { ...this.mods[id], camo: 'default' } : this.mods[id];
+      const g = buildGun(id, m, sk && lookOk('skin', sk.id, this.role) ? sk.id : null);
       attachCharm(g, this.charmId());
       g.userData.charmId = this.cos && this.cos.charm;
       g.scale.setScalar(1.25);

@@ -9,6 +9,14 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
+  { v: '2026.10.16.1', name: 'In Motion', banner: 'motion', notes: [
+    '## Moderator looks',
+    "Moderators get their own versions of the owner's items, in steel blue and silver with a shield badge",
+    'A costume, a rifle skin, a weapon wrap, a weapon charm, a name tag, a kill effect, a banner and a victory pose (On Guard, with a riot shield)',
+    'They only show on moderators the game has checked, so nobody can fake them',
+    '## New Banner',
+    'In Motion, the banner of this update, is in the shop',
+  ] },
   { v: '2026.10.15.38', name: 'New Look', banner: 'newlook', notes: [
     '## Menus',
     'Tabs across the top: Play, Loadout, Locker Room, Shop, Missions, Leaderboard and Friends',

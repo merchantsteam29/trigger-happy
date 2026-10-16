@@ -94,6 +94,10 @@ export const BANNER_STYLE = {
     bg: 'repeating-conic-gradient(from 0deg at 18% 50%, #ffffff10 0 6deg, transparent 6deg 18deg), radial-gradient(circle at 18% 50%, #fff7 0 6%, #2fe6ff88 12%, transparent 40%), linear-gradient(100deg, #10052a, #4a0f9a 45%, #ff2fd8)',
     accent: '#2fe6ff', emblem: '💥', anim: 'hue',
   },
+  motion: { // "In Motion" (2026-10-16): speed lines
+    bg: 'repeating-linear-gradient(100deg, transparent 0 18px, #ffffff14 18px 20px, transparent 20px 46px), radial-gradient(circle at 82% 50%, #3fe8ff55 0 14%, transparent 42%), linear-gradient(100deg, #0a0a1e, #1a1a4a 50%, #3a5aff 80%, #3fe8ff)',
+    accent: '#3fe8ff', emblem: '🏃', anim: 'shine',
+  },
   newlook: {
     bg: 'linear-gradient(90deg, #ffffff0f 1px, transparent 1px) 0 0, linear-gradient(0deg, #ffffff0f 1px, transparent 1px) 0 0, radial-gradient(circle at 82% 50%, #ff2d7555 0 16%, transparent 42%), linear-gradient(100deg, #12081e, #2a0f3a 55%, #ff2d75)',
     accent: '#ffd23f', emblem: '🖥', anim: 'shine', size: '24px 24px, 24px 24px, cover, cover',
@@ -129,6 +133,10 @@ export const BANNER_STYLE = {
   gigachad: {
     bg: 'repeating-linear-gradient(135deg, #ffffff10 0 2px, transparent 2px 14px), radial-gradient(circle at 84% 50%, #fff3a0aa 0 10%, #ffd23a55 20%, transparent 45%), linear-gradient(100deg, #2a0a3a, #6a1a8a 40%, #c88a12 75%, #ffd23a)',
     accent: '#ffe27a', emblem: '♛', anim: 'shine',
+  },
+  modshield: { // the moderators' own
+    bg: 'repeating-linear-gradient(135deg, #ffffff12 0 2px, transparent 2px 14px), radial-gradient(circle at 84% 50%, #e8f4ffaa 0 9%, #4fc3ff55 20%, transparent 45%), linear-gradient(100deg, #0a1426, #1a3a6a 45%, #3a7ac8 75%, #c8d4e2)',
+    accent: '#cfe8ff', emblem: '🛡', anim: 'shine',
   },
   armory: {
     bg: 'repeating-linear-gradient(90deg, #ffffff0d 0 2px, transparent 2px 16px), radial-gradient(circle at 82% 50%, #3fe8ff55 0 14%, transparent 40%), linear-gradient(100deg, #0a1018, #1a2a3a 50%, #ff8a1a)',

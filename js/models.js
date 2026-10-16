@@ -363,10 +363,16 @@ function camoTexture(c) {
       for (let j = 0; j < 4; j++) { x += (rnd() - 0.5) * 22; y += (rnd() - 0.5) * 22; g.lineTo(x, y); }
       g.stroke();
     }
-  } else if (c.pattern === 'shine' || c.pattern === 'crowns') { // gold with a bright band (and little crowns)
+  } else if (c.pattern === 'shine' || c.pattern === 'crowns' || c.pattern === 'shields') { // a bright band (and little crowns / shields)
     const grd = g.createLinearGradient(0, 0, 64, 0);
     grd.addColorStop(0, col[0]); grd.addColorStop(0.42, col[0]); grd.addColorStop(0.5, col[2]); grd.addColorStop(0.58, col[0]); grd.addColorStop(1, col[1]);
     g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
+    if (c.pattern === 'shields') { // little shields with a glowing badge
+      for (const [x, y] of [[8, 12], [40, 28], [20, 46], [52, 4]]) {
+        g.fillStyle = col[1]; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 12, y); g.quadraticCurveTo(x + 12, y + 8, x + 6, y + 13); g.quadraticCurveTo(x, y + 8, x, y); g.fill();
+        g.fillStyle = col[2]; g.fillRect(x + 4, y + 3, 4, 4);
+      }
+    }
     if (c.pattern === 'crowns') {
       g.fillStyle = col[2];
       for (const [x, y] of [[8, 14], [40, 30], [20, 48], [52, 6]]) { g.beginPath(); g.moveTo(x, y + 8); g.lineTo(x, y); g.lineTo(x + 3, y + 4); g.lineTo(x + 6, y); g.lineTo(x + 9, y + 4); g.lineTo(x + 12, y); g.lineTo(x + 12, y + 8); g.fill(); g.fillStyle = '#d0122a'; g.fillRect(x + 5, y + 5, 2, 2); g.fillStyle = col[2]; }

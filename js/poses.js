@@ -19,6 +19,7 @@ export const POSE_ITEMS = [
   { id: 'levitate', name: 'Levitate', price: 500, icon: '🧘', desc: 'Floats up and slowly turns' },
   { id: 'pushups', name: 'Push-ups', price: 400, icon: '🏋', desc: 'Drops down and does push-ups' },
   { id: 'guitar', name: 'Guitar Solo', price: 450, icon: '🎸', desc: 'Shreds on a guitar' },
+  { id: 'guard', name: 'On Guard', reward: true, staff: true, how: 'Only moderators have this one', icon: '🛡', desc: 'Plants a riot shield and stands watch' },
   { id: 'throne', name: 'Throne', reward: true, owner: true, how: 'Only the game owner has this one', icon: '👑', desc: 'Sits on a golden throne' },
 ];
 export const POSE_IDS = POSE_ITEMS.map((p) => p.id);
@@ -37,6 +38,7 @@ export function poseHand(id, side, t) {
     case 'pushups': { const b = poseBody('pushups', t); return [side * 0.28, 1.38, 0.05 - b.y]; } // hands on the floor (body lying face down)
     case 'guitar': return side > 0 ? [0.1, 1.08 + Math.abs(Math.sin(t * 16)) * 0.06, -0.24] : [-0.46, 1.28, -0.22]; // strumming / on the neck
     case 'throne': return [side * 0.36, 0.78, -0.12]; // on the armrests
+    case 'guard': return [side * 0.2, 1.24 + Math.sin(t * 2) * 0.01, -0.42]; // on top of the shield
     default: return null;
   }
 }
@@ -51,6 +53,7 @@ export function poseBody(id, t) {
   else if (id === 'levitate') { out.y = Math.min(1, t * 0.8) * 0.45 + Math.sin(t * 2) * 0.06; out.yaw = t * 0.7; }
   else if (id === 'pushups') { const k = Math.min(1, t * 2); out.pitch = -Math.PI / 2 * k; out.y = (0.34 + Math.sin(t * 5) * 0.11) * k; }
   else if (id === 'guitar') { out.bend = -0.15 + Math.abs(Math.sin(t * 8)) * 0.08; out.y = Math.abs(Math.sin(t * 8)) * 0.03; }
+  else if (id === 'guard') { out.bend = 0.08 + Math.sin(t * 2) * 0.015; out.yaw = Math.sin(t * 0.6) * 0.12; } // looking around, keeping watch
   else if (id === 'throne') { out.y = -0.36; out.foot = [0, 0.36, -0.34]; } // sitting: hips down, feet stay on the floor in front
   return out;
 }
@@ -66,6 +69,16 @@ export function poseProp(id) {
     box(g, wood, 0.045, 0.5, 0.025, -0.2, 0.36, -0.22, 1.15); // the neck, up to the left hand
     box(g, black, 0.08, 0.1, 0.03, -0.42, 0.47, -0.22, 1.15); // head
     return { g, bone: 'spine' };
+  }
+  if (id === 'guard') { // a riot shield planted on the ground in front of them (root)
+    const g = new THREE.Group(), steel = m('#c8d4e2', { metalness: 0.6, roughness: 0.3 }), blue = m('#2a5ab8', { metalness: 0.3, roughness: 0.4 }), glass = m('#9fd8ff', { transparent: true, opacity: 0.45, roughness: 0.1 });
+    box(g, blue, 0.62, 1.1, 0.04, 0, 0.62, -0.5); // the shield
+    box(g, glass, 0.4, 0.16, 0.05, 0, 0.98, -0.5); // its viewing window
+    for (const s of [-1, 1]) box(g, steel, 0.05, 1.1, 0.06, s * 0.31, 0.62, -0.5); // silver edges
+    box(g, steel, 0.66, 0.05, 0.06, 0, 1.18, -0.5); box(g, steel, 0.66, 0.05, 0.06, 0, 0.07, -0.5);
+    const e = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.02, 6), steel); e.rotation.x = Math.PI / 2; e.position.set(0, 0.62, -0.53); g.add(e); // the badge
+    const d = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 3), m('#4fc3ff', { emissive: '#1a5a9a', emissiveIntensity: 0.8 })); d.rotation.set(Math.PI / 2, 0, Math.PI); d.position.set(0, 0.62, -0.545); g.add(d);
+    return { g, bone: 'root' };
   }
   if (id === 'throne') { // stands on the ground behind them (root)
     const g = new THREE.Group(); g.position.y = 0.36; // the body sits 0.36 lower (poseBody); the throne stays on the floor
