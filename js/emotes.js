@@ -16,24 +16,12 @@ export const EMOTE_COOLDOWN = 3;
 // Where the hands go during an emote, in the body's own space (x right, y up, -z forward), or
 // null to keep the normal pose. t: seconds since it started.
 export function emoteHand(id, side, t) {
-  if (id === 'wave') return side > 0 ? [0.38, 1.8 + Math.sin(t * 9) * 0.04, -0.1 + Math.sin(t * 9) * 0.16] : [-0.3, 1.0, 0.04]; // other hand on the hip
-  if (id === 'salute') return side > 0 ? [0.1, 1.66, -0.2] : [-0.27, 0.86, 0.02]; // other arm straight down: attention
-  if (id === 'dance') return [side * 0.34, 1.45 + Math.sin(t * 8 + (side > 0 ? 0 : Math.PI)) * 0.32, -0.22 + Math.cos(t * 8 + (side > 0 ? 0 : Math.PI)) * 0.08];
-  if (id === 'flex') return [side * 0.44, 1.62 + Math.sin(t * 6 + (side > 0 ? 0 : Math.PI)) * 0.07, 0.02]; // one arm pumps, then the other
+  if (id === 'wave') return side > 0 ? [0.36, 1.78 + Math.sin(t * 9) * 0.04, -0.08 + Math.sin(t * 9) * 0.14] : null;
+  if (id === 'salute') return side > 0 ? [0.1, 1.66, -0.2] : null;
+  if (id === 'dance') return [side * 0.32, 1.45 + Math.sin(t * 8 + (side > 0 ? 0 : Math.PI)) * 0.3, -0.22];
+  if (id === 'flex') return [side * 0.44, 1.62 + Math.sin(t * 6) * 0.04, 0.02];
   if (id === 'laugh') return [side * 0.16, 1.0 + Math.abs(Math.sin(t * 14)) * 0.04, -0.24];
   return null;
-}
-
-// The rest of the body during an emote (added to the normal pose): bounce `y`, turn `yaw`, lean back
-// `bend` (negative: forward), lean sideways `roll`, hips `hipX`, head nod `neck` and tilt `neckZ`. t: seconds since it started.
-export function emoteBody(id, t) {
-  const o = { y: 0, yaw: 0, bend: 0, roll: 0, hipX: 0, neck: 0, neckZ: 0 };
-  if (id === 'wave') { o.roll = -0.06; o.neckZ = -0.14; o.neck = -0.05; o.y = Math.abs(Math.sin(t * 4.5)) * 0.015; }
-  else if (id === 'dance') { const s = Math.sin(t * 4); o.y = Math.abs(Math.sin(t * 8)) * 0.09; o.yaw = s * 0.45; o.hipX = s * 0.07; o.roll = -s * 0.1; o.neck = Math.sin(t * 8) * 0.1; o.neckZ = s * 0.15; }
-  else if (id === 'salute') { const k = Math.min(1, t / 0.18); o.bend = 0.05 * k; o.neck = 0.04 * k; o.y = 0.02 * k; } // snaps to attention, chest out
-  else if (id === 'laugh') { o.bend = -0.25 - Math.sin(t * 3) * 0.12; o.neck = -0.22 + Math.abs(Math.sin(t * 14)) * 0.06; o.y = Math.abs(Math.sin(t * 14)) * 0.015; o.roll = Math.sin(t * 2) * 0.05; } // doubled over, shaking
-  else if (id === 'flex') { const f = Math.sin(t * 6); o.y = Math.max(0, f) * 0.03; o.yaw = Math.sin(t * 1.5) * 0.35; o.bend = 0.06; o.roll = f * 0.05; } // chest out, showing off both sides
-  return o;
 }
 
 // The emoji bubble over someone's head.

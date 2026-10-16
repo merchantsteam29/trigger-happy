@@ -15,8 +15,7 @@ const RoundedBoxGeometry = function (sx, sy, sz, seg, r) {
 };
 import { WEAPONS } from './weapons.js';
 import { buildDisguise, disguiseBox } from './prophunt.js';
-import { EMOTES, EMOTE_TIME, emoteHand, emoteBody, emoteBubble } from './emotes.js';
-const sm = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+import { EMOTES, EMOTE_TIME, emoteHand, emoteBubble } from './emotes.js';
 import { angLerp } from './util.js';
 import { Limb, solveIK } from './rig.js';
 import { drawName, animateTag, tagAnim } from './nametags.js';
@@ -43,7 +42,6 @@ const INTERP_MS = 110, EXTRAP_MS = 120;
 export const netClock = { off: 0 };
 const YAXIS = new THREE.Vector3(0, 1, 0);
 const XAXIS = new THREE.Vector3(1, 0, 0);
-const ZAXIS = new THREE.Vector3(0, 0, 1);
 
 function mesh(geo, mat, x, y, z, parent) {
   const m = new THREE.Mesh(geo, mat);
@@ -356,9 +354,6 @@ export class RemotePlayer {
       }
     }
     if (!alive && this.alive && this.deathT === 0) this.die(null);
-    const hp = a[8];
-    if (alive && this.alive && typeof hp === 'number' && typeof this.hp === 'number' && hp < this.hp - 0.5 && performance.now() - (this.flAt || 0) > 250) this.flinch(null, false);
-    this.hp = hp;
     this.alive = alive;
     this.hasState = true;
   }
@@ -412,17 +407,12 @@ export class RemotePlayer {
         if (d > best[2] + 0.2) best = [x / l, z / l, d];
       }
       this.fallDir.set(best[0], 0, best[1]);
-      this.cramped = best[2] < 1.4; // no room anywhere: crumple where they stand
-    } else this.cramped = false;
+    }
     // Knocked back (and up, for explosions), with a random twist so no two deaths look the same.
     this.deathVel.set(this.fallDir.x * force, force >= 6 ? force * 0.75 : force * 0.25, this.fallDir.z * force);
     this.deathTwist = (Math.random() - 0.5) * (force >= 6 ? 3 : 1.2);
     this.deathFloor = Math.min(this.pos.y, this.groundBelow());
     this.deathSplay = 0.6 + Math.random() * 0.4;
-    // How they go down: headshots crumple at the knees, explosions throw them tumbling, the rest fall like a tree.
-    this.deathKind = force >= 6 ? 'blast' : head || this.cramped ? 'crumple' : 'fall';
-    this.deathHead = head;
-    this.deathDrop = 0;
     if (head) this.popHat();
   }
 
@@ -430,21 +420,6 @@ export class RemotePlayer {
   groundBelow(from = this.pos.y) {
     const h = raycast(this.pos.x, from + 0.3, this.pos.z, 0, -1, 0, 60);
     return h ? Math.min(from + 0.3, h.y) : from;
-  }
-
-  // Hit (not killed): a flinch away from `from` (a world position, or straight back if unknown).
-  flinch(from = null, head = false) {
-    if (!this.alive || this.deathT > 0) return;
-    this.flT = Math.min(1.3, (this.flT || 0) * 0.5 + 1);
-    this.flHead = head;
-    this.flAt = performance.now();
-    this.flDir = this.flDir || { x: 0, z: 1 };
-    if (from) { // in the body's own space: +z = pushed back, x = pushed to the side
-      const dx = this.pos.x - from.x, dz = this.pos.z - from.z, l = Math.hypot(dx, dz) || 1;
-      const cy = Math.cos(this.yaw), sy = Math.sin(this.yaw);
-      this.flDir.x = Math.max(-1, Math.min(1, (dx * cy - dz * sy) / l));
-      this.flDir.z = Math.max(-1, Math.min(1, (dx * sy + dz * cy) / l)); // negative: shot from behind, pushed forward
-    } else { this.flDir.x = (Math.random() - 0.5) * 0.6; this.flDir.z = 1; }
   }
 
   popHat() {
@@ -508,22 +483,11 @@ export class RemotePlayer {
     this.swapT = Math.max(0, this.swapT - dt * 3);
 
     this.vel.subVectors(this.pos, this.prev).divideScalar(Math.max(dt, 1e-4));
-    const rawSpeed = this.deathT > 0 ? 0 : Math.min(9, Math.hypot(this.vel.x, this.vel.z)); // a falling body doesn't run
-    this.spd = (this.spd || 0) + (rawSpeed - (this.spd || 0)) * Math.min(1, dt * 12); // smoothed: snapshots aren't perfectly even
-    const speed = this.deathT > 0 ? 0 : this.spd;
+    const speed = this.deathT > 0 ? 0 : Math.min(9, Math.hypot(this.vel.x, this.vel.z)); // a falling body doesn't run
     if (this.deathT > 0) this.air = 0;
     const moving = Math.min(1, speed / 1.5) * (1 - this.air);
-    // Turning on the spot: how fast they're turning (for little shuffling steps and leaning into turns).
-    const dYaw = Math.atan2(Math.sin(this.yaw - (this.lastYaw ?? this.yaw)), Math.cos(this.yaw - (this.lastYaw ?? this.yaw)));
-    this.lastYaw = this.yaw;
-    this.turnRate = (this.turnRate || 0) + (dYaw / Math.max(dt, 1e-4) - (this.turnRate || 0)) * Math.min(1, dt * 10);
-    const shuffle = this.alive && !this.poseId ? Math.min(1, Math.max(0, Math.abs(this.turnRate) - 1) / 2.5) * (1 - moving) * (1 - this.air) : 0;
-    // One step = half a cycle; a step is longer the faster they go (walk ~0.65 m, sprint ~1.1 m), shorter crouched.
-    const vcy = Math.cos(this.yaw), vsy = Math.sin(this.yaw), vl = Math.hypot(this.vel.x, this.vel.z) || 1;
-    const sideK = Math.abs(this.vel.x * vcy - this.vel.z * vsy) / vl, backK = Math.max(0, (this.vel.x * vsy + this.vel.z * vcy) / vl);
-    this.stepLen = (0.6 + speed * 0.055) * (1 - this.crouch * 0.35) * (1 - sideK * 0.55) * (1 - backK * 0.25); // short side steps and back steps
     const lastPhase = this.phase;
-    this.phase += dt * ((Math.PI * speed) / this.stepLen + shuffle * 9 + 0.001);
+    this.phase += dt * (speed * 2.1 + 0.001);
     if (Math.floor(lastPhase / Math.PI) !== Math.floor(this.phase / Math.PI) && moving > 0.5 && this.alive) this.stepped = true;
 
     // Root (dead bodies fly back, bounce and slide to a stop)
@@ -542,54 +506,27 @@ export class RemotePlayer {
       v.x *= Math.exp(-dt * 1.5); v.z *= Math.exp(-dt * 1.5);
     }
     this.root.position.copy(this.pos);
-    this.emB = null;
     if (this.deathT > 0) {
       this.deathT += dt;
-      const t = this.deathT, kind = this.deathKind || 'fall';
-      // Tipping over: faster and faster (like gravity) until it hits the floor at `dur`, then a small bounce.
-      const tip = (t0, dur) => {
-        const u = (t - t0) / dur;
-        if (u <= 0) return 0;
-        if (u < 1) return (Math.PI / 2) * u * u;
-        const b = (u - 1) * dur;
-        return Math.PI / 2 - 0.12 * Math.abs(Math.sin(b * 11)) * Math.exp(-b * 7);
-      };
-      let ang, twist = this.deathTwist * Math.min(1, t / 0.5);
-      if (kind === 'crumple') { // the knees give out first, then they tip over
-        const k = Math.min(1, t / 0.28);
-        ang = tip(0.2, 0.42);
-        this.deathDrop = 0.4 * k * k * (1 - ang / (Math.PI / 2));
-      } else if (kind === 'blast') { // thrown, tumbling through the air
-        ang = Math.min(1, t / 0.3) * Math.PI / 2;
-        twist = this.deathTwist * (1 + Math.min(t, 0.7) * 3);
-        this.deathDrop = 0;
-      } else { // a stagger back from the hit, then down
-        ang = tip(0.1, 0.48) - (t < 0.14 ? 0.1 * Math.sin((t / 0.14) * Math.PI) : 0);
-        this.deathDrop = 0;
-      }
+      const f = Math.min(1, this.deathT / 0.5);
       _axis.crossVectors(YAXIS, this.fallDir).normalize();
-      this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw + twist);
-      this.root.quaternion.premultiply(_q.setFromAxisAngle(_axis, ang));
-      this.root.position.y -= this.deathDrop;
-      if (t > 3) this.root.position.y -= (t - 3) * 0.6;
+      this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw + this.deathTwist * f);
+      _q.setFromAxisAngle(_axis, (f * f * (3 - 2 * f)) * Math.PI / 2 * (1 + Math.max(0, Math.sin(Math.min(1, this.deathT / 0.7) * Math.PI)) * 0.08));
+      this.root.quaternion.premultiply(_q);
+      if (this.deathT > 3) this.root.position.y -= (this.deathT - 3) * 0.6;
     } else {
       this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw);
-      const bank = Math.max(-0.16, Math.min(0.16, this.turnRate * speed * 0.012)) * moving; // leans into the turn
-      this.bank = (this.bank || 0) + (bank - (this.bank || 0)) * Math.min(1, dt * 8);
-      if (Math.abs(this.bank) > 1e-3) this.root.quaternion.multiply(_q.setFromAxisAngle(ZAXIS, this.bank));
-      if (this.emoteT > 0 && !this.poseId && !this.disguise) { // emote: the whole body joins in (emotes.js), easing in and out
-        const t = EMOTE_TIME - this.emoteT, e = this.emoteK();
-        const b = emoteBody(this.emoteId, t);
-        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw * e));
-        this.root.position.y += b.y * e;
-        this.emB = { b, e };
+      if (this.emoteT > 0 && this.emoteId === 'dance') { // dance: twist and bounce
+        const t = EMOTE_TIME - this.emoteT;
+        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, Math.sin(t * 6) * 0.5));
+        this.root.position.y += Math.abs(Math.sin(t * 8)) * 0.08;
       }
-      if (this.poseId) { // victory pose (poses.js), eased in from standing
+      if (this.poseId) { // victory pose (poses.js)
         this.poseT = (this.poseT || 0) + dt;
-        const b = this.poseB = poseBody(this.poseId, this.poseT), k = this.poseK = sm(this.poseT / 0.35);
-        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw * k));
-        if (b.pitch) this.root.quaternion.multiply(_q.setFromAxisAngle(XAXIS, b.pitch * k)); // lying down (push-ups)
-        this.root.position.y += b.y * k;
+        const b = this.poseB = poseBody(this.poseId, this.poseT);
+        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw));
+        if (b.pitch) this.root.quaternion.multiply(_q.setFromAxisAngle(XAXIS, b.pitch)); // lying down (push-ups)
+        this.root.position.y += b.y;
       }
     }
 
@@ -618,23 +555,8 @@ export class RemotePlayer {
     this.spine.rotation.y = -Math.sin(this.phase) * 0.1 * moving;
     this.spine.rotation.z = -this.lean * 0.12;
     this.neck.rotation.x = this.pitch * 0.5 + this.sprint * 0.2 + runK * 0.06 * moving;
-    if (this.deathT > 0 && this.deathHead) this.neck.rotation.x -= 0.7 * Math.min(1, this.deathT / 0.1); // a headshot snaps the head back
-    // Hit flinch: jolted back (and twisted away from the shot), the head snapping on a headshot.
-    this.flT = (this.flT || 0) * Math.exp(-dt * 7);
-    this.flA = (this.flA || 0) + ((this.flT || 0) - (this.flA || 0)) * Math.min(1, dt * 30);
-    if (this.flA > 0.01 && this.alive) {
-      const f = this.flA;
-      this.spine.rotation.x += 0.28 * f * this.flDir.z;
-      this.spine.rotation.z -= 0.18 * f * this.flDir.x;
-      this.spine.rotation.y += 0.15 * f * this.flDir.x;
-      this.neck.rotation.x += (this.flHead ? 0.7 : 0.15) * f;
-      this.hips.position.z += 0.03 * f * this.flDir.z; // a half step back
-    }
     this.neck.rotation.y = Math.sin(this.phase) * 0.04 * moving;
-    if (this.poseId && this.poseB) { const k = this.poseK ?? 1; this.spine.rotation.x += this.poseB.bend * k; this.hips.position.x += this.poseB.hipX * k; }
-    if (this.emB) { const { b, e } = this.emB; this.spine.rotation.x += b.bend * e; this.spine.rotation.z += b.roll * e; this.hips.position.x += b.hipX * e; this.neck.rotation.x += b.neck * e; this.neck.rotation.z = b.neckZ * e; }
-    else this.neck.rotation.z = 0;
-    if (!this.poseId) this.gunHolder.visible = !(this.emB && this.emB.e > 0.35); // the gun is put away while emoting
+    if (this.poseId && this.poseB) { this.spine.rotation.x += this.poseB.bend; this.hips.position.x += this.poseB.hipX; }
 
     // Gun pose
     const w = WEAPONS[this.weapon] || WEAPONS.ar;
@@ -646,7 +568,6 @@ export class RemotePlayer {
     else if (pistol) gh.position.set(0.06, -0.05, -0.48);
     else gh.position.set(0.14, -0.06, -0.36);
     gh.rotation.set(melee ? 0.9 : 0, 0, 0);
-    if (this.deathT > 0) { gh.rotation.x -= 1.3 * dying; gh.rotation.z += 0.4 * dying; } // the gun drops from their hands
     this.aim.rotation.set(this.pitch * (1 - this.sprint * 0.6) - this.sprint * 0.5, this.sprint * 0.5, 0);
     gh.position.z += this.recoil * 0.08;
     gh.rotation.x += this.recoil * 0.25 + this.air * 0.12 - land * 0.8;
@@ -688,22 +609,17 @@ export class RemotePlayer {
     let lx = dirX * cy - dirZ * sy, lz = dirX * sy + dirZ * cy;
     const ll = Math.hypot(lx, lz) || 1;
     lx /= ll; lz /= ll;
-    const stride = Math.min(0.55, this.stepLen * 0.5) * moving + shuffle * 0.05; // half a step either side: planted feet
-    const lift = (Math.min(0.24, 0.08 + speed * 0.03) * moving + shuffle * 0.07) * (1 + this.sprint * 0.3) * (1 - this.crouch * 0.4);
+    const stride = Math.min(0.46, speed * 0.075) * moving * (1 - this.crouch * 0.35);
+    const lift = Math.min(0.26, speed * 0.045) * moving * (1 + this.sprint * 0.3);
     for (const leg of this.legs) {
       const ph = this.phase + (leg.side > 0 ? Math.PI : 0);
       const fx = leg.side * (0.13 + this.crouch * 0.08), fz = -this.crouch * 0.12;
-      // A step cycle: the first half the foot swings forward through the air, the second half it's planted
-      // and moves back at exactly the body's speed (so it doesn't skate).
-      const u = (((ph / (Math.PI * 2)) % 1) + 1) % 1, swing = u < 0.5, su = u * 2;
-      const sw = (swing ? -1 + 2 * su * su * (3 - 2 * su) : 1 - 2 * (su - 1)) * stride;
-      leg.swing = swing ? su : -1;
-      let ty = (swing ? Math.sin(su * Math.PI) : 0) * lift + 0.06;
+      const sw = Math.sin(ph) * stride;
+      let ty = Math.max(0, Math.cos(ph)) * lift + 0.06;
       let tx = fx + lx * sw, tz = fz + lz * sw;
-      tx += leg.side * Math.abs(lx) * stride; // side steps: a wider stance, so each foot steps on its own side and they never cross
       if (this.air > 0.01) { ty += this.air * (leg.side > 0 ? 0.35 : 0.2); tz += this.air * (leg.side > 0 ? -0.15 : 0.12); }
-      if (this.poseId && this.poseB && this.poseB.foot) { const k = this.poseK ?? 1; tx += this.poseB.foot[0] * k; ty += this.poseB.foot[1] * k; tz += this.poseB.foot[2] * k; } // e.g. sitting (poses.js)
-      if (this.deathT > 0) { ty += dying * 0.2 + (this.deathDrop || 0); tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
+      if (this.poseId && this.poseB && this.poseB.foot) { tx += this.poseB.foot[0]; ty += this.poseB.foot[1]; tz += this.poseB.foot[2]; } // e.g. sitting (poses.js)
+      if (this.deathT > 0) { ty += dying * 0.2; tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
       this.root.localToWorld(_b.set(tx, ty, tz));
       leg.hip.getWorldPosition(_a);
       // Knee points forward (root -Z).
@@ -714,7 +630,7 @@ export class RemotePlayer {
       leg.foot.position.copy(_e);
       leg.foot.position.y -= 0.02;
       leg.foot.quaternion.copy(this.root.quaternion);
-      if (moving > 0.05 && this.alive && leg.swing >= 0) leg.foot.quaternion.multiply(_q.setFromAxisAngle(XAXIS, (0.4 - leg.swing * 0.75) * Math.sin(leg.swing * Math.PI) * moving * 1.4)); // pushes off with the toes, toe up before the heel lands
+      if (moving > 0.05 && this.alive) leg.foot.quaternion.multiply(_q.setFromAxisAngle(XAXIS, -Math.sin(ph) * 0.35 * moving)); // toe up as the foot swings forward
     }
 
     // Arms: right hand on the grip, left hand on the fore anchor (or relaxed at the side).
@@ -728,7 +644,7 @@ export class RemotePlayer {
     if (flop) this.root.localToWorld(_b.set(-0.6 * (this.deathSplay || 1), 1.15 - flop * 0.2, -0.05));
     else if (parts.fore && !this.reload) parts.fore.getWorldPosition(_b);
     else if (gun && this.reload > 0.01) gun.localToWorld(_b.set(0, -0.15 - Math.abs(Math.sin(this.phase * 2 + performance.now() / 300)) * 0.05, -0.1));
-    else this.root.localToWorld(_b.set(-0.33, 0.78 - this.crouch * 0.3 + Math.abs(Math.sin(this.phase)) * 0.04 * moving, -0.05 + Math.sin(this.phase) * (0.12 + this.sprint * 0.12) * moving));
+    else this.root.localToWorld(_b.set(-0.33, 0.78 - this.crouch * 0.3, -0.05 + Math.sin(this.phase) * 0.12 * moving));
     this.emoteArm(-1);
     this.placeArm(this.armsL, _b, -1);
     this.updateEmote(dt);
@@ -758,15 +674,11 @@ export class RemotePlayer {
     this.scene.add(this.bubble);
   }
 
-  // How far into an emote the body is (0..1): eases in at the start and back out at the end.
-  emoteK() { return sm((EMOTE_TIME - this.emoteT) / 0.25) * sm(this.emoteT / 0.35); }
-
-  // Moves the hand target _b (the normal pose's) toward the emote's / pose's hand, blended in and out.
   emoteArm(side) {
-    if (this.poseId && this.alive) { const h = poseHand(this.poseId, side, this.poseT || 0); if (h) _b.lerp(this.root.localToWorld(_hb.set(h[0], h[1], h[2])), this.poseK ?? 1); return; }
+    if (this.poseId && this.alive) { const h = poseHand(this.poseId, side, this.poseT || 0); if (h) this.root.localToWorld(_b.set(h[0], h[1], h[2])); return; }
     if (!(this.emoteT > 0) || !this.alive || this.disguise) return;
     const h = emoteHand(this.emoteId, side, EMOTE_TIME - this.emoteT);
-    if (h) _b.lerp(this.root.localToWorld(_hb.set(h[0], h[1] - this.crouch * 0.3, h[2])), this.emoteK());
+    if (h) this.root.localToWorld(_b.set(h[0], h[1] - this.crouch * 0.3, h[2]));
   }
 
   updateEmote(dt) {

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { buildGun } from './models.js';
 import { WEAPONS } from './weapons.js';
-import { Limb, solveIK, seg, bump, keyBlend, smooth } from './rig.js';
+import { Limb, solveIK, seg, bump, keyBlend } from './rig.js';
 import { attachCharm, swingCharm } from './charms.js';
 import { skinFor } from './gunskins.js';
 
@@ -74,24 +74,6 @@ function recoilClass(w) {
   return 'rifle';
 }
 const easeOutBack = (t) => { const c = 1.6; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; };
-// What kind of weapon it is, for the draw / sprint / inspect choreography.
-const kindOf = (w) => (w.type === 'melee' ? 'melee' : w.type === 'throw' ? 'throw' : recoilClass(w) === 'pistol' ? 'pistol' : 'long');
-
-// Like keyBlend, but the hand travels in an arc (down and out, like reaching to a pouch on the belt)
-// instead of a straight line.
-function keyArc(p, keys, pts, out) {
-  if (p <= keys[0][0]) return out.copy(pts[keys[0][1]]);
-  for (let i = 0; i < keys.length - 1; i++) {
-    const [t0, a] = keys[i], [t1, b] = keys[i + 1];
-    if (p <= t1) {
-      const k = smooth((p - t0) / Math.max(1e-4, t1 - t0));
-      out.copy(pts[a]).lerp(pts[b], k);
-      if (a !== b) { const d = pts[a].distanceTo(pts[b]), h = Math.sin(k * Math.PI) * d; out.y -= h * 0.25; out.x -= h * 0.12; }
-      return out;
-    }
-  }
-  return out.copy(pts[keys[keys.length - 1][1]]);
-}
 
 // First-person weapon + arms, rendered in its own scene on top of the world so it never clips walls.
 export class Viewmodel {
@@ -141,7 +123,6 @@ export class Viewmodel {
     this.casingGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.025, 6);
     this.casingMat = new THREE.MeshStandardMaterial({ color: '#c8a24a', roughness: 0.4, metalness: 0.5 });
     this.casings = [];
-    this.drops = []; // empty magazines falling away during a reload
 
     this.cur = null;
     this.quick = null; // temporary throwable shown during a quick throw
@@ -291,15 +272,6 @@ export class Viewmodel {
     this.casings.push({ m: c, v: new THREE.Vector3(1.2 + Math.random() * 0.6, 1.4 + Math.random() * 0.6, 0.3 * Math.random()), t: 0.7 });
   }
 
-  // The empty magazine falls out of the gun (a copy of it, tumbling down out of view).
-  dropMag(mag) {
-    mag.updateWorldMatrix(true, false);
-    const c = mag.clone();
-    mag.matrixWorld.decompose(c.position, c.quaternion, c.scale);
-    this.root.add(c);
-    this.drops.push({ m: c, v: new THREE.Vector3(-0.15 + Math.random() * 0.1, -0.6, 0.1), spin: new THREE.Vector3((Math.random() - 0.5) * 6, 0, 3 + Math.random() * 3), t: 0.9 });
-  }
-
   swing(style) {
     this.inspectT = -1;
     this.slashSide = -this.slashSide;
@@ -352,7 +324,6 @@ export class Viewmodel {
     const id = m.id;
     const w = WEAPONS[id];
     const P = m.parts;
-    const kind = kindOf(w);
 
     this.adsT += ((s.ads ? 1 : 0) - this.adsT) * Math.min(1, dt * 14 * (s.adsSpeed || 1)); // optics change aim speed
     this.sprintT += ((s.sprint ? 1 : 0) - this.sprintT) * Math.min(1, dt * 9);
@@ -396,8 +367,6 @@ export class Viewmodel {
     tr.x += Math.sin(this.t * 1.6 + 0.6) * 0.008 * breathe + (Math.cos(this.bobT * 2) - 1) * 0.012 * amt;
     tr.z += Math.sin(this.bobT) * 0.025 * amt * big - s.strafe * 0.07 * (1 - this.adsT * 0.7);
     tr.y += Math.sin(this.bobT) * 0.012 * amt;
-    tp.x += Math.sin(this.t * 0.7) * 0.005 * breathe; tr.z += Math.sin(this.t * 0.7 + 1.2) * 0.012 * breathe; // weight shifting from foot to foot
-    if (amt > 0.05) tp.y -= Math.max(0, Math.cos(this.bobT * 2)) ** 6 * 0.006 * amt; // each footfall lands
     // Crouch: lower and cant the gun a touch; slide: tilt it hard.
     const cr = (this.crouchT = (this.crouchT || 0) + ((s.crouch ? 1 : 0) - (this.crouchT || 0)) * Math.min(1, dt * 10));
     const sl = (this.slideTk = (this.slideTk || 0) + ((s.slide ? 1 : 0) - (this.slideTk || 0)) * Math.min(1, dt * 12));
@@ -408,31 +377,18 @@ export class Viewmodel {
     tr.x -= this.land * 0.08 * steady;
 
     const sp = this.sprintT * this.sprintT * (3 - 2 * this.sprintT); // eased into / out of the sprint pose
-    if (kind === 'pistol') { // high ready: muzzle up, close to the chest, pumping with the stride
-      tp.x -= sp * 0.04; tp.y -= sp * 0.01; tp.z += sp * 0.07;
-      tr.x += sp * 0.8; tr.y += sp * 0.2; tr.z += sp * 0.1;
-      tp.y += Math.sin(this.bobT * 2) * 0.012 * sp; tr.z += Math.sin(this.bobT) * 0.08 * sp;
-    } else if (kind === 'melee' || kind === 'throw') { // down by your side, arm swinging
-      tp.y -= sp * 0.06; tp.z += sp * 0.03; tr.x -= sp * 0.35;
-      tp.z += Math.sin(this.bobT) * 0.05 * sp; tr.x += Math.sin(this.bobT) * 0.2 * sp;
-    } else { // across the chest, rocking with each stride
-      tp.x -= sp * 0.06; tp.y -= sp * 0.045; tp.z += sp * 0.035;
-      tr.x -= sp * 0.32; tr.y += sp * 0.68; tr.z += sp * 0.32;
-      tr.z += Math.sin(this.bobT) * 0.07 * sp; tr.x += Math.cos(this.bobT * 2) * 0.03 * sp;
-    }
+    tp.x -= sp * 0.06; tp.y -= sp * 0.045; tp.z += sp * 0.035;
+    tr.x -= sp * 0.32; tr.y += sp * 0.68; tr.z += sp * 0.32;
 
     // Draw (raiseT 1 -> 0): guns swing up from below and settle with a small overshoot; melee
     // weapons sweep in from the side. Holster (lower 0 -> 1) tips the weapon away.
+    const meleeW = w.type === 'melee';
     const up = easeOutBack(1 - this.raiseT), e = 1 - up;
-    if (kind === 'melee') { tp.x += 0.14 * e; tp.y -= 0.22 * e; tr.y -= 1.0 * e; tr.z -= 0.6 * e; tr.x += 0.3 * e; } // swept in from the side
-    else if (kind === 'pistol') { tp.y -= 0.24 * e; tp.x += 0.03 * e; tr.x -= 1.5 * e; tr.z += 0.25 * e; } // flipped up from pointing at the floor
-    else if (kind === 'throw') { tp.y -= 0.3 * e; tp.z += 0.05 * e; tr.x -= 0.6 * e; }
-    else { tp.y -= 0.32 * e; tp.x += 0.1 * e; tr.x -= 0.75 * e; tr.z += 0.8 * e; tr.y += 0.3 * e; } // rolled up from the lower right
-    if (this.raiseT > 0) this.raising = true;
-    else if (this.raising) { this.raising = false; this.rr.v.x -= kind === 'long' ? 0.9 : 0.6; this.rp.v.y -= 0.12; } // it arrives with a little settle
-    if (lower > 0) { // holster: tipped away down to the left
+    if (meleeW) { tp.x += 0.12 * e; tp.y -= 0.2 * e; tr.y -= 0.9 * e; tr.z -= 0.5 * e; }
+    else { tp.y -= 0.32 * e; tr.x -= 0.9 * e; tr.z += 0.45 * e; tr.y += 0.15 * e; }
+    if (lower > 0) {
       const l = lower * lower;
-      tp.y -= 0.34 * l; tp.x += 0.02 * l; tr.x -= 0.7 * l; tr.z -= 0.75 * l; tr.y -= 0.2 * l;
+      tp.y -= 0.34 * l; tp.x += 0.05 * l; tr.x -= 0.8 * l; tr.z -= 0.5 * l;
     }
 
     // Reset animated parts
@@ -452,15 +408,12 @@ export class Viewmodel {
     if (s.reload >= 0 && !this.quick) {
       const p = s.reload;
       leftP = p;
-      leftKeys = reloadPose(w.reloadStyle, p, P, tp, tr, this);
-      this.leftArc = true;
+      leftKeys = reloadPose(w.reloadStyle, p, P, tp, tr);
       const roll = bump(p, 0.04, 0.96);
       tr.z += 0.22 * roll; tp.y -= 0.02 * roll; tr.x += 0.05 * roll;
-      const seat = w.reloadStyle === 'box' ? 0.66 : 0.62, rack = w.reloadStyle === 'box' ? 0.95 : 0.86;
-      if (p > seat && !this.reloadJolt && (!w.reloadStyle || w.reloadStyle === 'mag' || w.reloadStyle === 'box')) { this.reloadJolt = true; this.rr.v.x -= 1.4; this.rp.v.y += 0.35; } // mag slapped in
-      if (p > rack && !this.rackJolt && (P.bolt || P.slide)) { this.rackJolt = true; this.rr.v.x += 0.9; this.rp.v.z += 0.35; } // bolt / slide released
-    } else { this.reloadJolt = this.rackJolt = this.magOut = false; }
-    if (s.reload >= 0 && s.reload < 0.05) { this.reloadJolt = this.rackJolt = this.magOut = false; }
+      if (p > 0.6 && !this.reloadJolt) { this.reloadJolt = true; this.rr.v.x -= 1.2; this.rp.v.y += 0.3; } // mag seated
+    } else this.reloadJolt = false;
+    if (s.reload >= 0 && s.reload < 0.05) this.reloadJolt = false;
 
     // ----- Post-shot cycle (bolt / pump) -----
     if (this.cycleAnim) {
@@ -491,35 +444,30 @@ export class Viewmodel {
       const a = this.anim;
       a.t += dt;
       const p = Math.min(1, a.t / a.dur);
-      if (!a.hit && ((a.name === 'slash' && p > 0.36) || (a.name === 'chop' && p > 0.45))) { a.hit = true; this.rr.v.z -= 1.8 * (a.side || 1); this.rp.v.z -= 0.7; }
+      if (!a.hit && ((a.name === 'slash' && p > 0.4) || (a.name === 'chop' && p > 0.45))) { a.hit = true; this.rr.v.z -= 1.5 * (a.side || 1); this.rp.v.z -= 0.6; }
       if (a.name === 'slash') {
-        const wind = smooth(p / 0.2) * (1 - seg(p, 0.2, 0.3)); // pulled back
-        const sw = (seg(p, 0.2, 0.4) ** 2) * (1 - seg(p, 0.55, 1)); // a fast strike, held through, then back
-        const over = bump(p, 0.38, 0.6); // follow-through past the target
-        tp.x += 0.1 * a.side * wind - 0.28 * a.side * sw - 0.04 * a.side * over;
-        tp.y += 0.07 * wind + 0.06 * bump(p, 0.2, 0.45) - 0.05 * sw;
-        tp.z -= 0.22 * bump(p, 0.18, 0.6);
-        tr.y += 0.55 * a.side * wind - 1.25 * a.side * sw - 0.15 * a.side * over;
-        tr.z += 0.45 * a.side * wind - 0.85 * a.side * sw;
-        tr.x += 0.15 * wind - 0.35 * sw;
+        const wind = seg(p, 0, 0.22) * (1 - seg(p, 0.22, 0.4));
+        const sl = seg(p, 0.22, 0.48) * (1 - seg(p, 0.6, 1));
+        tp.x += 0.08 * a.side * wind - 0.24 * a.side * sl;
+        tp.z -= 0.18 * bump(p, 0.18, 0.7);
+        tp.y += 0.04 * wind;
+        tr.y += 0.45 * a.side * wind - 1.1 * a.side * sl;
+        tr.z += 0.35 * a.side * wind - 0.7 * a.side * sl;
+        tr.x -= 0.3 * sl;
       } else if (a.name === 'chop') {
-        const r = seg(p, 0, 0.38) * (1 - seg(p, 0.38, 0.5)); // raised high
-        const c = (seg(p, 0.38, 0.5) ** 2) * (1 - seg(p, 0.62, 1)); // slammed down
-        const bounce = bump(p, 0.5, 0.62); // and bounces off
-        tr.x += 1.3 * r - 1.15 * c + 0.14 * bounce;
-        tp.y += 0.18 * r - 0.13 * c + 0.025 * bounce;
-        tp.z += 0.08 * r - 0.24 * c;
-        tp.x -= 0.08 * r;
-        tr.z += 0.15 * r;
+        const r = seg(p, 0, 0.35) * (1 - seg(p, 0.35, 0.48));
+        const c = seg(p, 0.35, 0.48) * (1 - seg(p, 0.62, 1));
+        tr.x += 1.15 * r - 1.1 * c;
+        tp.y += 0.14 * r - 0.12 * c;
+        tp.z += 0.06 * r - 0.22 * c;
+        tp.x -= 0.06 * r;
       } else if (a.name === 'throw') {
-        const wind = seg(p, 0.22, 0.45) * (1 - seg(p, 0.45, 0.53)); // drawn back over the shoulder
-        const th = seg(p, 0.45, 0.56) * (1 - seg(p, 0.62, 0.9)); // thrown, following through down
-        tp.z += 0.2 * wind - 0.36 * th;
-        tp.y += 0.16 * wind - 0.06 * th - 0.35 * seg(p, 0.6, 0.75) * (1 - seg(p, 0.85, 1));
-        tp.x += 0.08 * wind - 0.04 * th;
-        tr.x += 1.0 * wind - 1.1 * th;
-        tr.z -= 0.25 * wind;
-        if (p > 0.5 && !a.released) { a.released = true; this.rp.v.z -= 0.6; this.rr.v.x -= 0.8; }
+        const wind = seg(p, 0.25, 0.45) * (1 - seg(p, 0.45, 0.55));
+        const th = seg(p, 0.45, 0.58) * (1 - seg(p, 0.62, 0.9));
+        tp.z += 0.12 * wind - 0.3 * th;
+        tp.y += 0.1 * wind - 0.05 * th - 0.35 * seg(p, 0.6, 0.75) * (1 - seg(p, 0.85, 1));
+        tp.x += 0.05 * wind;
+        tr.x += 0.8 * wind - 0.9 * th;
         if (P.pin) P.pin.visible = p < 0.24;
         m.gun.visible = p < 0.55 || (p > 0.85 && s.hasUtil);
         leftKeys = [[0, 'restL'], [0.12, 'pin'], [0.24, 'pin'], [0.42, 'restL']];
@@ -537,32 +485,15 @@ export class Viewmodel {
       }
     } else if (this.inspectT >= 0) {
       this.inspectT += dt;
-      const dur = kind === 'long' ? 3.2 : kind === 'pistol' ? 2.4 : 2.0;
-      const p = this.inspectT / dur;
+      const p = this.inspectT / 2.4;
       if (p >= 1) this.inspectT = -1;
-      if (kind === 'melee' || kind === 'throw') { // tossed up with a spin and caught
-        const air = bump(p, 0.25, 0.65), spin = seg(p, 0.25, 0.65);
-        tp.y += 0.16 * air; tp.z += 0.04 * air; tr.x += Math.PI * 2 * spin; tp.x -= 0.05 * bump(p, 0.1, 0.9);
-        if (p > 0.65 && !this.caught) { this.caught = true; this.rp.v.y -= 0.4; this.rr.v.x -= 1.2; }
-        if (p < 0.25) this.caught = false;
-      } else if (kind === 'pistol') { // turned to show the side, then spun forward around the finger
-        const a = seg(p, 0.04, 0.2) * (1 - seg(p, 0.38, 0.5));
-        const sp = seg(p, 0.55, 0.82);
-        tr.y -= 0.9 * a; tr.z += 0.5 * a; tp.x -= 0.07 * a; tp.z += 0.05 * a;
-        tr.x -= Math.PI * 2 * sp; tp.y += 0.05 * bump(p, 0.52, 0.86);
-        if (p > 0.82 && !this.caught) { this.caught = true; this.rr.v.x -= 1.0; }
-        if (p < 0.5) this.caught = false;
-      } else { // turned to show the side, flipped to the top, then the mag checked
-        const a = seg(p, 0.03, 0.17) * (1 - seg(p, 0.3, 0.4));
-        const b = seg(p, 0.36, 0.48) * (1 - seg(p, 0.58, 0.66));
-        const c = seg(p, 0.64, 0.74) * (1 - seg(p, 0.88, 0.96));
-        tr.y -= 1.0 * a; tr.z += 0.55 * a; tp.x -= 0.09 * a; tp.z += 0.06 * a; tp.y += 0.02 * a;
-        tr.x += 0.7 * b; tr.z -= 0.5 * b; tp.y += 0.06 * b; tp.x -= 0.03 * b;
-        tr.z += 0.55 * c; tr.x += 0.15 * c; tp.x -= 0.04 * c; tp.y += 0.03 * c; // tilted to look at the mag
-        if (P.mag && c > 0) { P.mag.position.y = P.mag.userData.base.y - 0.03 * bump(p, 0.74, 0.84); leftKeys = [[0, 'fore'], [0.66, 'fore'], [0.72, 'mag'], [0.86, 'mag'], [0.94, 'fore']]; leftP = p; this.leftArc = true; }
-        if (p > 0.84 && !this.caught) { this.caught = true; this.rr.v.x -= 0.8; } // the mag tapped back in
-        if (p < 0.64) this.caught = false;
-      }
+      // Turn it to show the side, flip to the top, then back to the hands with a settle.
+      const a = seg(p, 0.04, 0.22) * (1 - seg(p, 0.4, 0.52));
+      const b = seg(p, 0.45, 0.6) * (1 - seg(p, 0.76, 0.9));
+      const c = seg(p, 0.86, 0.95) * (1 - seg(p, 0.95, 1));
+      tr.y -= 1.0 * a; tr.z += 0.55 * a; tp.x -= 0.09 * a; tp.z += 0.06 * a; tp.y += 0.02 * a;
+      tr.x += 0.7 * b; tr.z -= 0.5 * b; tp.y += 0.06 * b; tp.x -= 0.03 * b;
+      tr.x -= 0.08 * c;
     }
 
     // ----- Smooth + recoil -----
@@ -596,19 +527,8 @@ export class Viewmodel {
 
     const handR = rightKeys ? keyBlend(rightP, rightKeys, pts, _h) : _h.copy(pts.grip);
     this.placeArm(SHOULDER_R, handR, POLE_R, this.arms.rU, this.arms.rF, this.gloveR, h.quaternion);
-    const handL = leftKeys ? (this.leftArc ? keyArc : keyBlend)(leftP, leftKeys, pts, _v) : _v.copy(pts[leftMode]);
-    this.leftArc = false;
+    const handL = leftKeys ? keyBlend(leftP, leftKeys, pts, _v) : _v.copy(pts[leftMode]);
     this.placeArm(SHOULDER_L, handL, POLE_L, this.arms.lU, this.arms.lF, this.gloveL, h.quaternion);
-
-    // Dropped magazines
-    for (let i = this.drops.length - 1; i >= 0; i--) {
-      const d = this.drops[i];
-      d.t -= dt;
-      d.v.y -= 9 * dt;
-      d.m.position.addScaledVector(d.v, dt);
-      d.m.rotation.x += d.spin.x * dt; d.m.rotation.z += d.spin.z * dt;
-      if (d.t <= 0) { this.root.remove(d.m); this.drops.splice(i, 1); }
-    }
 
     // Casings
     for (let i = this.casings.length - 1; i >= 0; i--) {
@@ -646,15 +566,14 @@ export class Viewmodel {
 }
 
 // Per-style reload choreography. Mutates pose/parts and returns left-hand keyframes.
-function reloadPose(style, p, P, tp, tr, vm) {
+function reloadPose(style, p, P, tp, tr) {
   const tilt = seg(p, 0, 0.15) * (1 - seg(p, 0.85, 1));
-  // The old mag is pulled out a little and dropped (it falls away: vm.dropMag); the new one comes up from the belt.
   const magY = (out, inn) => {
     if (!P.mag) return;
     const b = P.mag.userData.base;
     if (p < out[0]) return;
-    if (p < out[1]) P.mag.position.y = b.y - 0.09 * seg(p, out[0], out[1]);
-    else if (p < inn[0]) { if (!vm.magOut) { vm.magOut = true; P.mag.position.y = b.y - 0.09; vm.dropMag(P.mag); } P.mag.visible = false; }
+    if (p < out[1]) P.mag.position.y = b.y - 0.35 * seg(p, out[0], out[1]);
+    else if (p < inn[0]) P.mag.visible = false;
     else P.mag.position.y = b.y - 0.35 * (1 - seg(p, inn[0], inn[1]));
   };
   switch (style) {
@@ -686,7 +605,7 @@ function reloadPose(style, p, P, tp, tr, vm) {
     case 'box': {
       tr.z += 0.3 * tilt; tr.x += 0.1 * tilt;
       if (P.lid) P.lid.rotation.x = -1.3 * seg(p, 0.08, 0.18) * (1 - seg(p, 0.74, 0.82));
-      magY([0.2, 0.3], [0.5, 0.66]);
+      magY([0.2, 0.35], [0.5, 0.66]);
       const rack = bump(p, 0.85, 0.95);
       if (P.bolt) P.bolt.position.z = P.bolt.userData.base.z + 0.07 * rack;
       return [[0, 'fore'], [0.07, 'lid'], [0.16, 'lid'], [0.22, 'mag'], [0.35, 'mag'], [0.44, 'off'], [0.52, 'mag'],
@@ -694,8 +613,7 @@ function reloadPose(style, p, P, tp, tr, vm) {
     }
     default: { // 'mag'
       tr.z += 0.5 * tilt; tr.x += 0.12 * tilt; tp.x -= 0.03 * tilt; tp.y += 0.02 * tilt;
-      magY([0.12, 0.22], [0.45, 0.62]);
-      tr.z += 0.12 * bump(p, 0.14, 0.3); // a flick of the wrist to throw the old one out
+      magY([0.12, 0.3], [0.45, 0.62]);
       const rack = bump(p, 0.72, 0.86);
       if (P.bolt) P.bolt.position.z = P.bolt.userData.base.z + 0.06 * rack;
       if (P.slide) P.slide.position.z = P.slide.userData.base.z + 0.04 * rack;

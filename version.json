@@ -1,7 +1,8 @@
 {
-  "version": "2026.10.16.6",
+  "version": "2026.10.16.7",
   "notes": [
-    "Fixed bots looking like they go through walls, and players crossing their legs when strafing"
+    "Animations are back to how they were",
+    "Fixed bots looking like they slip into walls"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
