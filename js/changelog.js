@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.16.3', name: 'In Motion', banner: 'motion', notes: [
+  { v: '2026.10.16.4', name: 'In Motion', banner: 'motion', notes: [
     '## Moderator looks',
     "Moderators get their own versions of the owner's items, in steel blue and silver with a shield badge",
     'A costume, a rifle skin, a weapon wrap, a weapon charm, a name tag, a kill effect, a banner and a victory pose (On Guard, with a riot shield)',
@@ -28,6 +28,10 @@ export const UPDATES = [
     'Their steps get longer the faster they go, and they lean into turns when running',
     'Turning on the spot, they take little steps',
     'Toes push off and lift before each step lands, and the free hand swings with the stride',
+    '## Emotes and victory poses',
+    'The whole body joins in now: the dance sways the hips and bobs the head, laughing doubles you over, saluting snaps you to attention, flexing shows off both sides',
+    'Waving puts your other hand on your hip, and flexing pumps one arm then the other',
+    'Emotes and poses ease in and out smoothly instead of snapping, and your gun is put away while you emote',
   ] },
   { v: '2026.10.15.38', name: 'New Look', banner: 'newlook', notes: [
     '## Menus',

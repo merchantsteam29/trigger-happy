@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.3",
+  "version": "2026.10.16.4",
   "notes": [
-    "New player movement: feet stay planted, steps match speed, and players lean into turns"
+    "Emotes and victory poses move the whole body and blend in smoothly"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

@@ -15,7 +15,8 @@ const RoundedBoxGeometry = function (sx, sy, sz, seg, r) {
 };
 import { WEAPONS } from './weapons.js';
 import { buildDisguise, disguiseBox } from './prophunt.js';
-import { EMOTES, EMOTE_TIME, emoteHand, emoteBubble } from './emotes.js';
+import { EMOTES, EMOTE_TIME, emoteHand, emoteBody, emoteBubble } from './emotes.js';
+const sm = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 import { angLerp } from './util.js';
 import { Limb, solveIK } from './rig.js';
 import { drawName, animateTag, tagAnim } from './nametags.js';
@@ -504,6 +505,7 @@ export class RemotePlayer {
       v.x *= Math.exp(-dt * 1.5); v.z *= Math.exp(-dt * 1.5);
     }
     this.root.position.copy(this.pos);
+    this.emB = null;
     if (this.deathT > 0) {
       this.deathT += dt;
       const f = Math.min(1, this.deathT / 0.5);
@@ -517,17 +519,19 @@ export class RemotePlayer {
       const bank = Math.max(-0.16, Math.min(0.16, this.turnRate * speed * 0.012)) * moving; // leans into the turn
       this.bank = (this.bank || 0) + (bank - (this.bank || 0)) * Math.min(1, dt * 8);
       if (Math.abs(this.bank) > 1e-3) this.root.quaternion.multiply(_q.setFromAxisAngle(ZAXIS, this.bank));
-      if (this.emoteT > 0 && this.emoteId === 'dance') { // dance: twist and bounce
-        const t = EMOTE_TIME - this.emoteT;
-        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, Math.sin(t * 6) * 0.5));
-        this.root.position.y += Math.abs(Math.sin(t * 8)) * 0.08;
+      if (this.emoteT > 0 && !this.poseId && !this.disguise) { // emote: the whole body joins in (emotes.js), easing in and out
+        const t = EMOTE_TIME - this.emoteT, e = this.emoteK();
+        const b = emoteBody(this.emoteId, t);
+        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw * e));
+        this.root.position.y += b.y * e;
+        this.emB = { b, e };
       }
-      if (this.poseId) { // victory pose (poses.js)
+      if (this.poseId) { // victory pose (poses.js), eased in from standing
         this.poseT = (this.poseT || 0) + dt;
-        const b = this.poseB = poseBody(this.poseId, this.poseT);
-        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw));
-        if (b.pitch) this.root.quaternion.multiply(_q.setFromAxisAngle(XAXIS, b.pitch)); // lying down (push-ups)
-        this.root.position.y += b.y;
+        const b = this.poseB = poseBody(this.poseId, this.poseT), k = this.poseK = sm(this.poseT / 0.35);
+        this.root.quaternion.multiply(_q.setFromAxisAngle(YAXIS, b.yaw * k));
+        if (b.pitch) this.root.quaternion.multiply(_q.setFromAxisAngle(XAXIS, b.pitch * k)); // lying down (push-ups)
+        this.root.position.y += b.y * k;
       }
     }
 
@@ -557,7 +561,10 @@ export class RemotePlayer {
     this.spine.rotation.z = -this.lean * 0.12;
     this.neck.rotation.x = this.pitch * 0.5 + this.sprint * 0.2 + runK * 0.06 * moving;
     this.neck.rotation.y = Math.sin(this.phase) * 0.04 * moving;
-    if (this.poseId && this.poseB) { this.spine.rotation.x += this.poseB.bend; this.hips.position.x += this.poseB.hipX; }
+    if (this.poseId && this.poseB) { const k = this.poseK ?? 1; this.spine.rotation.x += this.poseB.bend * k; this.hips.position.x += this.poseB.hipX * k; }
+    if (this.emB) { const { b, e } = this.emB; this.spine.rotation.x += b.bend * e; this.spine.rotation.z += b.roll * e; this.hips.position.x += b.hipX * e; this.neck.rotation.x += b.neck * e; this.neck.rotation.z = b.neckZ * e; }
+    else this.neck.rotation.z = 0;
+    if (!this.poseId) this.gunHolder.visible = !(this.emB && this.emB.e > 0.35); // the gun is put away while emoting
 
     // Gun pose
     const w = WEAPONS[this.weapon] || WEAPONS.ar;
@@ -623,7 +630,7 @@ export class RemotePlayer {
       let ty = (swing ? Math.sin(su * Math.PI) : 0) * lift + 0.06;
       let tx = fx + lx * sw, tz = fz + lz * sw;
       if (this.air > 0.01) { ty += this.air * (leg.side > 0 ? 0.35 : 0.2); tz += this.air * (leg.side > 0 ? -0.15 : 0.12); }
-      if (this.poseId && this.poseB && this.poseB.foot) { tx += this.poseB.foot[0]; ty += this.poseB.foot[1]; tz += this.poseB.foot[2]; } // e.g. sitting (poses.js)
+      if (this.poseId && this.poseB && this.poseB.foot) { const k = this.poseK ?? 1; tx += this.poseB.foot[0] * k; ty += this.poseB.foot[1] * k; tz += this.poseB.foot[2] * k; } // e.g. sitting (poses.js)
       if (this.deathT > 0) { ty += dying * 0.2; tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
       this.root.localToWorld(_b.set(tx, ty, tz));
       leg.hip.getWorldPosition(_a);
@@ -679,11 +686,15 @@ export class RemotePlayer {
     this.scene.add(this.bubble);
   }
 
+  // How far into an emote the body is (0..1): eases in at the start and back out at the end.
+  emoteK() { return sm((EMOTE_TIME - this.emoteT) / 0.25) * sm(this.emoteT / 0.35); }
+
+  // Moves the hand target _b (the normal pose's) toward the emote's / pose's hand, blended in and out.
   emoteArm(side) {
-    if (this.poseId && this.alive) { const h = poseHand(this.poseId, side, this.poseT || 0); if (h) this.root.localToWorld(_b.set(h[0], h[1], h[2])); return; }
+    if (this.poseId && this.alive) { const h = poseHand(this.poseId, side, this.poseT || 0); if (h) _b.lerp(this.root.localToWorld(_hb.set(h[0], h[1], h[2])), this.poseK ?? 1); return; }
     if (!(this.emoteT > 0) || !this.alive || this.disguise) return;
     const h = emoteHand(this.emoteId, side, EMOTE_TIME - this.emoteT);
-    if (h) this.root.localToWorld(_b.set(h[0], h[1] - this.crouch * 0.3, h[2]));
+    if (h) _b.lerp(this.root.localToWorld(_hb.set(h[0], h[1] - this.crouch * 0.3, h[2])), this.emoteK());
   }
 
   updateEmote(dt) {
