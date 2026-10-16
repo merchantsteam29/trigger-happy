@@ -1136,3 +1136,17 @@ body.mobile:not(.tablet) .shop2 .shop-detail .shop-msg { font-size: 11px; }
 body.mobile:not(.tablet) .topbar .player-chip { padding: 2px 8px 2px 4px; }
 body.mobile:not(.tablet) .topbar .share-btn { padding: 4px 10px; }
 body.mobile:not(.tablet) .shop2 .shop-detail .shop-bnr, body.mobile:not(.tablet) .shop2 .shop-detail .shop-wrap.big, body.mobile:not(.tablet) .shop2 .shop-detail .shop-icon.big { max-width: 140px; }
+
+/* Mod Panel: the owner's Gifting tab */
+.gf-card { display: flex; flex-direction: column; gap: 6px; }
+.gf-lbl { margin-top: 6px; font-weight: 700; }
+.gf-lbl small { font-weight: 400; opacity: 0.75; margin-left: 6px; }
+.gf-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.gf-row input { flex: 1; min-width: 120px; }
+.gf-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; max-height: 300px; overflow-y: auto; padding: 2px; }
+.gf-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; text-align: left; text-transform: none; letter-spacing: 0; }
+.gf-item span { font-size: 20px; }
+.gf-item small { opacity: 0.7; font-size: 11px; }
+.gf-item.sel { outline: 2px solid var(--accent); background: rgba(255,45,117,0.15); }
+.gf-send { margin-top: 10px; align-self: flex-start; padding: 10px 22px; }
+.gf-sent { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; cursor: default; }

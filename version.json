@@ -1,8 +1,7 @@
 {
-  "version": "2026.10.16.8",
+  "version": "2026.10.16.9",
   "notes": [
-    "We had to remove the new animations because they were too broken, so animations are back to how they were",
-    "Fixed bots looking like they slip into walls"
+    "Some bug fixes"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

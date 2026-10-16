@@ -212,13 +212,25 @@ const shop = new Shop({
   onCos: (c) => { game.myBanner = c.banner; if (net) net.send({ t: 'cos', c: { ...myCos(), ...c } }); renderChip(); },
 });
 gifts.init(social);
+// Redraw the shop, but not while you're typing or picking in it (a dropdown would close and what you typed would go):
+// then it redraws once you're done.
+let shopLater = false;
+function refreshShop() {
+  if (game.active || menuPane !== 'shop') return;
+  const a = document.activeElement;
+  if (a && a.closest && a.closest('#menu-shop') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) {
+    if (!shopLater) { shopLater = true; a.addEventListener('blur', () => { shopLater = false; setTimeout(refreshShop, 50); }, { once: true }); }
+    return;
+  }
+  shop.render();
+}
 gifts.onGift = (g) => {
   const what = g.tokens ? `🪙 ${g.tokens} tokens` : `${shop.itemName(g.item)}${g.refunded ? ' (you had it, so you got its price in tokens)' : ''}`;
   const from = g.owner ? `♛ The owner (${g.from})` : g.from;
   if (game.active) chat.system(`🎁 ${from} sent you ${what}!${g.note ? ` “${g.note}”` : ''}`);
   else toast(`🎁 ${from} sent you ${what}!${g.note ? ` “${g.note}”` : ''}`);
   renderChip();
-  if (!game.active && menuPane === 'shop') shop.render();
+  refreshShop();
 };
 // Ranked season rewards: when a season has ended, its banners.
 function claimRanked() {
@@ -1968,7 +1980,7 @@ liveEvent.onLive = (l, started) => {
   }
   if (!game.active && menuPane === 'play') showPane('play');
 };
-liveEvent.onSpot = () => { if (!game.active && menuPane === 'shop') shop.render(); };
+liveEvent.onSpot = () => refreshShop();
 liveEvent.onMotd = () => { if (!game.active && menuPane === 'play') showPane('play'); };
 liveEvent.onChange = (e, started) => {
   if (started && e) toast(`🎉 Event: ${e.name}${e.tokens > 1 ? ` · 🪙 ${e.tokens}x tokens` : ''}`);
@@ -2105,10 +2117,13 @@ moderation.onChange = () => {
   modRenderT = setTimeout(() => {
     modRenderT = null;
     const a = document.activeElement;
-    if (a && a.closest && a.closest('#mod-pane') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) modPanel.renderPlayer();
-    else modPanel.render();
+    // Busy typing / picking in the panel: refresh once they're done, so nothing closes or gets wiped.
+    if (a && a.closest && a.closest('#mod-pane') && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) {
+      if (!modRenderLater) { modRenderLater = true; a.addEventListener('blur', () => { modRenderLater = false; setTimeout(() => { if (!document.activeElement || !document.activeElement.closest || !document.activeElement.closest('#mod-pane') || !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) moderation.onChange(); }, 50); }, { once: true }); }
+    } else modPanel.render();
   }, 300);
 };
+let modRenderLater = false;
 renderModNav();
 
 // Announcements from staff: a bar at the top of the menu, plus a chat line / pop-up in a match.

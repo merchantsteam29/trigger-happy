@@ -147,6 +147,9 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
   owned cosmetics, `track.*`), `seasons.js` (weekly season pass; season dates live in `ranked.js` `seasonNow` / `seasonDates`), `achievements.js`, `ranked.js`, `shop.js`, `gifts.js`, `invites.js`
 - **Social and online:** `relay.js`, `social.js`, `profiles.js`, `clans.js`, `leaderboard.js`, `servers.js`,
   `gamenight.js`, `voice.js`, `chat.js`
+- **Owner gifting:** Mod Panel tab `gifting` (`renderGifting` in modpanel.js, state kept in `this.gift`, sent list in store `ownerGifts`):
+  tokens or any `grantable` item to one or more gamertags via `gifts.grant`. Menu redraws triggered by relay events (`moderation.onChange`,
+  main.js `refreshShop`) wait while an input / select in that screen has focus, then redraw on blur (they used to close dropdowns).
 - **Staff:** (owner dashboard: `modpanel.js` `dashSample` / `renderDash`, store `dashStats`, per device) `roles.js` (appointments; moderator permissions: `PERMS`, `ACT_PERM`, `roles.can(tag, perm, at)` / `myCan`, an appointment's `perms` list, none = all, and `trial` (`onTrial` / `myTrial`: their ban / unban / appeal answers become owner-signed requests at `approve/<id>`, `moderation.requestApproval` / `answerApproval`); checked by `moderation.verify` on a record's latest log entry, `staffSigned(text, perm)`, and the host's in-match `mod*` handlers), `moderation.js`, `modpanel.js`, `hostpanel.js`
 - **Input and settings:** `settings.js` (`opts`, `setOpt`, `onOpts`), `settingsui.js`, `binds.js`, `gamepad.js`
   (rebindable `PAD_ACTIONS`), `touch.js`, `access.js` (colorblind modes), `tutorial.js`

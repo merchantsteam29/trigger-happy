@@ -88,6 +88,7 @@ export class ModPanel {
     const bans = [...moderation.records.values()].filter((r) => moderation.activeBan(r)).length;
     const appeals = moderation.openAppeals();
     const tabs = [['players', '👤 Players'], ['online', `🟢 Online <b>${online.length}</b>`], ['reports', `🚩 Reports ${reports.length ? `<b class="alert">${reports.length}</b>` : ''}`], ...(roles.isOwner() ? [['bugs', `🐞 Bugs ${moderation.bugs.size ? `<b class="alert">${moderation.bugs.size}</b>` : ''}`]] : []), ['appeals', `⚖ Appeals ${appeals.length ? `<b class="alert">${appeals.length}</b>` : ''}`], ...(roles.myCan('announce') ? [['announce', '📣 Announce']] : []), ['recent', '🕘 Recent'], ['staffchat', `💬 Staff chat ${this.unread ? `<b class="alert">${this.unread}</b>` : ''}`], ...(roles.myCan('tools') ? [['filter', '🤐 Chat filter']] : []), ['log', '📜 Log']];
+    if (owner) tabs.push(['gifting', '🎁 Gifting']);
     if (owner) tabs.push(['dash', '📊 Stats']);
     if (owner) tabs.push(['staff', `🛡 Staff ${moderation.approvals.size ? `<b class="alert">${moderation.approvals.size}</b>` : ''}`]);
     if (!tabs.some(([id]) => id === this.tab)) this.tab = 'players';
@@ -115,6 +116,7 @@ export class ModPanel {
     else if (this.tab === 'staffchat') this.renderStaffChat(body);
     else if (this.tab === 'recent') this.renderRecent(body);
     else if (this.tab === 'dash') this.renderDash(body, online);
+    else if (this.tab === 'gifting') this.renderGifting(body);
     else this.renderStaff(body);
     if (this.tab === 'filter') this.renderGlobalChat(body); // chat lock / slow mode for every match, above the filter
     this.el.querySelectorAll('input, textarea').forEach((i) => i.addEventListener('keydown', (e) => e.stopPropagation()));
@@ -825,6 +827,79 @@ export class ModPanel {
   }
 
   // ---------- 📊 Stats (owner) ----------
+  // ---------- Gifting (owner) ----------
+  // Give tokens or any item to one or more players. Everything you've picked stays put while the panel
+  // refreshes, and the tab stays open after sending so you can send the next one.
+  renderGifting(body) {
+    const g = this.gift ||= { to: '', tokens: '', item: null, note: '', find: '', slot: 'all' };
+    const slots = [...Object.keys(SLOT_LABELS).map((s) => [s, SLOT_LABELS[s]]), ['wrap', 'Weapon wraps']];
+    const all = slots.flatMap(([slot, label]) => (slot === 'wrap' ? CAMOS.filter((c) => c.id !== 'default') : COSMETICS[slot] || [])
+      .filter((c) => grantable(slot, c.id)).map((c) => ({ slot, id: c.id, name: c.name, label, icon: typeof c.icon === 'string' && c.icon.length < 6 ? c.icon : '' })));
+    const q = g.find.trim().toLowerCase();
+    const shown = all.filter((it) => (g.slot === 'all' || it.slot === g.slot) && (!q || it.name.toLowerCase().includes(q))).slice(0, 120);
+    const pick = g.item && all.find((it) => it.slot === g.item.slot && it.id === g.item.id);
+    const sent = store.get('ownerGifts', []);
+    const tags = moderation.searchPlayers('').slice(0, 300).map((p) => p.tag);
+    body.innerHTML = `
+      <div class="mp-grid">
+        <div class="card gf-card">
+          <h3>🎁 Give a gift</h3>
+          <label class="gf-lbl">To <small>one gamertag, or several separated by commas</small></label>
+          <input id="gf-to" list="gf-tags" maxlength="200" placeholder="Gamertag" spellcheck="false" autocapitalize="off" value="${esc(g.to)}">
+          <datalist id="gf-tags">${tags.map((t) => `<option value="${esc(t)}">`).join('')}</datalist>
+          <label class="gf-lbl">Tokens <small>up to ${GRANT_MAX.toLocaleString()}, or pick an item instead</small></label>
+          <div class="gf-row"><input id="gf-n" type="number" min="1" max="${GRANT_MAX}" placeholder="Tokens" value="${esc(g.tokens)}">
+            ${[100, 500, 1000, 5000].map((n) => `<button class="ghost sm" data-gfn="${n}">${n.toLocaleString()}</button>`).join('')}</div>
+          <label class="gf-lbl">Item ${pick ? `<small>picked: <b>${esc(pick.name)}</b> (${esc(pick.label)}) <button class="ghost sm" data-gfclear>✕</button></small>` : '<small>none picked</small>'}</label>
+          <div class="gf-row"><input id="gf-find" placeholder="Search items" value="${esc(g.find)}">
+            <select id="gf-slot"><option value="all">Everything</option>${slots.map(([s, n]) => `<option value="${s}" ${s === g.slot ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>
+          <div class="gf-items">${shown.map((it) => `<button class="gf-item ${pick && pick === it ? 'sel' : ''}" data-gfi="${it.slot}:${esc(it.id)}">${it.icon ? `<span>${it.icon}</span>` : ''}<b>${esc(it.name)}</b><small>${esc(it.label)}</small></button>`).join('') || '<div class="note">No item matches.</div>'}</div>
+          <label class="gf-lbl">Note <small>they see it with the gift (optional)</small></label>
+          <input id="gf-note" maxlength="60" placeholder="e.g. Thanks for reporting that bug!" value="${esc(g.note)}">
+          <button class="primary gf-send" data-gfsend>🎁 Send</button>
+        </div>
+        <div class="card">
+          <h3>Sent <span class="muted">(${sent.length})</span></h3>
+          <div class="mp-recent">${sent.map((s) => `<div class="mp-rec gf-sent"><b>${esc(s.to)}</b><span>${esc(s.what)}</span><small>${ago(s.ts)}${s.note ? ' · ' + esc(s.note) : ''}</small></div>`).join('') || '<div class="note">Nothing yet. Gifts arrive the next time they play, even if they\'re offline now.</div>'}</div>
+        </div>
+      </div>`;
+    const $ = (s) => body.querySelector(s);
+    $('#gf-to').oninput = (e) => { g.to = e.target.value; };
+    $('#gf-n').oninput = (e) => { g.tokens = e.target.value; if (e.target.value) g.item = null; };
+    $('#gf-note').oninput = (e) => { g.note = e.target.value; };
+    $('#gf-find').oninput = (e) => { g.find = e.target.value; const at = e.target.selectionStart; this.renderGifting(body); const f = body.querySelector('#gf-find'); f.focus(); f.setSelectionRange(at, at); };
+    $('#gf-slot').onchange = (e) => { g.slot = e.target.value; this.renderGifting(body); };
+    body.querySelectorAll('[data-gfn]').forEach((b) => { b.onclick = () => { g.tokens = b.dataset.gfn; g.item = null; this.renderGifting(body); }; });
+    body.querySelectorAll('[data-gfi]').forEach((b) => { b.onclick = () => { const [slot, id] = b.dataset.gfi.split(':'); g.item = { slot, id }; g.tokens = ''; this.renderGifting(body); }; });
+    const clear = $('[data-gfclear]'); if (clear) clear.onclick = () => { g.item = null; this.renderGifting(body); };
+    $('[data-gfsend]').onclick = async (e) => {
+      const btn = e.currentTarget;
+      const list = [...new Set(g.to.split(/[\s,;]+/).map((t) => t.trim()).filter(Boolean))];
+      if (!list.length) { this.say('Type who it\'s for.'); return; }
+      const bad = list.find((t) => !validTag(t));
+      if (bad) { this.say(`"${bad}" isn't a gamertag (${TAG_RULES}).`); return; }
+      const n = Number(g.tokens), item = g.item;
+      if (!item && !(n >= 1 && n <= GRANT_MAX)) { this.say(`Type 1 to ${GRANT_MAX.toLocaleString()} tokens or pick an item.`); return; }
+      const what = item ? (all.find((it) => it.slot === item.slot && it.id === item.id) || {}).name : `${n.toLocaleString()} tokens`;
+      btn.disabled = true;
+      const ok = [], missing = [];
+      for (const t of list) {
+        try {
+          const claim = await this.social.lookup(t, true);
+          if (!claim) { missing.push(t); continue; }
+          await gifts.grant(claim.tag || t, item ? { item } : { tokens: n }, g.note);
+          await moderation.act(claim.tag || t, 'grant', { reason: `🎁 ${what}${g.note ? ': ' + g.note : ''}` }).catch(() => {});
+          ok.push(claim.tag || t);
+          sent.unshift({ to: claim.tag || t, what, note: g.note, ts: Date.now() });
+        } catch (err) { missing.push(`${t} (${err.message})`); }
+      }
+      store.set('ownerGifts', sent.slice(0, 50));
+      this.msg = (ok.length ? `Sent ${what} to ${ok.join(', ')}. They get it next time they play.` : '') + (missing.length ? ` Couldn't send to: ${missing.join(', ')}.` : '');
+      if (ok.length) { g.to = ''; g.note = ''; }
+      this.render();
+    };
+  }
+
   renderDash(body, online) {
     if (this.servers) this.servers.start();
     dashSample(this.servers); // fresh numbers when opened
