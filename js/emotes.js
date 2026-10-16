@@ -24,15 +24,15 @@ export function emoteHand(id, side, t) {
   return null;
 }
 
-// The rest of the body during an emote (added to the normal pose): bounce `y`, turn `yaw`, lean forward
-// `bend`, lean sideways `roll`, hips `hipX`, head nod `neck` and tilt `neckZ`. t: seconds since it started.
+// The rest of the body during an emote (added to the normal pose): bounce `y`, turn `yaw`, lean back
+// `bend` (negative: forward), lean sideways `roll`, hips `hipX`, head nod `neck` and tilt `neckZ`. t: seconds since it started.
 export function emoteBody(id, t) {
   const o = { y: 0, yaw: 0, bend: 0, roll: 0, hipX: 0, neck: 0, neckZ: 0 };
   if (id === 'wave') { o.roll = -0.06; o.neckZ = -0.14; o.neck = -0.05; o.y = Math.abs(Math.sin(t * 4.5)) * 0.015; }
   else if (id === 'dance') { const s = Math.sin(t * 4); o.y = Math.abs(Math.sin(t * 8)) * 0.09; o.yaw = s * 0.45; o.hipX = s * 0.07; o.roll = -s * 0.1; o.neck = Math.sin(t * 8) * 0.1; o.neckZ = s * 0.15; }
-  else if (id === 'salute') { const k = Math.min(1, t / 0.18); o.bend = -0.08 * k; o.neck = -0.08 * k; o.y = 0.02 * k; } // snaps to attention
-  else if (id === 'laugh') { o.bend = 0.22 + Math.sin(t * 3) * 0.15; o.neck = -0.22 + Math.abs(Math.sin(t * 14)) * 0.06; o.y = Math.abs(Math.sin(t * 14)) * 0.015; o.roll = Math.sin(t * 2) * 0.05; } // doubled over, shaking
-  else if (id === 'flex') { const f = Math.sin(t * 6); o.y = Math.max(0, f) * 0.03; o.yaw = Math.sin(t * 1.5) * 0.35; o.bend = -0.06; o.roll = f * 0.05; } // shows off both sides
+  else if (id === 'salute') { const k = Math.min(1, t / 0.18); o.bend = 0.05 * k; o.neck = 0.04 * k; o.y = 0.02 * k; } // snaps to attention, chest out
+  else if (id === 'laugh') { o.bend = -0.25 - Math.sin(t * 3) * 0.12; o.neck = -0.22 + Math.abs(Math.sin(t * 14)) * 0.06; o.y = Math.abs(Math.sin(t * 14)) * 0.015; o.roll = Math.sin(t * 2) * 0.05; } // doubled over, shaking
+  else if (id === 'flex') { const f = Math.sin(t * 6); o.y = Math.max(0, f) * 0.03; o.yaw = Math.sin(t * 1.5) * 0.35; o.bend = 0.06; o.roll = f * 0.05; } // chest out, showing off both sides
   return o;
 }
 

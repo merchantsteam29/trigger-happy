@@ -138,6 +138,11 @@ Voice uses PeerJS calls (`whffa-v1-vc-<room>-<tag>`) with signed tokens (`voice.
 - **Core:** `main.js` (menus, wiring, everything UI outside a match) · `game.js` (client match:
   input, movement, shooting, camera, effects, HUD feeding) · `host.js` (`HostLogic`) · `net.js` ·
   `physics.js` (boxes, `moveBody`, `raycast`) · `maps.js` (map data + scene build) · `nav.js`
+- **Animation (2026-10-16 remake):** `viewmodel.js`: per-kind draw / sprint / inspect (`kindOf`), reload hands arc (`keyArc`),
+  dropped mags (`dropMag`). `remote.js`: a step cycle with planted feet (stance moves back at body speed; `stepLen`), turn
+  steps, banking, `flinch(from, head)` (own hits in game.js, everyone else from hp drops in snapshots), death styles
+  `deathKind` fall / crumple / blast. `emotes.js` `emoteBody` (whole-body motion; positive `bend` leans BACK), eased by
+  `emoteK` / `poseK`.
 - **Players and visuals:** `remote.js` (other players), `viewmodel.js` (first-person gun),
   `rig.js`, `models.js` / `guns.js` / `modelkit.js` (low-poly models), `cosmetics.js`, `camos.js`,
   `banners.js`, `effects.js`, `audio.js` (synthesized sounds), `radar.js`, `hud.js`, `medals.js`, `highlights.js`

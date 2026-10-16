@@ -119,7 +119,8 @@ screen joins or starts a server playing it. Finish 3 matches of it in a week for
 ## Emotes
 
 Press **B** (rebindable) in a match, then **1–5** (or click) to **wave 👋**, **dance 💃**, **salute 🫡**, **laugh 😂** or **flex 💪**.
-Everyone else sees your character do it, with the emoji over your head. One every 3 seconds.
+Everyone else sees your character do it with their whole body (your gun is put away while you do), with the emoji over
+your head. One every 3 seconds.
 
 ## Pings (team modes)
 

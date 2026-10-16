@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.4",
+  "version": "2026.10.16.5",
   "notes": [
-    "Emotes and victory poses move the whole body and blend in smoothly"
+    "Players flinch when hit, and deaths depend on the hit: headshots crumple, explosions send them tumbling"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

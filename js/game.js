@@ -2073,6 +2073,7 @@ export class Game {
     if (hits.size) this.rep(id).hits++;
     for (const [vid, h] of hits) {
       this.net.send({ t: 'hit', v: vid, dmg: Math.round(h.dmg), w: id, head: h.head });
+      this.remotes.get(vid)?.flinch(this.me.pos, !!h.head);
       this.rep(id).dmg += h.dmg;
       this.showHit(vid, Math.round(h.dmg), h.head);
       this.hud.hit(h.head ? 'head' : null, !!h.head, h.dmg);
@@ -2383,6 +2384,7 @@ export class Game {
       imp = [r2(_f.x * k), r2(Math.max(0.3, _f.y) * k * 0.4 + 4), r2(_f.z * k)];
     }
     this.net.send({ t: 'hit', v: best.id, dmg: back ? w.backstab : w.dmg, w: w.id, head: back, imp });
+    this.remotes.get(best.id)?.flinch(this.me.pos, false);
     this.rep(w.id).dmg += back ? w.backstab : w.dmg;
     this.showHit(best.id, back ? w.backstab : w.dmg, false);
     this.fx.blood(best.center(_c));

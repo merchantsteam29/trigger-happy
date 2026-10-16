@@ -9,13 +9,11 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.16.4', name: 'In Motion', banner: 'motion', notes: [
+  { v: '2026.10.16.5', name: 'In Motion', banner: 'motion', notes: [
     '## Moderator looks',
     "Moderators get their own versions of the owner's items, in steel blue and silver with a shield badge",
     'A costume, a rifle skin, a weapon wrap, a weapon charm, a name tag, a kill effect, a banner and a victory pose (On Guard, with a riot shield)',
     'They only show on moderators the game has checked, so nobody can fake them',
-    '## New Banner',
-    'In Motion, the banner of this update, is in the shop',
     '## First-person animations',
     'Reloads: your hand reaches down to your belt for the new mag, the empty one drops out, and it slaps in with a jolt when the bolt or slide snaps forward',
     'Every weapon type draws its own way: rifles roll up from the side, pistols flip up, melee weapons sweep in, and they settle with a little bounce',
@@ -32,6 +30,13 @@ export const UPDATES = [
     'The whole body joins in now: the dance sways the hips and bobs the head, laughing doubles you over, saluting snaps you to attention, flexing shows off both sides',
     'Waving puts your other hand on your hip, and flexing pumps one arm then the other',
     'Emotes and poses ease in and out smoothly instead of snapping, and your gun is put away while you emote',
+    '## Hits and deaths',
+    "Players and bots flinch when they're hit, pushed away from the shot, and their head snaps back on a headshot",
+    'Deaths look different depending on the hit: headshots crumple at the knees, most hits stagger them back before they fall like a tree and bounce, explosions throw them tumbling',
+    'Their gun drops from their hands as they fall',
+    'Fixed: the Bow and Dab victory poses leaned the wrong way',
+    '## New Banner',
+    'In Motion, the banner of this update, is in the shop',
   ] },
   { v: '2026.10.15.38', name: 'New Look', banner: 'newlook', notes: [
     '## Menus',

@@ -46,14 +46,14 @@ export function poseHand(id, side, t) {
 export function poseBody(id, t) {
   const out = { y: 0, yaw: 0, bend: 0, hipX: 0, pitch: 0, foot: null }; // foot: [x, y, z] added to both feet (root space)
   if (id === 'cheer') out.y = Math.abs(Math.sin(t * 7)) * 0.07;
-  else if (id === 'dab') { out.bend = 0.25; out.yaw = -0.25; }
-  else if (id === 'bow') out.bend = Math.min(1, Math.max(0, Math.sin(Math.min(Math.PI, t * 1.6)))) * 0.75;
+  else if (id === 'dab') { out.bend = -0.25; out.yaw = -0.25; }
+  else if (id === 'bow') out.bend = -Math.min(1, Math.max(0, Math.sin(Math.min(Math.PI, t * 1.6)))) * 0.75; // (negative bend = forward)
   else if (id === 'floss') out.hipX = -Math.sin(t * 7) * 0.08;
   else if (id === 'spin') { const ph = (t * 3.4) % (Math.PI * 2); out.y = Math.max(0, Math.sin(ph)) * 0.65; out.yaw = ph < Math.PI ? (ph / Math.PI) * Math.PI * 2 : 0; } // one full turn per jump
   else if (id === 'levitate') { out.y = Math.min(1, t * 0.8) * 0.45 + Math.sin(t * 2) * 0.06; out.yaw = t * 0.7; }
   else if (id === 'pushups') { const k = Math.min(1, t * 2); out.pitch = -Math.PI / 2 * k; out.y = (0.34 + Math.sin(t * 5) * 0.11) * k; }
   else if (id === 'guitar') { out.bend = -0.15 + Math.abs(Math.sin(t * 8)) * 0.08; out.y = Math.abs(Math.sin(t * 8)) * 0.03; }
-  else if (id === 'guard') { out.bend = 0.08 + Math.sin(t * 2) * 0.015; out.yaw = Math.sin(t * 0.6) * 0.12; } // looking around, keeping watch
+  else if (id === 'guard') { out.bend = -0.05 + Math.sin(t * 2) * 0.015; out.yaw = Math.sin(t * 0.6) * 0.12; } // looking around, keeping watch
   else if (id === 'throne') { out.y = -0.36; out.foot = [0, 0.36, -0.34]; } // sitting: hips down, feet stay on the floor in front
   return out;
 }

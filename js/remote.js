@@ -356,6 +356,9 @@ export class RemotePlayer {
       }
     }
     if (!alive && this.alive && this.deathT === 0) this.die(null);
+    const hp = a[8];
+    if (alive && this.alive && typeof hp === 'number' && typeof this.hp === 'number' && hp < this.hp - 0.5 && performance.now() - (this.flAt || 0) > 250) this.flinch(null, false);
+    this.hp = hp;
     this.alive = alive;
     this.hasState = true;
   }
@@ -403,6 +406,10 @@ export class RemotePlayer {
     this.deathTwist = (Math.random() - 0.5) * (force >= 6 ? 3 : 1.2);
     this.deathFloor = Math.min(this.pos.y, this.groundBelow());
     this.deathSplay = 0.6 + Math.random() * 0.4;
+    // How they go down: headshots crumple at the knees, explosions throw them tumbling, the rest fall like a tree.
+    this.deathKind = force >= 6 ? 'blast' : head ? 'crumple' : 'fall';
+    this.deathHead = head;
+    this.deathDrop = 0;
     if (head) this.popHat();
   }
 
@@ -410,6 +417,21 @@ export class RemotePlayer {
   groundBelow(from = this.pos.y) {
     const h = raycast(this.pos.x, from + 0.3, this.pos.z, 0, -1, 0, 60);
     return h ? Math.min(from + 0.3, h.y) : from;
+  }
+
+  // Hit (not killed): a flinch away from `from` (a world position, or straight back if unknown).
+  flinch(from = null, head = false) {
+    if (!this.alive || this.deathT > 0) return;
+    this.flT = Math.min(1.3, (this.flT || 0) * 0.5 + 1);
+    this.flHead = head;
+    this.flAt = performance.now();
+    this.flDir = this.flDir || { x: 0, z: 1 };
+    if (from) { // in the body's own space: +z = pushed back, x = pushed to the side
+      const dx = this.pos.x - from.x, dz = this.pos.z - from.z, l = Math.hypot(dx, dz) || 1;
+      const cy = Math.cos(this.yaw), sy = Math.sin(this.yaw);
+      this.flDir.x = Math.max(-1, Math.min(1, (dx * cy - dz * sy) / l));
+      this.flDir.z = Math.max(-1, Math.min(1, (dx * sy + dz * cy) / l)); // negative: shot from behind, pushed forward
+    } else { this.flDir.x = (Math.random() - 0.5) * 0.6; this.flDir.z = 1; }
   }
 
   popHat() {
@@ -508,12 +530,33 @@ export class RemotePlayer {
     this.emB = null;
     if (this.deathT > 0) {
       this.deathT += dt;
-      const f = Math.min(1, this.deathT / 0.5);
+      const t = this.deathT, kind = this.deathKind || 'fall';
+      // Tipping over: faster and faster (like gravity) until it hits the floor at `dur`, then a small bounce.
+      const tip = (t0, dur) => {
+        const u = (t - t0) / dur;
+        if (u <= 0) return 0;
+        if (u < 1) return (Math.PI / 2) * u * u;
+        const b = (u - 1) * dur;
+        return Math.PI / 2 - 0.12 * Math.abs(Math.sin(b * 11)) * Math.exp(-b * 7);
+      };
+      let ang, twist = this.deathTwist * Math.min(1, t / 0.5);
+      if (kind === 'crumple') { // the knees give out first, then they tip over
+        const k = Math.min(1, t / 0.28);
+        ang = tip(0.2, 0.42);
+        this.deathDrop = 0.4 * k * k * (1 - ang / (Math.PI / 2));
+      } else if (kind === 'blast') { // thrown, tumbling through the air
+        ang = Math.min(1, t / 0.3) * Math.PI / 2;
+        twist = this.deathTwist * (1 + Math.min(t, 0.7) * 3);
+        this.deathDrop = 0;
+      } else { // a stagger back from the hit, then down
+        ang = tip(0.1, 0.48) - (t < 0.14 ? 0.1 * Math.sin((t / 0.14) * Math.PI) : 0);
+        this.deathDrop = 0;
+      }
       _axis.crossVectors(YAXIS, this.fallDir).normalize();
-      this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw + this.deathTwist * f);
-      _q.setFromAxisAngle(_axis, (f * f * (3 - 2 * f)) * Math.PI / 2 * (1 + Math.max(0, Math.sin(Math.min(1, this.deathT / 0.7) * Math.PI)) * 0.08));
-      this.root.quaternion.premultiply(_q);
-      if (this.deathT > 3) this.root.position.y -= (this.deathT - 3) * 0.6;
+      this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw + twist);
+      this.root.quaternion.premultiply(_q.setFromAxisAngle(_axis, ang));
+      this.root.position.y -= this.deathDrop;
+      if (t > 3) this.root.position.y -= (t - 3) * 0.6;
     } else {
       this.root.quaternion.setFromAxisAngle(YAXIS, this.yaw);
       const bank = Math.max(-0.16, Math.min(0.16, this.turnRate * speed * 0.012)) * moving; // leans into the turn
@@ -560,6 +603,18 @@ export class RemotePlayer {
     this.spine.rotation.y = -Math.sin(this.phase) * 0.1 * moving;
     this.spine.rotation.z = -this.lean * 0.12;
     this.neck.rotation.x = this.pitch * 0.5 + this.sprint * 0.2 + runK * 0.06 * moving;
+    if (this.deathT > 0 && this.deathHead) this.neck.rotation.x -= 0.7 * Math.min(1, this.deathT / 0.1); // a headshot snaps the head back
+    // Hit flinch: jolted back (and twisted away from the shot), the head snapping on a headshot.
+    this.flT = (this.flT || 0) * Math.exp(-dt * 7);
+    this.flA = (this.flA || 0) + ((this.flT || 0) - (this.flA || 0)) * Math.min(1, dt * 30);
+    if (this.flA > 0.01 && this.alive) {
+      const f = this.flA;
+      this.spine.rotation.x += 0.28 * f * this.flDir.z;
+      this.spine.rotation.z -= 0.18 * f * this.flDir.x;
+      this.spine.rotation.y += 0.15 * f * this.flDir.x;
+      this.neck.rotation.x += (this.flHead ? 0.7 : 0.15) * f;
+      this.hips.position.z += 0.03 * f * this.flDir.z; // a half step back
+    }
     this.neck.rotation.y = Math.sin(this.phase) * 0.04 * moving;
     if (this.poseId && this.poseB) { const k = this.poseK ?? 1; this.spine.rotation.x += this.poseB.bend * k; this.hips.position.x += this.poseB.hipX * k; }
     if (this.emB) { const { b, e } = this.emB; this.spine.rotation.x += b.bend * e; this.spine.rotation.z += b.roll * e; this.hips.position.x += b.hipX * e; this.neck.rotation.x += b.neck * e; this.neck.rotation.z = b.neckZ * e; }
@@ -576,6 +631,7 @@ export class RemotePlayer {
     else if (pistol) gh.position.set(0.06, -0.05, -0.48);
     else gh.position.set(0.14, -0.06, -0.36);
     gh.rotation.set(melee ? 0.9 : 0, 0, 0);
+    if (this.deathT > 0) { gh.rotation.x -= 1.3 * dying; gh.rotation.z += 0.4 * dying; } // the gun drops from their hands
     this.aim.rotation.set(this.pitch * (1 - this.sprint * 0.6) - this.sprint * 0.5, this.sprint * 0.5, 0);
     gh.position.z += this.recoil * 0.08;
     gh.rotation.x += this.recoil * 0.25 + this.air * 0.12 - land * 0.8;
@@ -631,7 +687,7 @@ export class RemotePlayer {
       let tx = fx + lx * sw, tz = fz + lz * sw;
       if (this.air > 0.01) { ty += this.air * (leg.side > 0 ? 0.35 : 0.2); tz += this.air * (leg.side > 0 ? -0.15 : 0.12); }
       if (this.poseId && this.poseB && this.poseB.foot) { const k = this.poseK ?? 1; tx += this.poseB.foot[0] * k; ty += this.poseB.foot[1] * k; tz += this.poseB.foot[2] * k; } // e.g. sitting (poses.js)
-      if (this.deathT > 0) { ty += dying * 0.2; tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
+      if (this.deathT > 0) { ty += dying * 0.2 + (this.deathDrop || 0); tx += leg.side * dying * 0.22 * (this.deathSplay || 1); tz += dying * (leg.side > 0 ? 0.15 : -0.1); }
       this.root.localToWorld(_b.set(tx, ty, tz));
       leg.hip.getWorldPosition(_a);
       // Knee points forward (root -Z).
