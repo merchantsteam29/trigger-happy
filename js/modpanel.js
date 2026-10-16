@@ -104,6 +104,7 @@ export class ModPanel {
       <div id="mp-msg" class="note mp-msg">${esc(this.msg)}</div>
       <div id="mp-body"></div>`;
     this.el.querySelectorAll('[data-tab]').forEach((b) => { b.onclick = () => { this.tab = b.dataset.tab; this.msg = ''; this.render(); }; });
+    { const bar = this.el.querySelector('.mp-tabs'), sel = bar && bar.querySelector('.sel'); if (sel && bar.scrollWidth > bar.clientWidth) bar.scrollLeft = sel.offsetLeft - (bar.clientWidth - sel.offsetWidth) / 2; } // phones: the picked tab in view
     const body = this.el.querySelector('#mp-body');
     if (this.tab === 'players') this.renderPlayers(body);
     else if (this.tab === 'online') this.renderOnline(body, online);

@@ -1150,3 +1150,30 @@ body.mobile:not(.tablet) .shop2 .shop-detail .shop-bnr, body.mobile:not(.tablet)
 .gf-item.sel { outline: 2px solid var(--accent); background: rgba(255,45,117,0.15); }
 .gf-send { margin-top: 10px; align-self: flex-start; padding: 10px 22px; }
 .gf-sent { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; cursor: default; }
+
+/* ================= Mod Panel on phones (landscape) ================= */
+/* The numbers become one slim row of chips, the tabs one sideways-scrolling row that stays at the top
+   while you scroll, cards stack in one column, and buttons are big enough to tap. */
+body.mobile:not(.tablet) .mp-stats { flex-wrap: nowrap; gap: 6px; margin-bottom: 6px; overflow-x: auto; scrollbar-width: none; }
+body.mobile:not(.tablet) .mp-stats > div { flex: 0 0 auto; display: flex; align-items: baseline; gap: 5px; padding: 4px 10px; border-radius: 999px; }
+body.mobile:not(.tablet) .mp-stats b { display: inline; font-size: 14px; }
+body.mobile:not(.tablet) .mp-stats small { font-size: 9px; letter-spacing: 0.5px; }
+body.mobile:not(.tablet) .mp-stats .mp-you { font-size: 10px; padding: 2px 8px; }
+body.mobile:not(.tablet) .mp-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 5; margin: 0 -2px 6px; padding: 4px 2px;
+  background: #150f26; box-shadow: 0 -14px 0 0 #150f26, 0 6px 10px -6px rgba(0,0,0,0.6); }
+body.mobile:not(.tablet) .mp-tabs::-webkit-scrollbar, body.mobile:not(.tablet) .mp-stats::-webkit-scrollbar { display: none; }
+body.mobile:not(.tablet) .mp-tabs button { flex: 0 0 auto; min-height: 36px; padding: 6px 11px; font-size: 11px; white-space: nowrap; }
+body.mobile:not(.tablet) .mp-msg { position: sticky; top: 44px; z-index: 4; margin: 0 0 6px; padding: 6px 10px; border-radius: 8px; background: rgba(20,14,36,0.95); border: 1px solid var(--accent); }
+body.mobile:not(.tablet) .mp-grid { grid-template-columns: 1fr; gap: 8px; }
+body.mobile:not(.tablet) .mp-grid > div { gap: 8px; }
+body.mobile:not(.tablet) #mp-body .card { padding: 10px 12px; }
+body.mobile:not(.tablet) #mp-body h3 { font-size: 13px; margin-bottom: 6px; }
+body.mobile:not(.tablet) .mp-actions { gap: 6px; }
+body.mobile:not(.tablet) .mp-actions button { min-height: 40px; padding: 8px 12px; font-size: 12px; }
+body.mobile:not(.tablet) .mp-actions select, body.mobile:not(.tablet) .mp-timed select { min-height: 40px; }
+body.mobile:not(.tablet) .mp-results { max-height: 150px; overflow-y: auto; }
+body.mobile:not(.tablet) .mp-player { padding: 10px; }
+body.mobile:not(.tablet) .mp-give { flex-wrap: wrap; }
+body.mobile:not(.tablet) .mp-give select { min-width: 0; flex: 1 1 160px; }
+body.mobile:not(.tablet) .gf-items { max-height: 190px; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+body.mobile:not(.tablet) .gf-row button { min-height: 38px; }

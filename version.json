@@ -1,7 +1,7 @@
 {
-  "version": "2026.10.16.9",
+  "version": "2026.10.16.10",
   "notes": [
-    "Some bug fixes"
+    "The Mod Panel is easier to use on phones"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",
