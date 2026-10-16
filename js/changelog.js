@@ -9,7 +9,7 @@ import { APP_VERSION } from './version.js';
 // is being built, add each one to the top entry and bump its `v`; a new batch gets a new entry with
 // a new banner. Keep the hidden feature out (see CLAUDE.md).
 export const UPDATES = [
-  { v: '2026.10.15.37', name: 'New Look', banner: 'newlook', notes: [
+  { v: '2026.10.15.38', name: 'New Look', banner: 'newlook', notes: [
     '## Menus',
     'Tabs across the top: Play, Loadout, Locker Room, Shop, Missions, Leaderboard and Friends',
     '## Play',
@@ -30,6 +30,11 @@ export const UPDATES = [
     "A slimmer top bar, so there's more room for everything else",
     'Play: Quick Play and Ranked are two big wide buttons again, with your daily reward, challenges and level in a row under them',
     'Shop: your character in 3D on the left, the items on the right, and the categories scroll sideways',
+    '## Fixes',
+    'Aiming down sights: the gun no longer drifts off the crosshair when you turn, jump or land while aiming',
+    'Aiming sensitivity now defaults to 1x (it was 0.8x on top of the zoom, which felt sluggish). You can still change it in Settings → Controls',
+    'Squirt Gun, Retro Ray Gun, Marksman Revolver and Pumpkin Launcher skins: you now aim over the top of the gun instead of into it',
+    "Bots (and players) no longer glitch or jump around when they're killed, and anyone killed in mid-air falls to the floor instead of floating",
   ] },
   { v: '2026.10.15.35', name: 'Play Together', banner: 'together', notes: [
     '## Play Hour',

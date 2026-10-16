@@ -5,7 +5,7 @@ const DEFAULTS = {
   fov: 75,            // world field of view (vertical, degrees)
   vmFov: 65,          // weapon/arms field of view
   sens: 1,            // mouse sensitivity
-  adsSens: 0.8,       // multiplier while aiming down sights
+  adsSens: 1,         // multiplier while aiming down sights (on top of the zoom's own slow-down)
   touchSens: 1,       // drag-to-look speed on touch screens
   invertY: false,
   aimAssist: true,        // touch screens only
@@ -65,6 +65,8 @@ const DEFAULTS = {
 export const opts = { ...DEFAULTS, ...store.get('opts', {}) };
 // Older versions saved sensitivity on its own.
 if (store.get('opts', null) === null) opts.sens = store.get('sens', DEFAULTS.sens);
+// 2026-10-16: the aiming sensitivity default went from 0.8 to 1 (aiming felt sluggish); move anyone still on the old default.
+if (!opts.adsV2) { if (opts.adsSens === 0.8) opts.adsSens = 1; opts.adsV2 = 1; }
 
 const listeners = new Set();
 export function onOpts(fn) { listeners.add(fn); fn(opts); }

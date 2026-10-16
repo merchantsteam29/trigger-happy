@@ -76,6 +76,7 @@ const SKINS = {
     },
   },
   pumpkin: {
+    sight: 0.25, // aim over the top of the model
     build(g) {
       const pk = mat('#f07a12', { roughness: 0.7 }), ridge = mat('#c85a0a', { roughness: 0.7 }), stem = mat('#4f7a2a', { roughness: 0.8 }), black = mat('#120804'), fire = glow('#ffb23a', 1.6);
       cyl(g, pk, 0.085, 0.9, 0, 0.09, -0.2, 16); // tube
@@ -118,6 +119,7 @@ const SKINS = {
     },
   },
   squirtgun: {
+    sight: 0.245, // aim over the top of the model
     build(g) {
       const pink = mat('#ff4fa8', { roughness: 0.35 }), green = mat('#3ad86a', { roughness: 0.35 }), orange = mat('#ff9a1a', { roughness: 0.4 });
       const water = mat('#5ac8ff', { roughness: 0.05, transparent: true, opacity: 0.6, emissive: '#1a5a8a', emissiveIntensity: 0.4 });
@@ -141,6 +143,7 @@ const SKINS = {
     },
   },
   raygun: {
+    sight: 0.15, // aim over the top of the model
     build(g) {
       const silver = mat('#c9d0d8', { metalness: 0.5, roughness: 0.25 }), red = mat('#d8202a', { roughness: 0.4 }), ring = glow('#5affc8', 2), bulb = glow('#b8fff0', 2.4);
       const body = sphere(g, silver, 0.05, 0, 0.05, -0.04, 14, 10); body.scale.set(1, 1, 1.8);
@@ -192,6 +195,7 @@ const SKINS = {
     },
   },
   coinrevolver: {
+    sight: 0.146, // aim over the top of the model
     build(g) {
       const blue = mat('#2f5fc8', { metalness: 0.35, roughness: 0.3 }), steel = mat('#4a5262', { metalness: 0.4, roughness: 0.35 }), yellow = glow('#ffcf3a', 1.2), coin = mat('#f2c033', { metalness: 0.4, roughness: 0.25, emissive: '#4a3000', emissiveIntensity: 0.5 });
       rbox(g, blue, 0.045, 0.06, 0.13, 0, 0.042, -0.02); // frame
@@ -244,7 +248,8 @@ export function applySkin(g, sk, spec) {
     for (const m of meshes) m.parent.remove(m);
     def.build(g);
     // No iron sights or muzzle devices on top of a skin (optics you picked still go on)
-    return spec ? { ...spec, irons: null, folded: null, device: null } : spec;
+    // `sight`: the skin's own aiming height, when its body would block the view.
+    return spec ? { ...spec, irons: null, folded: null, device: null, ...(def.sight ? { ironY: def.sight } : {}) } : spec;
   }
   return spec;
 }

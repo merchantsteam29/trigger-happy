@@ -1,7 +1,9 @@
 {
-  "version": "2026.10.15.37",
+  "version": "2026.10.15.38",
   "notes": [
-    "Phones: a cleaner menu with a slim tab bar, big Quick Play and Ranked buttons, and the Shop with your 3D character beside the items"
+    "Aiming down sights stays steady on the crosshair, and aiming sensitivity feels less sluggish",
+    "Some gun skins no longer block your view when aiming",
+    "Killed bots no longer glitch or jump around"
   ],
   "files": [
     "./", "index.html", "style.css", "version.json", "manifest.webmanifest", "sw.js",

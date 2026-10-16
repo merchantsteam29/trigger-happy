@@ -341,7 +341,7 @@ export class Viewmodel {
     // into a bounce when you land.
     const ld = Math.max(dt, 1 / 240);
     this.sw.target.set(THREE.MathUtils.clamp(this.lookAcc.y / ld * 0.00006, -0.12, 0.12), THREE.MathUtils.clamp(-this.lookAcc.x / ld * 0.00006, -0.14, 0.14), THREE.MathUtils.clamp(-this.lookAcc.x / ld * 0.00009, -0.18, 0.18));
-    this.sw.target.multiplyScalar(1 - this.adsT * 0.7);
+    this.sw.target.multiplyScalar(1 - this.adsT * 0.9);
     this.lookAcc.set(0, 0);
     if (this.wasGround && !s.onGround && s.vy > 1) { this.mv.v.y += 0.3; this.rr.v.x += 0.6; }
     this.wasGround = s.onGround;
@@ -361,8 +361,9 @@ export class Viewmodel {
     this.bobT += dt * (3.6 + s.speed * 1.45) * (1 + this.sprintT * 0.15);
     const big = 1 + this.sprintT * 0.9;
     const breathe = (1 - amt) * (1 - this.adsT * 0.8);
-    tp.x += Math.sin(this.bobT) * 0.013 * amt * big + this.sway.x;
-    tp.y += (Math.cos(this.bobT * 2) - 1) * 0.008 * amt * big + this.sway.y + Math.sin(this.t * 1.6) * 0.0035 * breathe;
+    const steady = 1 - this.adsT * 0.9; // aiming: the gun follows your view, so the sights stay on the crosshair
+    tp.x += Math.sin(this.bobT) * 0.013 * amt * big + this.sway.x * steady;
+    tp.y += (Math.cos(this.bobT * 2) - 1) * 0.008 * amt * big + this.sway.y * steady + Math.sin(this.t * 1.6) * 0.0035 * breathe;
     tr.x += Math.sin(this.t * 1.6 + 0.6) * 0.008 * breathe + (Math.cos(this.bobT * 2) - 1) * 0.012 * amt;
     tr.z += Math.sin(this.bobT) * 0.025 * amt * big - s.strafe * 0.07 * (1 - this.adsT * 0.7);
     tr.y += Math.sin(this.bobT) * 0.012 * amt;
@@ -371,9 +372,9 @@ export class Viewmodel {
     const sl = (this.slideTk = (this.slideTk || 0) + ((s.slide ? 1 : 0) - (this.slideTk || 0)) * Math.min(1, dt * 12));
     tp.y -= 0.012 * cr * (1 - this.adsT); tr.z += 0.07 * cr * (1 - this.adsT);
     tp.x -= 0.035 * sl; tp.y -= 0.02 * sl; tr.z += 0.32 * sl * (1 - this.adsT * 0.6); tr.y -= 0.08 * sl;
-    tr.y += this.sway.x * 1.5;
-    tp.y -= THREE.MathUtils.clamp(s.vy * 0.005, -0.04, 0.04) + this.land * 0.07;
-    tr.x -= this.land * 0.08;
+    tr.y += this.sway.x * 1.5 * steady;
+    tp.y -= (THREE.MathUtils.clamp(s.vy * 0.005, -0.04, 0.04) + this.land * 0.07) * steady;
+    tr.x -= this.land * 0.08 * steady;
 
     const sp = this.sprintT * this.sprintT * (3 - 2 * this.sprintT); // eased into / out of the sprint pose
     tp.x -= sp * 0.06; tp.y -= sp * 0.045; tp.z += sp * 0.035;

@@ -1,6 +1,6 @@
 import { poseHand, poseBody, poseProp } from './poses.js';
 import * as THREE from 'three';
-import { overlap } from './physics.js';
+import { overlap, raycast } from './physics.js';
 import { RoundedBoxGeometry as RoundedBox } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { buildGun, modelQuality, mergeStatic } from './models.js';
 import { buildCosmetics } from './cosmetics.js';
@@ -335,7 +335,8 @@ export class RemotePlayer {
     this.tcrouch = a[6] ? 1 : 0;
     this.flags = a[11] || 0;
     this.setWeapon(a[5]);
-    const jump = !this.alive || !this.hasState || this.tpos.distanceTo(this.buf.length ? this.buf[this.buf.length - 1].p : this.pos) > 6;
+    // (still "alive" a second after a kill message: they weren't really killed, e.g. infected; stand them back up)
+    const jump = !this.alive || !this.hasState || this.deathT > 1 || this.tpos.distanceTo(this.buf.length ? this.buf[this.buf.length - 1].p : this.pos) > 6;
     if (alive && jump) { // spawned / respawned / teleported: no sliding across the map
       this.pos.copy(this.tpos);
       this.prev.copy(this.tpos);
@@ -398,9 +399,15 @@ export class RemotePlayer {
     // Knocked back (and up, for explosions), with a random twist so no two deaths look the same.
     this.deathVel.set(this.fallDir.x * force, force >= 6 ? force * 0.75 : force * 0.25, this.fallDir.z * force);
     this.deathTwist = (Math.random() - 0.5) * (force >= 6 ? 3 : 1.2);
-    this.deathFloor = this.pos.y;
+    this.deathFloor = Math.min(this.pos.y, this.groundBelow());
     this.deathSplay = 0.6 + Math.random() * 0.4;
     if (head) this.popHat();
+  }
+
+  // The floor under the body (killed in mid-air: jumping, grappling, on a zipline), at most a step above `from`.
+  groundBelow(from = this.pos.y) {
+    const h = raycast(this.pos.x, from + 0.3, this.pos.z, 0, -1, 0, 60);
+    return h ? Math.min(from + 0.3, h.y) : from;
   }
 
   popHat() {
@@ -445,7 +452,7 @@ export class RemotePlayer {
     if (this.costumeAnim && this.alive) this.costumeAnim(dt, this); // costumes.js (wings, pop-up toast…)
     this.stepped = false;
     this.prev.copy(this.pos);
-    if (this.alive && !this.replay) {
+    if (this.alive && !this.replay && !(this.deathT > 0)) {
       if (this.buf.length) this.interpolate();
       else {
         this.pos.lerp(this.tpos, 1 - Math.exp(-dt * 16));
@@ -464,7 +471,8 @@ export class RemotePlayer {
     this.swapT = Math.max(0, this.swapT - dt * 3);
 
     this.vel.subVectors(this.pos, this.prev).divideScalar(Math.max(dt, 1e-4));
-    const speed = Math.min(9, Math.hypot(this.vel.x, this.vel.z));
+    const speed = this.deathT > 0 ? 0 : Math.min(9, Math.hypot(this.vel.x, this.vel.z)); // a falling body doesn't run
+    if (this.deathT > 0) this.air = 0;
     const moving = Math.min(1, speed / 1.5) * (1 - this.air);
     const lastPhase = this.phase;
     this.phase += dt * (speed * 2.1 + 0.001);
@@ -477,6 +485,7 @@ export class RemotePlayer {
       const ox = this.pos.x, oz = this.pos.z;
       this.pos.addScaledVector(v, dt);
       if (overlap(this.pos.x, this.pos.y + 0.6, this.pos.z, 0.25, 0.5)) { this.pos.x = ox; this.pos.z = oz; v.x = 0; v.z = 0; } // hit a wall
+      else if (ox !== this.pos.x || oz !== this.pos.z) this.deathFloor = this.groundBelow(Math.max(this.pos.y, this.deathFloor)); // slid off a ledge: fall to the floor below
       if (this.pos.y < this.deathFloor) {
         this.pos.y = this.deathFloor;
         v.y = v.y < -2 ? -v.y * 0.3 : 0;
